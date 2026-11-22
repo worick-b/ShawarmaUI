@@ -12,7 +12,7 @@
 - **Single-Header & Zero Dependencies:** `~I've got to break free, I've fallen in love"`
 - **For Windows:** Drop `ShawarmaUI.h` into your project, choose `GDI` or `Direct2D` and compile.
   - **GDI (Default):** Works on every Windows machine out of the box (including Safe Mode, Windows PE, and basic video drivers).
-  - **Direct2D + DirectWrite (`#define SHAWARMAGUI_USE_D2D`):** Hardware-accelerated rendering with cached `IDWriteTextLayout` for zero per-frame allocations.
+  - **Direct2D + DirectWrite (`#define SHAWARMAUI_USE_D2D`):** Hardware-accelerated rendering with cached `IDWriteTextLayout` for zero per-frame allocations.
 - **For Android:** Drop `ShawarmaUI_Android.h && NanoVG` into your project, disable Material Design and compile.
 - **Event-Driven & Ultra-Light:** Consumes **~5–8 MB of RAM** and **0.0% CPU** when idle, with smooth 30 FPS animations only while transitions are active.
 - **Fluent API & RAII Scopes:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`) and use automatic RAII scopes (`if (auto p = ui.Panel("Title")) { ... }`).

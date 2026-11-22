@@ -9,7 +9,7 @@
 
 ## ✨ Key Features
 
-- **Single-Header & Zero Dependencies:** `~"I've got to break free, I've fallen in love"`
+- **Single-Header & Zero Dependencies:** `~I've got to break free, I've fallen in love"`
 - **For Windows:** Drop `ShawarmaUI.h` into your project, choose `GDI` or `Direct2D` and compile.
   - **GDI (Default):** Works on every Windows machine out of the box (including Safe Mode, Windows PE, and basic video drivers).
   - **Direct2D + DirectWrite (`#define SHAWARMAGUI_USE_D2D`):** Hardware-accelerated rendering with cached `IDWriteTextLayout` for zero per-frame allocations.

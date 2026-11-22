@@ -2,7 +2,7 @@
 
 > *A UI Sexy Model — Ultra-lightweight, single-header C++17 Immediate-Mode GUI library for Windows (and soon Android).*
 
-**ShawarmaUI** is a ~90 KB single-header (`ShawarmaUI.h`) retained/immediate hybrid GUI library built from scratch with zero external dependencies. Designed for high-performance utilities, launchers, media players, and diagnostic tools that demand native speed, crisp typography, and near-zero RAM/CPU overhead.
+**ShawarmaUI** is a ~90 KB single-header (`ShawarmaUI.h`) retained/immediate hybrid GUI library built from scratch with zero external dependencies. Designed for high-performance utilities, launchers, media players or anything your stomach want, that demand native speed, crisp typography, and near-zero RAM/CPU overhead.
 
 ---
 
@@ -90,6 +90,6 @@ g++ -std=c++17 -O3 -s main.cpp -o app.exe -ld2d1 -ldwrite -ldwmapi -lshell32 -mw
 - [x] Windows GDI & Direct2D backends
 - [x] Fluent API, RAII scopes, and 16+ core widgets
 - [x] DXGI SwapChain & D2D HUD overlay mode
-- [ ] **Android Backend (`ShawarmaUI_Android.hpp`)** powered by OpenGL ES 3.0 + NanoVG (with updated `stb_truetype` & `stb_image`)
+- [ ] **Android Backend (`ShawarmaUI_Android.h`)** powered by OpenGL ES 3.0 + NanoVG (with updated `stb_truetype` & `stb_image`)
 
 ---

@@ -93,6 +93,6 @@ g++ -std=c++17 -O3 -s main.cpp -o app.exe -ld2d1 -ldwrite -ldwmapi -lshell32 -mw
 - [x] Windows GDI & Direct2D backends
 - [x] Fluent API, RAII scopes, and 16+ core widgets
 - [x] DXGI SwapChain & D2D HUD overlay mode
-- [x] **Android Backend (`Zero Material Design Baby! S2`)** powered by OpenGL ES 3.0 + NanoVG (Updated `stb_truetype` & `stb_image`)
+- [x] Android Backend **(`Zero Material Design Baby! S2`)** powered by OpenGL ES 3.0 + NanoVG (Updated `stb_truetype` & `stb_image`)
 
 ---

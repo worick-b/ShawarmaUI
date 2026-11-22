@@ -39,9 +39,11 @@ class MainActivity : Activity() {
         window.decorView.setOnApplyWindowInsetsListener { v, insets ->
             topInset = insets.systemWindowInsetTop
             bottomInset = insets.systemWindowInsetBottom
+            if (glView.width > 0 && glView.height > 0) {
+                glView.queueEvent { nativeResize(glView.width, glView.height, topInset, bottomInset) }
+            }
             v.onApplyWindowInsets(insets)
         }
-    }
 
     fun requestRenderFromNative() {
         glView.requestRender()

@@ -18,6 +18,7 @@
 - **Fluent API & RAII Scopes:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`) and use automatic RAII scopes (`if (auto p = ui.Panel("Title")) { ... }`).
 - **Built-in Themes:** Switch entire color schemes in one line (`DarkBlue`, `NeonRed`, `CyberPurple`, `LightClean`).
 - **External Render Target Integration:** Embed ShawarmaUI HUD overlays directly into existing `IDXGISwapChain1` (DirectX 11) or `ID2D1HwndRenderTarget` pipelines.
+- **It's:** `A personal project, don't expect a dev master blaster (12" Version)`.
 
 ---
 

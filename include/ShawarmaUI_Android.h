@@ -282,8 +282,12 @@ public:
             }
         }
 
-        if (touchIsDraggingScroll && activeScrollChildId != 0) {
-            childScrollMap[activeScrollChildId] -= static_cast<float>(dy);
+        if (touchIsDraggingScroll) {
+            if (activeScrollChildId != 0) {
+                childScrollMap[activeScrollChildId] -= static_cast<float>(dy);
+            } else {
+                windowScrollY -= static_cast<float>(dy);
+            }
         }
         RequestRedraw();
     }
@@ -681,6 +685,7 @@ public:
         bool changed = false;
 
         if (focused) {
+		    inputRenderedThisFrame = true;
             hasActiveAnimations = true;
             for (const auto& txt : pendingTextCommits) {
                 cursorBlinkStart = NowMs();
@@ -770,6 +775,7 @@ public:
         bool changed = false;
 
         if (focused) {
+		    inputRenderedThisFrame = true;
             hasActiveAnimations = true;
             for (const auto& txt : pendingTextCommits) {
                 cursorBlinkStart = NowMs();
@@ -1466,7 +1472,9 @@ private:
 
     std::vector<RectI> clipStack;
 
-    int focusedInputId = 0;
+    int focusedInputId = 0;    
+    bool inputRenderedThisFrame = false;
+	float windowScrollY = 0.0f;
     uint64_t cursorBlinkStart = 0;
     std::vector<std::string> pendingTextCommits;
     int pendingBackspaceCount = 0;
@@ -1610,6 +1618,7 @@ private:
         pendingTooltipText.clear();
         clipStack.clear();
         childStack.clear();
+        inputRenderedThisFrame = false;
 
         uint64_t now = NowMs();
         deltaTime = (lastFrameTimeMs == 0) ? 0.016f : std::min(0.06f, (now - lastFrameTimeMs) / 1000.0f);
@@ -1618,10 +1627,13 @@ private:
         hasActiveAnimations = false;
 
         int pad = S(style.windowPadding);
+        int topStart = std::max(pad, safeAreaTop + S(8));
+        windowScrollY = std::max(0.0f, windowScrollY);
+
         regionLeft = pad;
         regionRight = clientW - pad;
         cursorX = regionLeft;
-        cursorY = std::max(pad, safeAreaTop + S(8));
+        cursorY = topStart - static_cast<int>(std::round(windowScrollY));
         colCount = 1;
         disabledStack.clear();
 
@@ -1630,6 +1642,16 @@ private:
     }
 
     void EndFrameState() {
+        int bottomSafe = std::max(S(style.windowPadding), safeAreaBottom);
+        int contentBottom = cursorY + static_cast<int>(std::round(windowScrollY)) + bottomSafe;
+        int maxWinScroll = std::max(0, contentBottom - clientH);
+        windowScrollY = std::clamp(windowScrollY, 0.0f, static_cast<float>(maxWinScroll));
+
+        if (focusedInputId != 0 && !inputRenderedThisFrame) {
+            focusedInputId = 0;
+            if (onShowKeyboard) onShowKeyboard(false);
+        }
+
         if (!comboOverlayDraws.empty()) {
             for (auto& fn : comboOverlayDraws) fn();
             comboOverlayDraws.clear();
@@ -1667,19 +1689,18 @@ private:
     }
 
     void DrawToastInternal(const std::string& textUtf8, Color accent, float alpha) {
-        int padX = S(14);
+        int padX = S(16);
         int textW = CalcTextWidth(textUtf8, true);
         int boxW = std::min(clientW - S(28), textW + padX * 2);
         int boxH = S(34);
         int bx = (clientW - boxW) / 2;
-        int bottomSafe = std::max(S(16), safeAreaBottom + S(10));
-        int by = clientH - boxH - bottomSafe;
+        int by = std::max(S(14), safeAreaTop + S(8));
 
-        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, (uint8_t)(245 * alpha));
-        Color bdr(accent.r, accent.g, accent.b, (uint8_t)(230 * alpha));
+        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, (uint8_t)(248 * alpha));
+        Color bdr(accent.r, accent.g, accent.b, (uint8_t)(235 * alpha));
         Color txt(style.text.r, style.text.g, style.text.b, (uint8_t)(255 * alpha));
 
-        DrawRoundRect(bx, by, boxW, boxH, S(style.rounding), bg, bdr);
+        DrawRoundRect(bx, by, boxW, boxH, boxH / 2, bg, bdr);
         DrawTextInternal(bx + padX, by, std::max(0, boxW - padX * 2), boxH, textUtf8, txt, true, ALIGN_CENTER);
     }
 

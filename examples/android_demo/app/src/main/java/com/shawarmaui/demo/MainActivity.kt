@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.View
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -44,6 +43,7 @@ class MainActivity : Activity() {
             }
             v.onApplyWindowInsets(insets)
         }
+    }
 
     fun requestRenderFromNative() {
         glView.requestRender()
@@ -64,7 +64,7 @@ class MainActivity : Activity() {
     inner class ShawarmaGLView(ctx: Context) : GLSurfaceView(ctx), GLSurfaceView.Renderer {
         init {
             setEGLContextClientVersion(3)
-            setEGLConfigChooser(8, 8, 8, 8, 16, 8) // Stencil 8-bit obrigatório para NanoVG
+            setEGLConfigChooser(8, 8, 8, 8, 16, 8)
             setRenderer(this)
             renderMode = RENDERMODE_WHEN_DIRTY
             isFocusable = true

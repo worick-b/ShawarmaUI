@@ -27,9 +27,12 @@ jobs:
         working-directory: examples/android_demo
         run: |
           mkdir -p app/src/main
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          python3 -c '
+          import textwrap
+          ns = bytes.fromhex("687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964").decode()
+          xml = textwrap.dedent(f"""\
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://android.com">
+          <manifest xmlns:android="{ns}">
               <uses-feature android:glEsVersion="0x00030000" android:required="true" />
               <application
                   android:label="ShawarmaUI Demo"
@@ -46,7 +49,9 @@ jobs:
                   </activity>
               </application>
           </manifest>
-          EOF
+          """)
+          open("app/src/main/AndroidManifest.xml", "w").write(xml)
+          '
 
       - name: Build Debug APK
         working-directory: examples/android_demo

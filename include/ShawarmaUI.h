@@ -60,7 +60,6 @@ struct Style {
     Color popupBg       = Color(38, 34, 32, 252);
     Color tooltipBg     = Color(28, 25, 23, 245);
     Color modalDimBg    = Color(10, 9, 8, 175);
-
     Color border        = Color(64, 58, 54, 255);
     Color borderFocus   = Color(232, 176, 56, 255);
     Color text          = Color(245, 241, 234, 255);
@@ -77,6 +76,8 @@ struct Style {
     Color separator     = Color(64, 58, 54, 255);
     Color disabledBg    = Color(30, 28, 26, 255);
     Color disabledText  = Color(115, 108, 100, 255);
+    Color scrollbarBg   = Color(28, 25, 23, 200);
+    Color scrollbarGrab = Color(92, 84, 78, 255);
 
     int windowPadding   = 16;
     int framePaddingX   = 10;

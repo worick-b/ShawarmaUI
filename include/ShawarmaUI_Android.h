@@ -35,38 +35,38 @@ struct Color {
 };
 
 enum class Theme {
-    ShawarmaRoseGold,
-    NeonRed,
+    NeonRed = 0,
     CyberPurple,
+    RoseGold,
     LightClean
 };
 
 struct Style {
-    Color windowBg      = Color(12, 12, 15, 255);
-    Color panelBg       = Color(26, 25, 30, 125);   // Vidro fumê neutro
-    Color childBg       = Color(20, 19, 24, 115);
-    Color popupBg       = Color(24, 23, 28, 235);
-    Color tooltipBg     = Color(20, 20, 25, 240);
-    Color modalDimBg    = Color(6, 6, 9, 185);
-    Color border        = Color(255, 255, 255, 38);
-    Color borderFocus   = Color(224, 128, 108, 230);// Borda Cobre Rosé
-    Color text          = Color(246, 243, 242, 255);// Branco quente suave
-    Color textDim       = Color(164, 156, 154, 255);
-    Color frameBg       = Color(38, 36, 43, 135);
-    Color frameHover    = Color(54, 50, 60, 175);
-    Color checkMark     = Color(224, 128, 108, 255);
-    Color sliderGrab    = Color(230, 136, 115, 255);
-    Color button        = Color(214, 98, 96, 235);
-    Color buttonGradEnd = Color(168, 66, 68, 245);
-    Color buttonHover   = Color(218, 118, 98, 245);
-    Color buttonActive  = Color(168, 82, 66, 255);
-    Color toggleActive  = Color(196, 102, 84, 235);
-    Color toggleHover   = Color(218, 118, 98, 250);
+    Color windowBg      = Color(12, 12, 16, 255);
+    Color panelBg       = Color(24, 16, 22, 125);   // Vidro fumê com toque rubi
+    Color childBg       = Color(20, 14, 18, 115);
+    Color popupBg       = Color(24, 20, 28, 235);
+    Color tooltipBg     = Color(20, 18, 24, 240);
+    Color modalDimBg    = Color(8, 6, 10, 185);
+    Color border        = Color(230, 25, 65, 110);  // Borda neon sutil
+    Color borderFocus   = Color(255, 50, 90, 255);
+    Color text          = Color(246, 243, 244, 255);
+    Color textDim       = Color(168, 156, 160, 255);
+    Color frameBg       = Color(36, 18, 24, 140);
+    Color frameHover    = Color(62, 20, 34, 180);
+    Color checkMark     = Color(235, 35, 75, 255);
+    Color sliderGrab    = Color(255, 40, 85, 255);
+    Color button        = Color(225, 32, 68, 235);  // Topo do degradê 3D (Vermelho Neon)
+    Color buttonGradEnd = Color(165, 16, 42, 245);  // Base do degradê 3D (Carmesim escuro)
+    Color buttonHover   = Color(245, 45, 82, 250);
+    Color buttonActive  = Color(185, 20, 50, 255);
+    Color toggleActive  = Color(225, 32, 68, 240);
+    Color toggleHover   = Color(250, 48, 88, 255);
     Color separator     = Color(255, 255, 255, 28);
-    Color disabledBg    = Color(28, 27, 32, 140);
-    Color disabledText  = Color(108, 102, 102, 255);
-    Color scrollbarBg   = Color(24, 23, 28, 150);
-    Color scrollbarGrab = Color(88, 82, 86, 220);
+    Color disabledBg    = Color(30, 24, 26, 140);
+    Color disabledText  = Color(115, 104, 108, 255);
+    Color scrollbarBg   = Color(28, 22, 25, 150);
+    Color scrollbarGrab = Color(98, 76, 84, 220);
 
     // Dimensões confortáveis para toque no Android (em dp)
     int windowPadding   = 16;
@@ -90,7 +90,7 @@ struct PointI {
 class Context {
 public:
     Style style;
-    Theme currentTheme = Theme::ShawarmaRoseGold;
+    Theme currentTheme = Theme::NeonRed;
     float backdropSeed = 0.0f;
     NVGcontext* vg = nullptr;
     float dpiScale = 1.0f;
@@ -170,24 +170,7 @@ public:
     void ApplyTheme(Theme theme) {
         currentTheme = theme;
         style = Style{};
-        if (theme == Theme::NeonRed) {
-            style.windowBg      = Color(12, 12, 16, 255);
-            style.panelBg       = Color(24, 16, 22, 125);
-            style.childBg       = Color(20, 14, 18, 115);
-            style.popupBg       = Color(24, 20, 28, 235);
-            style.border        = Color(230, 25, 65, 120);
-            style.borderFocus   = Color(255, 50, 90, 255);
-            style.frameBg       = Color(36, 18, 24, 140);
-            style.frameHover    = Color(62, 20, 34, 180);
-            style.checkMark     = Color(230, 35, 75, 255);
-            style.sliderGrab    = Color(255, 35, 80, 255);
-            style.button        = Color(225, 32, 68, 235);
-            style.buttonGradEnd = Color(165, 16, 42, 245);
-            style.buttonHover   = Color(215, 25, 65, 245);
-            style.buttonActive  = Color(255, 40, 85, 255);
-            style.toggleActive  = Color(225, 25, 65, 240);
-            style.toggleHover   = Color(255, 45, 88, 255);
-        } else if (theme == Theme::CyberPurple) {
+        if (theme == Theme::CyberPurple) {
             style.windowBg      = Color(13, 15, 20, 255);
             style.panelBg       = Color(24, 27, 36, 125);
             style.childBg       = Color(20, 23, 30, 115);
@@ -204,30 +187,47 @@ public:
             style.buttonActive  = Color(74, 20, 140, 255);
             style.toggleActive  = Color(123, 31, 162, 240);
             style.toggleHover   = Color(156, 39, 176, 255);
+            } else if (theme == Theme::RoseGold) {
+            style.windowBg      = Color(12, 12, 15, 255);
+            style.panelBg       = Color(26, 25, 30, 125);
+            style.childBg       = Color(20, 19, 24, 115);
+            style.popupBg       = Color(24, 23, 28, 235);
+            style.border        = Color(255, 255, 255, 38);
+            style.borderFocus   = Color(224, 128, 108, 230);
+            style.frameBg       = Color(38, 36, 43, 135);
+            style.frameHover    = Color(54, 50, 60, 175);
+            style.checkMark     = Color(224, 128, 108, 255);
+            style.sliderGrab    = Color(230, 136, 115, 255);
+            style.button        = Color(214, 98, 96, 235);
+            style.buttonGradEnd = Color(168, 66, 68, 245);
+            style.buttonHover   = Color(230, 114, 112, 250);
+            style.buttonActive  = Color(178, 68, 76, 255);
+            style.toggleActive  = Color(214, 98, 96, 245);
+            style.toggleHover   = Color(235, 118, 116, 255);
         } else if (theme == Theme::LightClean) {
-            style.windowBg      = Color(235, 238, 245, 255);
-            style.panelBg       = Color(255, 255, 255, 185);
-            style.childBg       = Color(248, 250, 252, 165);
-            style.popupBg       = Color(255, 255, 255, 245);
-            style.tooltipBg     = Color(30, 34, 42, 240);
-            style.border        = Color(180, 190, 208, 160);
-            style.borderFocus   = Color(35, 105, 210, 255);
-            style.text          = Color(24, 28, 36, 255);
-            style.textDim       = Color(95, 105, 120, 255);
-            style.frameBg       = Color(224, 230, 240, 190);
-            style.frameHover    = Color(210, 218, 232, 220);
-            style.checkMark     = Color(35, 105, 210, 255);
-            style.sliderGrab    = Color(35, 105, 210, 255);
-            style.button        = Color(208, 216, 230, 235);
+            style.windowBg      = Color(210, 220, 234, 255);
+            style.panelBg       = Color(234, 240, 248, 195);
+            style.childBg       = Color(226, 234, 244, 180);
+            style.popupBg       = Color(238, 243, 250, 245);
+            style.tooltipBg     = Color(28, 34, 46, 240);
+            style.border        = Color(155, 172, 196, 165);
+            style.borderFocus   = Color(38, 106, 210, 255);
+            style.text          = Color(26, 32, 44, 255);
+            style.textDim       = Color(88, 98, 116, 255);
+            style.frameBg       = Color(204, 215, 230, 200);
+            style.frameHover    = Color(190, 204, 222, 225);
+            style.checkMark     = Color(38, 106, 210, 255);
+            style.sliderGrab    = Color(38, 106, 210, 255);
+            style.button        = Color(188, 202, 222, 235);
             style.buttonGradEnd = Color(24, 86, 192, 245);
-            style.buttonHover   = Color(192, 204, 224, 250);
-            style.buttonActive  = Color(175, 190, 215, 255);
+            style.buttonHover   = Color(172, 188, 212, 250);
+            style.buttonActive  = Color(156, 174, 202, 255);
             style.toggleActive  = Color(48, 122, 235, 245);
-            style.toggleHover   = Color(50, 120, 225, 255);
-            style.disabledBg    = Color(228, 232, 238, 175);
-            style.disabledText  = Color(145, 152, 165, 255);
-            style.scrollbarBg   = Color(224, 230, 240, 170);
-            style.scrollbarGrab = Color(165, 175, 192, 225);
+            style.toggleHover   = Color(62, 134, 242, 255);
+            style.disabledBg    = Color(206, 216, 228, 180);
+            style.disabledText  = Color(135, 146, 164, 255);
+            style.scrollbarBg   = Color(204, 215, 230, 175);
+            style.scrollbarGrab = Color(148, 162, 184, 225);
         }
     }
 
@@ -1828,31 +1828,31 @@ private:
         float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
         float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
 
-        // Cores das luzes adaptadas ao tema atual (Padrão: RoseGold)
-        NVGcolor bgTop = nvgRGBA(14, 13, 16, 255);
+        // Cores das luzes adaptadas ao tema atual (Padrão: NeonRed)
+        NVGcolor bgTop = nvgRGBA(14, 10, 14, 255);
         NVGcolor bgBot = nvgRGBA(8, 8, 10, 255);
-        NVGcolor cOrb1 = nvgRGBA(235, 145, 120, 90);  // Brilho Cobre Rosé superior
-        NVGcolor cOrb2 = nvgRGBA(205, 125, 110, 75);  // Anel Rosé inferior
-        NVGcolor cOrb3 = nvgRGBA(185, 135, 125, 50);  // Luz suave esquerda
+        NVGcolor cOrb1 = nvgRGBA(245, 55, 95, 85);    // Brilho Vermelho Neon superior
+        NVGcolor cOrb2 = nvgRGBA(210, 40, 80, 70);    // Anel Carmesim inferior
+        NVGcolor cOrb3 = nvgRGBA(180, 60, 100, 45);   // Luz suave esquerda
         NVGcolor cHole = nvgRGBA(12, 11, 14, 150);
 
-        if (currentTheme == Theme::NeonRed) {
-            bgTop = nvgRGBA(14, 10, 14, 255);
-            cOrb1 = nvgRGBA(245, 55, 95, 85);
-            cOrb2 = nvgRGBA(210, 40, 80, 70);
-            cOrb3 = nvgRGBA(180, 60, 100, 45);
+        if (currentTheme == Theme::RoseGold) {
+            bgTop = nvgRGBA(14, 13, 16, 255);
+            cOrb1 = nvgRGBA(235, 145, 120, 90);
+            cOrb2 = nvgRGBA(205, 125, 110, 75);
+            cOrb3 = nvgRGBA(185, 135, 125, 50);
         } else if (currentTheme == Theme::CyberPurple) {
             bgTop = nvgRGBA(13, 14, 22, 255);
             cOrb1 = nvgRGBA(185, 110, 235, 85);
             cOrb2 = nvgRGBA(130, 95, 220, 75);
             cOrb3 = nvgRGBA(110, 140, 230, 50);
         } else if (currentTheme == Theme::LightClean) {
-            bgTop = nvgRGBA(232, 236, 244, 255);
-            bgBot = nvgRGBA(218, 224, 235, 255);
-            cOrb1 = nvgRGBA(95, 155, 245, 85);
-            cOrb2 = nvgRGBA(130, 180, 250, 75);
-            cOrb3 = nvgRGBA(255, 255, 255, 110);
-            cHole = nvgRGBA(225, 230, 240, 140);
+            bgTop = nvgRGBA(206, 218, 234, 255);
+            bgBot = nvgRGBA(190, 205, 224, 255);
+            cOrb1 = nvgRGBA(110, 160, 235, 80);
+            cOrb2 = nvgRGBA(135, 180, 242, 70);
+            cOrb3 = nvgRGBA(235, 242, 252, 95);
+            cHole = nvgRGBA(198, 210, 228, 140);
         }
 
         // 1. Fundo base

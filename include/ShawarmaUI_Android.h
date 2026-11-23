@@ -42,18 +42,21 @@ enum class Theme {
 };
 
 struct Style {
-    Color windowBg      = Color(18, 16, 15, 255);
-    Color panelBg       = Color(36, 32, 30, 168);
-    Color childBg       = Color(28, 25, 23, 160);
-    Color popupBg       = Color(38, 34, 32, 238);
-    Color tooltipBg     = Color(28, 25, 23, 235);
-    Color modalDimBg    = Color(10, 9, 8, 175);
-    Color border        = Color(92, 82, 74, 150);
-    Color borderFocus   = Color(232, 176, 56, 255);
-    Color text          = Color(245, 241, 234, 255);
-    Color textDim       = Color(168, 158, 146, 255);
-    Color frameBg       = Color(48, 43, 40, 180);
-    Color frameHover    = Color(66, 59, 54, 210);
+    Color windowBg      = Color(12, 12, 14, 255);
+    // Painéis mais translúcidos (alfa entre 110 e 135)
+    Color panelBg       = Color(28, 28, 32, 120);
+    Color childBg       = Color(20, 20, 24, 110);
+    Color popupBg       = Color(26, 26, 30, 225); // Popups precisam de mais opacidade para leitura
+    Color tooltipBg     = Color(22, 22, 26, 230);
+    Color modalDimBg    = Color(8, 8, 10, 180);
+
+    // Borda fina clara simulando espessura de vidro
+    Color border        = Color(255, 255, 255, 38);
+    Color borderFocus   = Color(232, 176, 56, 220);
+
+    // Inputs e frames internos levemente translúcidos
+    Color frameBg       = Color(40, 40, 46, 130);
+    Color frameHover    = Color(58, 58, 66, 165);
     Color checkMark     = Color(232, 176, 56, 255);
     Color sliderGrab    = Color(232, 176, 56, 255);
     Color button        = Color(194, 136, 30, 255);
@@ -510,35 +513,45 @@ public:
     }
 
     void EndPanel() {
-        if (!panelActive) return;
-        int pad = S(12);
-        int panelBottom = cursorY + pad - S(style.itemSpacingY);
+    if (!panelActive) return;
+    int pad = S(12);
+    int panelBottom = cursorY + pad - S(style.itemSpacingY);
+    int w = panelRight - panelLeft;
+    int h = panelBottom - panelStartY;
+    float r = (float)S(style.rounding);
 
-        DrawRoundRect(panelLeft, panelStartY, panelRight - panelLeft, panelBottom - panelStartY,
-                      S(style.rounding), style.panelBg, style.border);
+    // Fundo translúcido do painel
+    DrawRoundRect(panelLeft, panelStartY, w, h, S(style.rounding), style.panelBg, Color(0, 0, 0, 0));
 
-        // Reflexo sutil de vidro na borda superior do painel
-        int rInset = S(style.rounding);
-        if (panelRight - panelLeft > rInset * 2) {
-            DrawLine(panelLeft + rInset, panelStartY + 1, panelRight - rInset, panelStartY + 1,
-                     Color(255, 245, 230, 38));
-        }
+    // Borda com degradê de luz (mais brilhante no topo, mais sutil embaixo)
+    if (vg && w > 0 && h > 0) {
+        NVGpaint glassBorder = nvgLinearGradient(
+            vg, (float)panelLeft, (float)panelStartY, (float)panelLeft, (float)panelBottom,
+            nvgRGBA(255, 255, 255, 75), // Brilho superior
+            nvgRGBA(255, 255, 255, 18)  // Sombra inferior
+        );
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, panelLeft + 0.5f, panelStartY + 0.5f, w - 1.0f, h - 1.0f, r);
+        nvgStrokePaint(vg, glassBorder);
+        nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
+        nvgStroke(vg);
+    }
 
-        if (!panelTitle.empty()) {
-            int titleY = panelStartY + S(10);
-            DrawTextInternal(panelLeft + pad, titleY, (panelRight - panelLeft) - pad * 2, S(22),
-                             panelTitle, panelTitleColor, true, ALIGN_LEFT);
-            int sepY = titleY + S(24);
-            DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
-        }
+    if (!panelTitle.empty()) {
+        int titleY = panelStartY + S(10);
+        DrawTextInternal(panelLeft + pad, titleY, w - pad * 2, S(22),
+                         panelTitle, panelTitleColor, true, ALIGN_LEFT);
+        int sepY = titleY + S(24);
+        DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
+    }
 
-        regionLeft = panelLeft;
-        regionRight = panelRight;
-        cursorX = regionLeft;
-        cursorY = panelBottom + S(style.itemSpacingY);
-        panelActive = false;
+    regionLeft = panelLeft;
+    regionRight = panelRight;
+    cursorX = regionLeft;
+    cursorY = panelBottom + S(style.itemSpacingY);
+    panelActive = false;
 
-        FlushDeferredDraws();
+    FlushDeferredDraws();
     }
 
     void BeginChild(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
@@ -1763,37 +1776,66 @@ private:
     }
 
     void DrawGlassBackdrop(int w, int h) {
-        if (!vg || w <= 0 || h <= 0) return;
-        NVGpaint bgGrad = nvgLinearGradient(
-            vg, 0.0f, 0.0f, (float)w * 0.4f, (float)h,
-            nvgRGBA(34, 26, 22, 255),
-            nvgRGBA(14, 13, 13, 255)
-        );
-        nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-        nvgFillPaint(vg, bgGrad);
-        nvgFill(vg);
+    if (!vg || w <= 0 || h <= 0) return;
 
-        NVGpaint glow1 = nvgRadialGradient(
-            vg, w * 0.85f, h * 0.12f, S(20), std::max(w, h) * 0.65f,
-            nvgRGBA(210, 145, 35, 38),
-            nvgRGBA(210, 145, 35, 0)
-        );
-        nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-        nvgFillPaint(vg, glow1);
-        nvgFill(vg);
+    // 1. Base escura profunda (similar ao fundo da imagem)
+    NVGpaint bgGrad = nvgLinearGradient(
+        vg, 0.0f, 0.0f, (float)w, (float)h,
+        nvgRGBA(14, 14, 16, 255),
+        nvgRGBA(8, 8, 10, 255)
+    );
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+    nvgFillPaint(vg, bgGrad);
+    nvgFill(vg);
 
-        NVGpaint glow2 = nvgRadialGradient(
-            vg, w * 0.15f, h * 0.82f, S(20), std::max(w, h) * 0.60f,
-            nvgRGBA(185, 48, 38, 30),
-            nvgRGBA(185, 48, 38, 0)
-        );
-        nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-        nvgFillPaint(vg, glow2);
-        nvgFill(vg);
-    }
+    float minDim = (float)std::min(w, h);
+    float maxDim = (float)std::max(w, h);
+
+    // 2. Orbe/Anel desfocado superior direito (luz fria/prateada)
+    NVGpaint orb1 = nvgRadialGradient(
+        vg, w * 0.82f, h * 0.22f, minDim * 0.04f, minDim * 0.45f,
+        nvgRGBA(225, 230, 235, 95),
+        nvgRGBA(225, 230, 235, 0)
+    );
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+    nvgFillPaint(vg, orb1);
+    nvgFill(vg);
+
+    // 3. Forma difusa inferior direita (efeito de anel/aro iluminado)
+    NVGpaint orb2Outer = nvgRadialGradient(
+        vg, w * 0.68f, h * 0.72f, minDim * 0.08f, minDim * 0.42f,
+        nvgRGBA(200, 195, 185, 85),
+        nvgRGBA(200, 195, 185, 0)
+    );
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+    nvgFillPaint(vg, orb2Outer);
+    nvgFill(vg);
+
+    // Miolo escuro para simular o "furo" desfocado de um anel 3D
+    NVGpaint orb2Hole = nvgRadialGradient(
+        vg, w * 0.68f, h * 0.72f, minDim * 0.01f, minDim * 0.16f,
+        nvgRGBA(12, 12, 14, 150),
+        nvgRGBA(12, 12, 14, 0)
+    );
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+    nvgFillPaint(vg, orb2Hole);
+    nvgFill(vg);
+
+    // 4. Ponto de luz secundário à esquerda
+    NVGpaint orb3 = nvgRadialGradient(
+        vg, w * 0.12f, h * 0.55f, minDim * 0.02f, maxDim * 0.35f,
+        nvgRGBA(180, 185, 195, 55),
+        nvgRGBA(180, 185, 195, 0)
+    );
+    nvgBeginPath(vg);
+    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+    nvgFillPaint(vg, orb3);
+    nvgFill(vg);
+   }
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         if (!vg || w <= 0 || h <= 0) return;

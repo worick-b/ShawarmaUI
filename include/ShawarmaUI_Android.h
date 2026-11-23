@@ -89,19 +89,12 @@ struct PointI {
 class Context {
 public:
     Style style;
+    Theme currentTheme = Theme::ShawarmaGold;
+    float backdropSeed = 0.0f;
     NVGcontext* vg = nullptr;
     float dpiScale = 1.0f;
     int safeAreaTop = 0;
     int safeAreaBottom = 0;
-
-    std::function<void()> onRequestRedraw;
-    std::function<void(bool show)> onShowKeyboard;
-
-class Context {
-public:
-    Style style;
-    Theme currentTheme = Theme::ShawarmaGold;
-    float backdropSeed = 0.0f;
 
     // --- ESCOPOS RAII OPCIONAIS ---
     struct PanelScope {

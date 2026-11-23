@@ -241,6 +241,23 @@ public:
         return (fontRegularId >= 0);
     }
 
+    // Registra uma fonte de icones (.ttf) da memoria como fallback para textos e botoes
+    bool LoadIconFontFromMemory(const uint8_t* ttfData, int dataSize) {
+        if (!vg || !ttfData || dataSize <= 0 || fontRegularId < 0) return false;
+        // NanoVG espera unsigned char* nao-const quando freeData == 0
+        unsigned char* ptr = const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(ttfData));
+        int iconId = nvgCreateFontMem(vg, "shawarma-icons", ptr, dataSize, 0);
+        if (iconId < 0) return false;
+
+        nvgAddFallbackFontId(vg, fontRegularId, iconId);
+        if (fontBoldId >= 0 && fontBoldId != fontRegularId) {
+            nvgAddFallbackFontId(vg, fontBoldId, iconId);
+        }
+        textWidthCacheRegular.clear();
+        textWidthCacheBold.clear();
+        return true;
+    }
+
     void Shutdown() {
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
@@ -1136,8 +1153,8 @@ public:
             int arrowW = S(28);
             DrawTextInternal(x + S(10), y, std::max(0, w - arrowW - S(10)), h, preview,
                              disabled ? style.disabledText : style.text, false, ALIGN_LEFT);
-            DrawTextInternal(x + w - arrowW, y, arrowW, h, isOpen ? "▲" : "▼",
-                             disabled ? style.disabledText : style.textDim, false, ALIGN_CENTER);
+            DrawComboArrowNVG(x + w - arrowW, y, arrowW, h, isOpen,
+                              disabled ? style.disabledText : style.textDim);
         });
 
         bool selectionChanged = false;
@@ -1771,6 +1788,29 @@ private:
         nvgLineTo(vg, x + boxSz * 0.76f, y + boxSz * 0.30f);
         nvgStrokeColor(vg, chkCol.ToNVG());
         nvgStrokeWidth(vg, std::max(2.0f, boxSz * 0.13f));
+        nvgLineCap(vg, NVG_ROUND);
+        nvgLineJoin(vg, NVG_ROUND);
+        nvgStroke(vg);
+    }
+
+    void DrawComboArrowNVG(int x, int y, int w, int h, bool isOpen, Color col) {
+        if (!vg) return;
+        float cx = x + w * 0.5f;
+        float cy = y + h * 0.5f;
+        float sz = S(4);
+
+        nvgBeginPath(vg);
+        if (isOpen) {
+            nvgMoveTo(vg, cx - sz, cy + sz * 0.55f);
+            nvgLineTo(vg, cx,      cy - sz * 0.55f);
+            nvgLineTo(vg, cx + sz, cy + sz * 0.55f);
+        } else {
+            nvgMoveTo(vg, cx - sz, cy - sz * 0.55f);
+            nvgLineTo(vg, cx,      cy + sz * 0.55f);
+            nvgLineTo(vg, cx + sz, cy - sz * 0.55f);
+        }
+        nvgStrokeColor(vg, col.ToNVG());
+        nvgStrokeWidth(vg, std::max(1.8f, 1.5f * dpiScale));
         nvgLineCap(vg, NVG_ROUND);
         nvgLineJoin(vg, NVG_ROUND);
         nvgStroke(vg);

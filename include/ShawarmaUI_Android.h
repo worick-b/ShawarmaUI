@@ -97,6 +97,12 @@ public:
     std::function<void()> onRequestRedraw;
     std::function<void(bool show)> onShowKeyboard;
 
+class Context {
+public:
+    Style style;
+    Theme currentTheme = Theme::ShawarmaGold;
+    float backdropSeed = 0.0f;
+
     // --- ESCOPOS RAII OPCIONAIS ---
     struct PanelScope {
         Context& ctx;
@@ -165,6 +171,7 @@ public:
     }
 
     void ApplyTheme(Theme theme) {
+        currentTheme = theme;
         style = Style{};
         if (theme == Theme::NeonRed) {
             style.windowBg     = Color(12, 12, 16, 255);
@@ -1782,26 +1789,55 @@ private:
     void DrawGlassBackdrop(int w, int h) {
         if (!vg || w <= 0 || h <= 0) return;
 
-        // Limita a animação do fundo a ~10 FPS (100ms) para economia máxima de bateria
-        const uint64_t backdropIntervalMs = 100;
-        uint64_t now = NowMs();
-        uint64_t quantizedTime = (now / backdropIntervalMs) * backdropIntervalMs;
-        float t = quantizedTime * 0.0005f;
-
-        float offsetX = std::sin(t) * S(24);
-        float offsetY = std::cos(t * 0.8f) * S(16);
-
-        if (now - lastBackdropTickMs >= backdropIntervalMs) {
-            lastBackdropTickMs = now;
-            hasActiveAnimations = true;
+        // Gera uma semente aleatória única na primeira vez que desenha
+        if (backdropSeed == 0.0f) {
+            backdropSeed = static_cast<float>(NowMs() % 10000) * 0.137f;
         }
 
-        // 1. Base escura profunda
-        NVGpaint bgGrad = nvgLinearGradient(
-            vg, 0.0f, 0.0f, (float)w, (float)h,
-            nvgRGBA(14, 14, 16, 255),
-            nvgRGBA(8, 8, 10, 255)
-        );
+        // Mantém a animação sempre ativa (o ritmo de 10 FPS é controlado pelo postDelayed do Android)
+        hasActiveAnimations = true;
+
+        float t = (NowMs() * 0.00045f) + backdropSeed;
+
+        // Ondas combinadas (frequências irracionais) para trajetórias que nunca se repetem igual
+        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(34);
+        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(26);
+
+        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(38);
+        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(28);
+
+        float ox3 = std::sin(t * 0.41f + 2.1f) * S(28);
+        float oy3 = std::cos(t * 0.37f + 1.1f) * S(22);
+
+        // Cores das luzes adaptadas ao tema atual
+        NVGcolor bgTop = nvgRGBA(14, 14, 16, 255);
+        NVGcolor bgBot = nvgRGBA(8, 8, 10, 255);
+        NVGcolor cOrb1 = nvgRGBA(240, 195, 95, 85);   // Dourado suave (ShawarmaGold)
+        NVGcolor cOrb2 = nvgRGBA(215, 185, 135, 75);
+        NVGcolor cOrb3 = nvgRGBA(190, 175, 150, 50);
+        NVGcolor cHole = nvgRGBA(12, 12, 14, 150);
+
+        if (currentTheme == Theme::NeonRed) {
+            bgTop = nvgRGBA(14, 10, 14, 255);
+            cOrb1 = nvgRGBA(245, 55, 95, 85);
+            cOrb2 = nvgRGBA(210, 40, 80, 70);
+            cOrb3 = nvgRGBA(180, 60, 100, 45);
+        } else if (currentTheme == Theme::CyberPurple) {
+            bgTop = nvgRGBA(13, 14, 22, 255);
+            cOrb1 = nvgRGBA(185, 110, 235, 85);
+            cOrb2 = nvgRGBA(130, 95, 220, 75);
+            cOrb3 = nvgRGBA(110, 140, 230, 50);
+        } else if (currentTheme == Theme::LightClean) {
+            bgTop = nvgRGBA(232, 236, 244, 255);
+            bgBot = nvgRGBA(218, 224, 235, 255);
+            cOrb1 = nvgRGBA(95, 155, 245, 85);
+            cOrb2 = nvgRGBA(130, 180, 250, 75);
+            cOrb3 = nvgRGBA(255, 255, 255, 110);
+            cHole = nvgRGBA(225, 230, 240, 140);
+        }
+
+        // 1. Fundo base
+        NVGpaint bgGrad = nvgLinearGradient(vg, 0.0f, 0.0f, (float)w, (float)h, bgTop, bgBot);
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
         nvgFillPaint(vg, bgGrad);
@@ -1810,22 +1846,20 @@ private:
         float minDim = (float)std::min(w, h);
         float maxDim = (float)std::max(w, h);
 
-        // 2. Orbe desfocado superior direito
+        // 2. Orbe 1 (superior direito)
         NVGpaint orb1 = nvgRadialGradient(
-            vg, w * 0.82f + offsetX, h * 0.22f + offsetY, minDim * 0.04f, minDim * 0.45f,
-            nvgRGBA(225, 230, 235, 95),
-            nvgRGBA(225, 230, 235, 0)
+            vg, w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.04f, minDim * 0.46f,
+            cOrb1, nvgRGBA(cOrb1.r * 255, cOrb1.g * 255, cOrb1.b * 255, 0)
         );
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
         nvgFillPaint(vg, orb1);
         nvgFill(vg);
 
-        // 3. Anel desfocado inferior direito
+        // 3. Anel 2 (inferior direito)
         NVGpaint orb2Outer = nvgRadialGradient(
-            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.08f, minDim * 0.42f,
-            nvgRGBA(200, 195, 185, 85),
-            nvgRGBA(200, 195, 185, 0)
+            vg, w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.08f, minDim * 0.43f,
+            cOrb2, nvgRGBA(cOrb2.r * 255, cOrb2.g * 255, cOrb2.b * 255, 0)
         );
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
@@ -1833,20 +1867,18 @@ private:
         nvgFill(vg);
 
         NVGpaint orb2Hole = nvgRadialGradient(
-            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.01f, minDim * 0.16f,
-            nvgRGBA(12, 12, 14, 150),
-            nvgRGBA(12, 12, 14, 0)
+            vg, w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.01f, minDim * 0.16f,
+            cHole, nvgRGBA(cHole.r * 255, cHole.g * 255, cHole.b * 255, 0)
         );
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
         nvgFillPaint(vg, orb2Hole);
         nvgFill(vg);
 
-        // 4. Ponto de luz secundário à esquerda
+        // 4. Luz secundária 3 (esquerda)
         NVGpaint orb3 = nvgRadialGradient(
-            vg, w * 0.12f + (offsetY * 0.6f), h * 0.55f + (offsetX * 0.6f), minDim * 0.02f, maxDim * 0.35f,
-            nvgRGBA(180, 185, 195, 55),
-            nvgRGBA(180, 185, 195, 0)
+            vg, w * 0.14f + ox3, h * 0.54f + oy3, minDim * 0.02f, maxDim * 0.36f,
+            cOrb3, nvgRGBA(cOrb3.r * 255, cOrb3.g * 255, cOrb3.b * 255, 0)
         );
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);

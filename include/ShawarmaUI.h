@@ -47,36 +47,36 @@ struct Color {
 };
 
 enum class Theme {
-    DarkBlue,
+    ShawarmaGold,
     NeonRed,
     CyberPurple,
     LightClean
 };
 
 struct Style {
-    Color windowBg      = Color(24, 26, 32, 255);
-    Color panelBg       = Color(34, 37, 45, 240);
-    Color childBg       = Color(28, 30, 37, 235);
-    Color popupBg       = Color(36, 39, 48, 252);
-    Color modalDimBg    = Color(0, 0, 0, 145);
-    Color tooltipBg     = Color(18, 20, 26, 248);
-    Color border        = Color(62, 68, 82, 255);
-    Color borderFocus   = Color(89, 173, 250, 255);
-    Color text          = Color(240, 242, 247, 255);
-    Color textDim       = Color(130, 136, 148, 255);
-    Color frameBg       = Color(44, 48, 58, 255);
-    Color frameHover    = Color(58, 63, 76, 255);
-    Color checkMark     = Color(89, 173, 250, 255);
-    Color sliderGrab    = Color(89, 173, 250, 255);
-    Color scrollbarBg   = Color(26, 28, 34, 180);
-    Color scrollbarGrab = Color(75, 82, 98, 220);
-    Color button        = Color(56, 115, 184, 255);
-    Color buttonHover   = Color(71, 135, 209, 255);
-    Color buttonActive  = Color(46, 97, 158, 255);
-    Color toggleActive  = Color(56, 115, 184, 255);
-    Color toggleHover   = Color(71, 135, 209, 255);
-    Color disabledBg    = Color(38, 40, 46, 255);
-    Color disabledText  = Color(102, 108, 118, 255);
+    Color windowBg      = Color(22, 20, 19, 255);
+    Color panelBg       = Color(33, 30, 28, 245);
+    Color childBg       = Color(27, 25, 23, 240);
+    Color popupBg       = Color(38, 34, 32, 252);
+    Color tooltipBg     = Color(28, 25, 23, 245);
+    Color modalDimBg    = Color(10, 9, 8, 175);
+
+    Color border        = Color(64, 58, 54, 255);
+    Color borderFocus   = Color(232, 176, 56, 255);
+    Color text          = Color(245, 241, 234, 255);
+    Color textDim       = Color(158, 148, 136, 255);
+    Color frameBg       = Color(46, 42, 39, 255);
+    Color frameHover    = Color(61, 55, 51, 255);
+    Color checkMark     = Color(232, 176, 56, 255);
+    Color sliderGrab    = Color(232, 176, 56, 255);
+    Color button        = Color(194, 136, 30, 255);
+    Color buttonHover   = Color(219, 158, 42, 255);
+    Color buttonActive  = Color(164, 112, 22, 255);
+    Color toggleActive  = Color(196, 54, 44, 255);
+    Color toggleHover   = Color(222, 68, 56, 255);
+    Color separator     = Color(64, 58, 54, 255);
+    Color disabledBg    = Color(30, 28, 26, 255);
+    Color disabledText  = Color(115, 108, 100, 255);
 
     int windowPadding   = 16;
     int framePaddingX   = 10;

@@ -42,18 +42,18 @@ enum class Theme {
 };
 
 struct Style {
-    Color windowBg      = Color(22, 20, 19, 255);
-    Color panelBg       = Color(33, 30, 28, 245);
-    Color childBg       = Color(27, 25, 23, 240);
-    Color popupBg       = Color(38, 34, 32, 252);
-    Color tooltipBg     = Color(28, 25, 23, 245);
+    Color windowBg      = Color(18, 16, 15, 255);
+    Color panelBg       = Color(36, 32, 30, 168);
+    Color childBg       = Color(28, 25, 23, 160);
+    Color popupBg       = Color(38, 34, 32, 238);
+    Color tooltipBg     = Color(28, 25, 23, 235);
     Color modalDimBg    = Color(10, 9, 8, 175);
-    Color border        = Color(64, 58, 54, 255);
+    Color border        = Color(92, 82, 74, 150);
     Color borderFocus   = Color(232, 176, 56, 255);
     Color text          = Color(245, 241, 234, 255);
-    Color textDim       = Color(158, 148, 136, 255);
-    Color frameBg       = Color(46, 42, 39, 255);
-    Color frameHover    = Color(61, 55, 51, 255);
+    Color textDim       = Color(168, 158, 146, 255);
+    Color frameBg       = Color(48, 43, 40, 180);
+    Color frameHover    = Color(66, 59, 54, 210);
     Color checkMark     = Color(232, 176, 56, 255);
     Color sliderGrab    = Color(232, 176, 56, 255);
     Color button        = Color(194, 136, 30, 255);
@@ -357,6 +357,7 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         nvgBeginFrame(vg, static_cast<float>(width), static_cast<float>(height), 1.0f);
+        DrawGlassBackdrop(width, height);
         BeginFrameState();
     }
 
@@ -515,6 +516,13 @@ public:
 
         DrawRoundRect(panelLeft, panelStartY, panelRight - panelLeft, panelBottom - panelStartY,
                       S(style.rounding), style.panelBg, style.border);
+
+        // Reflexo sutil de vidro na borda superior do painel
+        int rInset = S(style.rounding);
+        if (panelRight - panelLeft > rInset * 2) {
+            DrawLine(panelLeft + rInset, panelStartY + 1, panelRight - rInset, panelStartY + 1,
+                     Color(255, 245, 230, 38));
+        }
 
         if (!panelTitle.empty()) {
             int titleY = panelStartY + S(10);
@@ -1752,6 +1760,39 @@ private:
         int w = (int)std::ceil(adv);
         cache[textUtf8] = w;
         return w;
+    }
+
+    void DrawGlassBackdrop(int w, int h) {
+        if (!vg || w <= 0 || h <= 0) return;
+        NVGpaint bgGrad = nvgLinearGradient(
+            vg, 0.0f, 0.0f, (float)w * 0.4f, (float)h,
+            nvgRGBA(34, 26, 22, 255),
+            nvgRGBA(14, 13, 13, 255)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, bgGrad);
+        nvgFill(vg);
+
+        NVGpaint glow1 = nvgRadialGradient(
+            vg, w * 0.85f, h * 0.12f, S(20), std::max(w, h) * 0.65f,
+            nvgRGBA(210, 145, 35, 38),
+            nvgRGBA(210, 145, 35, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, glow1);
+        nvgFill(vg);
+
+        NVGpaint glow2 = nvgRadialGradient(
+            vg, w * 0.15f, h * 0.82f, S(20), std::max(w, h) * 0.60f,
+            nvgRGBA(185, 48, 38, 30),
+            nvgRGBA(185, 48, 38, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, glow2);
+        nvgFill(vg);
     }
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {

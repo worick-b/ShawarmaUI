@@ -35,7 +35,7 @@ struct Color {
 };
 
 enum class Theme {
-    ShawarmaGold,
+    ShawarmaRoseGold,
     NeonRed,
     CyberPurple,
     LightClean
@@ -89,7 +89,7 @@ struct PointI {
 class Context {
 public:
     Style style;
-    Theme currentTheme = Theme::ShawarmaGold;
+    Theme currentTheme = Theme::ShawarmaRoseGold;
     float backdropSeed = 0.0f;
     NVGcontext* vg = nullptr;
     float dpiScale = 1.0f;

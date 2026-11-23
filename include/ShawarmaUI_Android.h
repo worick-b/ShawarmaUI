@@ -1787,25 +1787,27 @@ private:
     void DrawGlassBackdrop(int w, int h) {
         if (!vg || w <= 0 || h <= 0) return;
 
-        // Gera uma semente aleatória única na primeira vez que desenha
-        if (backdropSeed == 0.0f) {
-            backdropSeed = static_cast<float>(NowMs() % 10000) * 0.137f;
+        static uint64_t backdropStartMs = 0;
+        uint64_t now = NowMs();
+        if (backdropStartMs == 0) {
+            backdropStartMs = now;
+            backdropSeed = static_cast<float>(now % 10000) * 0.137f;
         }
 
-        // Mantém a animação sempre ativa (o ritmo de 10 FPS é controlado pelo postDelayed do Android)
         hasActiveAnimations = true;
 
-        float t = (NowMs() * 0.00045f) + backdropSeed;
+        // Tempo relativo ao início do app (evita perda de precisão de float) e velocidade ~3x mais visível
+        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
 
-        // Ondas combinadas (frequências irracionais) para trajetórias que nunca se repetem igual
-        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(34);
-        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(26);
+        // Ondas combinadas com amplitude maior para cruzar por trás dos painéis
+        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
+        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
 
-        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(38);
-        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(28);
+        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
+        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
 
-        float ox3 = std::sin(t * 0.41f + 2.1f) * S(28);
-        float oy3 = std::cos(t * 0.37f + 1.1f) * S(22);
+        float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
+        float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
 
         // Cores das luzes adaptadas ao tema atual (Padrão: RoseGold)
         NVGcolor bgTop = nvgRGBA(14, 13, 16, 255);

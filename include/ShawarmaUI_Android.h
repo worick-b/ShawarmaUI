@@ -56,8 +56,8 @@ struct Style {
     Color frameHover    = Color(54, 50, 60, 175);
     Color checkMark     = Color(224, 128, 108, 255);
     Color sliderGrab    = Color(230, 136, 115, 255);
-    Color button        = Color(214, 98, 96, 235)
-    Color buttonGradEnd = Color(168, 66, 68, 245)
+    Color button        = Color(214, 98, 96, 235);
+    Color buttonGradEnd = Color(168, 66, 68, 245);
     Color buttonHover   = Color(218, 118, 98, 245);
     Color buttonActive  = Color(168, 82, 66, 255);
     Color toggleActive  = Color(196, 102, 84, 235);
@@ -181,8 +181,8 @@ public:
             style.frameHover    = Color(62, 20, 34, 180);
             style.checkMark     = Color(230, 35, 75, 255);
             style.sliderGrab    = Color(255, 35, 80, 255);
-            style.button        = Color(225, 32, 68, 235)
-            style.buttonGradEnd = Color(165, 16, 42, 245)
+            style.button        = Color(225, 32, 68, 235);
+            style.buttonGradEnd = Color(165, 16, 42, 245);
             style.buttonHover   = Color(215, 25, 65, 245);
             style.buttonActive  = Color(255, 40, 85, 255);
             style.toggleActive  = Color(225, 25, 65, 240);
@@ -198,8 +198,8 @@ public:
             style.frameHover    = Color(46, 52, 66, 180);
             style.checkMark     = Color(206, 147, 216, 255);
             style.sliderGrab    = Color(186, 104, 200, 255);
-            style.button        = Color(142, 44, 205, 235)
-            style.buttonGradEnd = Color(92, 22, 148, 245)
+            style.button        = Color(142, 44, 205, 235);
+            style.buttonGradEnd = Color(92, 22, 148, 245);
             style.buttonHover   = Color(142, 36, 170, 245);
             style.buttonActive  = Color(74, 20, 140, 255);
             style.toggleActive  = Color(123, 31, 162, 240);
@@ -219,10 +219,10 @@ public:
             style.checkMark     = Color(35, 105, 210, 255);
             style.sliderGrab    = Color(35, 105, 210, 255);
             style.button        = Color(208, 216, 230, 235);
-            style.buttonGradEnd = Color(24, 86, 192, 245)
+            style.buttonGradEnd = Color(24, 86, 192, 245);
             style.buttonHover   = Color(192, 204, 224, 250);
             style.buttonActive  = Color(175, 190, 215, 255);
-            style.toggleActive  = Color(48, 122, 235, 245)
+            style.toggleActive  = Color(48, 122, 235, 245);
             style.toggleHover   = Color(50, 120, 225, 255);
             style.disabledBg    = Color(228, 232, 238, 175);
             style.disabledText  = Color(145, 152, 165, 255);

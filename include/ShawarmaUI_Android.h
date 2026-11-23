@@ -43,32 +43,29 @@ enum class Theme {
 
 struct Style {
     Color windowBg      = Color(12, 12, 14, 255);
-    // Painéis mais translúcidos (alfa entre 110 e 135)
-    Color panelBg       = Color(28, 28, 32, 120);
-    Color childBg       = Color(20, 20, 24, 110);
-    Color popupBg       = Color(26, 26, 30, 225); // Popups precisam de mais opacidade para leitura
+    Color panelBg       = Color(28, 28, 32, 120);   // Painel translúcido
+    Color childBg       = Color(20, 20, 24, 110);   // Sub-painel translúcido
+    Color popupBg       = Color(26, 26, 30, 225);
     Color tooltipBg     = Color(22, 22, 26, 230);
     Color modalDimBg    = Color(8, 8, 10, 180);
-
-    // Borda fina clara simulando espessura de vidro
-    Color border        = Color(255, 255, 255, 38);
+    Color border        = Color(255, 255, 255, 38); // Borda sutil de vidro
     Color borderFocus   = Color(232, 176, 56, 220);
-
-    // Inputs e frames internos levemente translúcidos
-    Color frameBg       = Color(40, 40, 46, 130);
+    Color text          = Color(245, 241, 234, 255);
+    Color textDim       = Color(168, 158, 146, 255);
+    Color frameBg       = Color(40, 40, 46, 130);   // Inputs translúcidos
     Color frameHover    = Color(58, 58, 66, 165);
     Color checkMark     = Color(232, 176, 56, 255);
     Color sliderGrab    = Color(232, 176, 56, 255);
-    Color button        = Color(194, 136, 30, 255);
-    Color buttonHover   = Color(219, 158, 42, 255);
+    Color button        = Color(194, 136, 30, 220);
+    Color buttonHover   = Color(219, 158, 42, 240);
     Color buttonActive  = Color(164, 112, 22, 255);
-    Color toggleActive  = Color(196, 54, 44, 255);
-    Color toggleHover   = Color(222, 68, 56, 255);
-    Color separator     = Color(64, 58, 54, 255);
-    Color disabledBg    = Color(30, 28, 26, 255);
+    Color toggleActive  = Color(196, 54, 44, 235);
+    Color toggleHover   = Color(222, 68, 56, 250);
+    Color separator     = Color(255, 255, 255, 30);
+    Color disabledBg    = Color(30, 28, 26, 140);
     Color disabledText  = Color(115, 108, 100, 255);
-    Color scrollbarBg   = Color(28, 25, 23, 200);
-    Color scrollbarGrab = Color(92, 84, 78, 255);
+    Color scrollbarBg   = Color(28, 25, 23, 150);
+    Color scrollbarGrab = Color(92, 84, 78, 220);
 
     // Dimensões confortáveis para toque no Android (em dp)
     int windowPadding   = 16;
@@ -78,7 +75,7 @@ struct Style {
     int itemSpacingY    = 10;
     int rounding        = 8;
     int touchHeight     = 38;
-    int animFps         = 60;
+    int animFps         = 30;
 };
 
 struct RectI {
@@ -170,60 +167,60 @@ public:
     void ApplyTheme(Theme theme) {
         style = Style{};
         if (theme == Theme::NeonRed) {
-            style.windowBg     = Color(16, 16, 20, 255);
-            style.panelBg      = Color(18, 14, 20, 236);
-            style.childBg      = Color(22, 18, 25, 240);
-            style.popupBg      = Color(24, 20, 28, 252);
-            style.border       = Color(230, 25, 65, 210);
+            style.windowBg     = Color(12, 12, 16, 255);
+            style.panelBg      = Color(24, 16, 22, 125);
+            style.childBg      = Color(20, 14, 18, 115);
+            style.popupBg      = Color(24, 20, 28, 235);
+            style.border       = Color(230, 25, 65, 120);
             style.borderFocus  = Color(255, 50, 90, 255);
-            style.frameBg      = Color(32, 16, 22, 235);
-            style.frameHover   = Color(62, 20, 34, 245);
+            style.frameBg      = Color(36, 18, 24, 140);
+            style.frameHover   = Color(62, 20, 34, 180);
             style.checkMark    = Color(230, 35, 75, 255);
             style.sliderGrab   = Color(255, 35, 80, 255);
-            style.button       = Color(36, 18, 24, 235);
+            style.button       = Color(185, 22, 55, 220);
             style.buttonHover  = Color(215, 25, 65, 245);
             style.buttonActive = Color(255, 40, 85, 255);
-            style.toggleActive = Color(225, 25, 65, 250);
+            style.toggleActive = Color(225, 25, 65, 240);
             style.toggleHover  = Color(255, 45, 88, 255);
         } else if (theme == Theme::CyberPurple) {
-            style.windowBg     = Color(17, 19, 24, 255);
-            style.panelBg      = Color(24, 27, 34, 245);
-            style.childBg      = Color(20, 23, 30, 245);
-            style.popupBg      = Color(28, 32, 42, 252);
-            style.border       = Color(46, 52, 66, 255);
+            style.windowBg     = Color(13, 15, 20, 255);
+            style.panelBg      = Color(24, 27, 36, 125);
+            style.childBg      = Color(20, 23, 30, 115);
+            style.popupBg      = Color(28, 32, 42, 235);
+            style.border       = Color(140, 110, 190, 85);
             style.borderFocus  = Color(186, 104, 200, 255);
-            style.frameBg      = Color(30, 34, 42, 255);
-            style.frameHover   = Color(42, 48, 60, 255);
+            style.frameBg      = Color(32, 36, 46, 140);
+            style.frameHover   = Color(46, 52, 66, 180);
             style.checkMark    = Color(206, 147, 216, 255);
             style.sliderGrab   = Color(186, 104, 200, 255);
-            style.button       = Color(106, 27, 154, 255);
-            style.buttonHover  = Color(142, 36, 170, 255);
+            style.button       = Color(106, 27, 154, 220);
+            style.buttonHover  = Color(142, 36, 170, 245);
             style.buttonActive = Color(74, 20, 140, 255);
-            style.toggleActive = Color(123, 31, 162, 255);
+            style.toggleActive = Color(123, 31, 162, 240);
             style.toggleHover  = Color(156, 39, 176, 255);
         } else if (theme == Theme::LightClean) {
-            style.windowBg      = Color(242, 244, 248, 255);
-            style.panelBg       = Color(255, 255, 255, 250);
-            style.childBg       = Color(248, 250, 252, 250);
-            style.popupBg       = Color(255, 255, 255, 255);
-            style.tooltipBg     = Color(30, 34, 42, 245);
-            style.border        = Color(205, 212, 224, 255);
+            style.windowBg      = Color(235, 238, 245, 255);
+            style.panelBg       = Color(255, 255, 255, 165);
+            style.childBg       = Color(248, 250, 252, 150);
+            style.popupBg       = Color(255, 255, 255, 245);
+            style.tooltipBg     = Color(30, 34, 42, 240);
+            style.border        = Color(255, 255, 255, 140);
             style.borderFocus   = Color(45, 115, 215, 255);
             style.text          = Color(28, 32, 40, 255);
             style.textDim       = Color(110, 118, 132, 255);
-            style.frameBg       = Color(232, 236, 242, 255);
-            style.frameHover    = Color(220, 226, 236, 255);
+            style.frameBg       = Color(232, 236, 242, 170);
+            style.frameHover    = Color(220, 226, 236, 200);
             style.checkMark     = Color(45, 115, 215, 255);
             style.sliderGrab    = Color(45, 115, 215, 255);
-            style.button        = Color(225, 230, 240, 255);
-            style.buttonHover   = Color(208, 216, 230, 255);
-            style.buttonActive  = Color(190, 202, 222, 255);
-            style.toggleActive  = Color(45, 115, 215, 255);
+            style.button        = Color(215, 222, 235, 220);
+            style.buttonHover   = Color(200, 210, 226, 240);
+            style.buttonActive  = Color(185, 198, 220, 255);
+            style.toggleActive  = Color(45, 115, 215, 240);
             style.toggleHover   = Color(60, 130, 230, 255);
-            style.disabledBg    = Color(235, 237, 240, 255);
+            style.disabledBg    = Color(235, 237, 240, 160);
             style.disabledText  = Color(160, 166, 176, 255);
-            style.scrollbarBg   = Color(232, 236, 242, 220);
-            style.scrollbarGrab = Color(180, 188, 202, 255);
+            style.scrollbarBg   = Color(232, 236, 242, 160);
+            style.scrollbarGrab = Color(180, 188, 202, 220);
         }
     }
 
@@ -250,7 +247,6 @@ public:
     // Registra uma fonte de icones (.ttf) da memoria como fallback para textos e botoes
     bool LoadIconFontFromMemory(const uint8_t* ttfData, int dataSize) {
         if (!vg || !ttfData || dataSize <= 0 || fontRegularId < 0) return false;
-        // NanoVG espera unsigned char* nao-const quando freeData == 0
         unsigned char* ptr = const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(ttfData));
         int iconId = nvgCreateFontMem(vg, "shawarma-icons", ptr, dataSize, 0);
         if (iconId < 0) return false;
@@ -275,8 +271,14 @@ public:
         safeAreaBottom = std::max(0, bottomPx);
     }
 
-    void RequestRedraw() {
-        if (onRequestRedraw) onRequestRedraw();
+    void RequestRedraw(bool force = false) {
+        if (!onRequestRedraw) return;
+        uint64_t now = NowMs();
+        // Limita pedidos contínuos (arrastar/scroll) a ~30 FPS (33ms), mas aceita cliques imediatos (force = true)
+        if (force || (now - lastRedrawRequestMs >= 33)) {
+            lastRedrawRequestMs = now;
+            onRequestRedraw();
+        }
     }
 
     // --- ENTRADA POR TOQUE (TOUCH EVENTS) ---
@@ -289,7 +291,7 @@ public:
         touchClicked = true;
         touchIsDraggingScroll = false;
         touchDownTimeMs = NowMs();
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     void OnTouchMove(int x, int y) {
@@ -312,7 +314,7 @@ public:
                 windowScrollY -= static_cast<float>(dy);
             }
         }
-        RequestRedraw();
+        RequestRedraw(false); // Limitado a 30 FPS durante o arrasto
     }
 
     void OnTouchUp(int x, int y) {
@@ -322,7 +324,7 @@ public:
         activeDragId = 0;
         activeScrollChildId = 0;
         touchIsDraggingScroll = false;
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     // --- ENTRADA DE TECLADO VIRTUAL ---
@@ -330,21 +332,21 @@ public:
     void OnTextCommit(const std::string& utf8Text) {
         if (focusedInputId != 0 && !utf8Text.empty()) {
             pendingTextCommits.push_back(utf8Text);
-            RequestRedraw();
+            RequestRedraw(true);
         }
     }
 
     void OnKeyBackspace() {
         if (focusedInputId != 0) {
             pendingBackspaceCount++;
-            RequestRedraw();
+            RequestRedraw(true);
         }
     }
 
     void OnKeyEnter() {
         if (focusedInputId != 0) {
             pendingEnterPressed = true;
-            RequestRedraw();
+            RequestRedraw(true);
         }
     }
 
@@ -513,45 +515,45 @@ public:
     }
 
     void EndPanel() {
-    if (!panelActive) return;
-    int pad = S(12);
-    int panelBottom = cursorY + pad - S(style.itemSpacingY);
-    int w = panelRight - panelLeft;
-    int h = panelBottom - panelStartY;
-    float r = (float)S(style.rounding);
+        if (!panelActive) return;
+        int pad = S(12);
+        int panelBottom = cursorY + pad - S(style.itemSpacingY);
+        int w = panelRight - panelLeft;
+        int h = panelBottom - panelStartY;
+        float r = (float)S(style.rounding);
 
-    // Fundo translúcido do painel
-    DrawRoundRect(panelLeft, panelStartY, w, h, S(style.rounding), style.panelBg, Color(0, 0, 0, 0));
+        // Fundo translúcido do painel
+        DrawRoundRect(panelLeft, panelStartY, w, h, S(style.rounding), style.panelBg, Color(0, 0, 0, 0));
 
-    // Borda com degradê de luz (mais brilhante no topo, mais sutil embaixo)
-    if (vg && w > 0 && h > 0) {
-        NVGpaint glassBorder = nvgLinearGradient(
-            vg, (float)panelLeft, (float)panelStartY, (float)panelLeft, (float)panelBottom,
-            nvgRGBA(255, 255, 255, 75), // Brilho superior
-            nvgRGBA(255, 255, 255, 18)  // Sombra inferior
-        );
-        nvgBeginPath(vg);
-        nvgRoundedRect(vg, panelLeft + 0.5f, panelStartY + 0.5f, w - 1.0f, h - 1.0f, r);
-        nvgStrokePaint(vg, glassBorder);
-        nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
-        nvgStroke(vg);
-    }
+        // Borda com degradê de luz simulando espessura de vidro
+        if (vg && w > 0 && h > 0) {
+            NVGpaint glassBorder = nvgLinearGradient(
+                vg, (float)panelLeft, (float)panelStartY, (float)panelLeft, (float)panelBottom,
+                nvgRGBA(255, 255, 255, 75),
+                nvgRGBA(255, 255, 255, 18)
+            );
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, panelLeft + 0.5f, panelStartY + 0.5f, w - 1.0f, h - 1.0f, r);
+            nvgStrokePaint(vg, glassBorder);
+            nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
+            nvgStroke(vg);
+        }
 
-    if (!panelTitle.empty()) {
-        int titleY = panelStartY + S(10);
-        DrawTextInternal(panelLeft + pad, titleY, w - pad * 2, S(22),
-                         panelTitle, panelTitleColor, true, ALIGN_LEFT);
-        int sepY = titleY + S(24);
-        DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
-    }
+        if (!panelTitle.empty()) {
+            int titleY = panelStartY + S(10);
+            DrawTextInternal(panelLeft + pad, titleY, w - pad * 2, S(22),
+                             panelTitle, panelTitleColor, true, ALIGN_LEFT);
+            int sepY = titleY + S(24);
+            DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
+        }
 
-    regionLeft = panelLeft;
-    regionRight = panelRight;
-    cursorX = regionLeft;
-    cursorY = panelBottom + S(style.itemSpacingY);
-    panelActive = false;
+        regionLeft = panelLeft;
+        regionRight = panelRight;
+        cursorX = regionLeft;
+        cursorY = panelBottom + S(style.itemSpacingY);
+        panelActive = false;
 
-    FlushDeferredDraws();
+        FlushDeferredDraws();
     }
 
     void BeginChild(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
@@ -726,7 +728,7 @@ public:
         bool changed = false;
 
         if (focused) {
-		    inputRenderedThisFrame = true;
+            inputRenderedThisFrame = true;
             hasActiveAnimations = true;
             for (const auto& txt : pendingTextCommits) {
                 cursorBlinkStart = NowMs();
@@ -816,7 +818,7 @@ public:
         bool changed = false;
 
         if (focused) {
-		    inputRenderedThisFrame = true;
+            inputRenderedThisFrame = true;
             hasActiveAnimations = true;
             for (const auto& txt : pendingTextCommits) {
                 cursorBlinkStart = NowMs();
@@ -1365,7 +1367,7 @@ public:
         toastStartTime = NowMs();
         toastDurationMs = durationMs;
         hasActiveAnimations = true;
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     bool IsLastItemTouched() const {
@@ -1403,14 +1405,14 @@ public:
         openComboId = 0;
         focusedInputId = 0;
         if (onShowKeyboard) onShowKeyboard(false);
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     void CloseCurrentPopup() {
         activePopupId.clear();
         focusedInputId = 0;
         if (onShowKeyboard) onShowKeyboard(false);
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     bool BeginPopupModal(const std::string& id, int customW = 340, int customH = 160) {
@@ -1481,6 +1483,8 @@ private:
     std::unordered_map<int, float> animValues;
     bool hasActiveAnimations = false;
     uint64_t lastFrameTimeMs = 0;
+    uint64_t lastRedrawRequestMs = 0;
+    uint64_t lastBackdropTickMs = 0;
     float deltaTime = 0.016f;
 
     int cursorX = 0, cursorY = 0;
@@ -1515,7 +1519,7 @@ private:
 
     int focusedInputId = 0;    
     bool inputRenderedThisFrame = false;
-	float windowScrollY = 0.0f;
+    float windowScrollY = 0.0f;
     uint64_t cursorBlinkStart = 0;
     std::vector<std::string> pendingTextCommits;
     int pendingBackspaceCount = 0;
@@ -1776,66 +1780,79 @@ private:
     }
 
     void DrawGlassBackdrop(int w, int h) {
-    if (!vg || w <= 0 || h <= 0) return;
+        if (!vg || w <= 0 || h <= 0) return;
 
-    // 1. Base escura profunda (similar ao fundo da imagem)
-    NVGpaint bgGrad = nvgLinearGradient(
-        vg, 0.0f, 0.0f, (float)w, (float)h,
-        nvgRGBA(14, 14, 16, 255),
-        nvgRGBA(8, 8, 10, 255)
-    );
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-    nvgFillPaint(vg, bgGrad);
-    nvgFill(vg);
+        // Limita a animação do fundo a ~10 FPS (100ms) para economia máxima de bateria
+        const uint64_t backdropIntervalMs = 100;
+        uint64_t now = NowMs();
+        uint64_t quantizedTime = (now / backdropIntervalMs) * backdropIntervalMs;
+        float t = quantizedTime * 0.0005f;
 
-    float minDim = (float)std::min(w, h);
-    float maxDim = (float)std::max(w, h);
+        float offsetX = std::sin(t) * S(24);
+        float offsetY = std::cos(t * 0.8f) * S(16);
 
-    // 2. Orbe/Anel desfocado superior direito (luz fria/prateada)
-    NVGpaint orb1 = nvgRadialGradient(
-        vg, w * 0.82f, h * 0.22f, minDim * 0.04f, minDim * 0.45f,
-        nvgRGBA(225, 230, 235, 95),
-        nvgRGBA(225, 230, 235, 0)
-    );
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-    nvgFillPaint(vg, orb1);
-    nvgFill(vg);
+        if (now - lastBackdropTickMs >= backdropIntervalMs) {
+            lastBackdropTickMs = now;
+            hasActiveAnimations = true;
+        }
 
-    // 3. Forma difusa inferior direita (efeito de anel/aro iluminado)
-    NVGpaint orb2Outer = nvgRadialGradient(
-        vg, w * 0.68f, h * 0.72f, minDim * 0.08f, minDim * 0.42f,
-        nvgRGBA(200, 195, 185, 85),
-        nvgRGBA(200, 195, 185, 0)
-    );
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-    nvgFillPaint(vg, orb2Outer);
-    nvgFill(vg);
+        // 1. Base escura profunda
+        NVGpaint bgGrad = nvgLinearGradient(
+            vg, 0.0f, 0.0f, (float)w, (float)h,
+            nvgRGBA(14, 14, 16, 255),
+            nvgRGBA(8, 8, 10, 255)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, bgGrad);
+        nvgFill(vg);
 
-    // Miolo escuro para simular o "furo" desfocado de um anel 3D
-    NVGpaint orb2Hole = nvgRadialGradient(
-        vg, w * 0.68f, h * 0.72f, minDim * 0.01f, minDim * 0.16f,
-        nvgRGBA(12, 12, 14, 150),
-        nvgRGBA(12, 12, 14, 0)
-    );
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-    nvgFillPaint(vg, orb2Hole);
-    nvgFill(vg);
+        float minDim = (float)std::min(w, h);
+        float maxDim = (float)std::max(w, h);
 
-    // 4. Ponto de luz secundário à esquerda
-    NVGpaint orb3 = nvgRadialGradient(
-        vg, w * 0.12f, h * 0.55f, minDim * 0.02f, maxDim * 0.35f,
-        nvgRGBA(180, 185, 195, 55),
-        nvgRGBA(180, 185, 195, 0)
-    );
-    nvgBeginPath(vg);
-    nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-    nvgFillPaint(vg, orb3);
-    nvgFill(vg);
-   }
+        // 2. Orbe desfocado superior direito
+        NVGpaint orb1 = nvgRadialGradient(
+            vg, w * 0.82f + offsetX, h * 0.22f + offsetY, minDim * 0.04f, minDim * 0.45f,
+            nvgRGBA(225, 230, 235, 95),
+            nvgRGBA(225, 230, 235, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, orb1);
+        nvgFill(vg);
+
+        // 3. Anel desfocado inferior direito
+        NVGpaint orb2Outer = nvgRadialGradient(
+            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.08f, minDim * 0.42f,
+            nvgRGBA(200, 195, 185, 85),
+            nvgRGBA(200, 195, 185, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, orb2Outer);
+        nvgFill(vg);
+
+        NVGpaint orb2Hole = nvgRadialGradient(
+            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.01f, minDim * 0.16f,
+            nvgRGBA(12, 12, 14, 150),
+            nvgRGBA(12, 12, 14, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, orb2Hole);
+        nvgFill(vg);
+
+        // 4. Ponto de luz secundário à esquerda
+        NVGpaint orb3 = nvgRadialGradient(
+            vg, w * 0.12f + (offsetY * 0.6f), h * 0.55f + (offsetX * 0.6f), minDim * 0.02f, maxDim * 0.35f,
+            nvgRGBA(180, 185, 195, 55),
+            nvgRGBA(180, 185, 195, 0)
+        );
+        nvgBeginPath(vg);
+        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgFillPaint(vg, orb3);
+        nvgFill(vg);
+    }
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         if (!vg || w <= 0 || h <= 0) return;

@@ -56,7 +56,8 @@ struct Style {
     Color frameHover    = Color(54, 50, 60, 175);
     Color checkMark     = Color(224, 128, 108, 255);
     Color sliderGrab    = Color(230, 136, 115, 255);
-    Color button        = Color(196, 102, 84, 230); // Cobre Rosé metálico
+    Color button        = Color(214, 88, 96, 240);   // Início do mesh (Rosé intenso)
+    Color buttonGradEnd = Color(238, 152, 114, 240); // Fim do mesh (Cobre dourado)
     Color buttonHover   = Color(218, 118, 98, 245);
     Color buttonActive  = Color(168, 82, 66, 255);
     Color toggleActive  = Color(196, 102, 84, 235);
@@ -181,6 +182,7 @@ public:
             style.checkMark    = Color(230, 35, 75, 255);
             style.sliderGrab   = Color(255, 35, 80, 255);
             style.button       = Color(185, 22, 55, 220);
+            style.buttonGradEnd = Color(245, 78, 52, 235); // Rubi -> Coral fogo
             style.buttonHover  = Color(215, 25, 65, 245);
             style.buttonActive = Color(255, 40, 85, 255);
             style.toggleActive = Color(225, 25, 65, 240);
@@ -197,6 +199,7 @@ public:
             style.checkMark    = Color(206, 147, 216, 255);
             style.sliderGrab   = Color(186, 104, 200, 255);
             style.button       = Color(106, 27, 154, 220);
+            style.buttonGradEnd = Color(68, 95, 235, 235);  // Roxo neon -> Azul índigo
             style.buttonHover  = Color(142, 36, 170, 245);
             style.buttonActive = Color(74, 20, 140, 255);
             style.toggleActive = Color(123, 31, 162, 240);
@@ -216,6 +219,7 @@ public:
             style.checkMark     = Color(35, 105, 210, 255);
             style.sliderGrab    = Color(35, 105, 210, 255);
             style.button        = Color(208, 216, 230, 235);
+            style.buttonGradEnd = Color(56, 158, 242, 245); // Azul safira -> Ciano suave
             style.buttonHover   = Color(192, 204, 224, 250);
             style.buttonActive  = Color(175, 190, 215, 255);
             style.toggleActive  = Color(35, 105, 210, 245);
@@ -984,7 +988,12 @@ public:
         Color txtCol  = disabled ? style.disabledText : style.text;
 
         QueueOrDraw([=, this]() {
-            DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
+            if (!disabled && customBg.a == 0) {
+                Color endCol = Color::Lerp(style.buttonGradEnd, style.buttonHover, pressT);
+                DrawMeshRect(x, y, w, h, S(style.rounding), bgCol, endCol, bgCol);
+            } else {
+                DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
+            }
             DrawTextInternal(x, y, w, h, labelUtf8, txtCol, true, ALIGN_CENTER);
         });
 
@@ -1060,7 +1069,11 @@ public:
             Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
 
             QueueOrDraw([=, this]() {
-                DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, isSelected ? style.borderFocus : style.border);
+                if (!disabled && isSelected) {
+                    DrawMeshRect(tx, y, curW, h, S(style.rounding), bgCol, style.buttonGradEnd, style.borderFocus);
+                } else {
+                    DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
+                }
                 DrawTextInternal(tx, y, curW, h, labels.at(i), txtCol, isSelected, ALIGN_CENTER);
             });
         }
@@ -1107,8 +1120,14 @@ public:
             QueueOrDraw([=, this]() {
                 if (activeT > 0.02f || pressT > 0.02f) {
                     int pad = S(3);
-                    DrawRoundRect(sx + pad, y + pad, std::max(0, curW - pad * 2), std::max(0, h - pad * 2),
-                                  std::max(2, S(style.rounding) - 2), segCol, segCol);
+                    int rx = sx + pad, ry = y + pad;
+                    int rw = std::max(0, curW - pad * 2), rh = std::max(0, h - pad * 2);
+                    int rr = std::max(2, S(style.rounding) - 2);
+                    if (!disabled && isSelected) {
+                        DrawMeshRect(rx, ry, rw, rh, rr, segCol, style.buttonGradEnd, Color(0, 0, 0, 0));
+                    } else {
+                        DrawRoundRect(rx, ry, rw, rh, rr, segCol, segCol);
+                    }
                 }
                 DrawTextInternal(sx, y, curW, h, options.at(i), txtCol, isSelected, ALIGN_CENTER);
             });
@@ -1897,6 +1916,29 @@ private:
             nvgFill(vg);
         }
         if (borderCol.a > 0 && borderCol.Pack() != fill.Pack()) {
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, std::max(0.0f, w - 1.0f), std::max(0.0f, h - 1.0f), r);
+            nvgStrokeColor(vg, borderCol.ToNVG());
+            nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
+            nvgStroke(vg);
+        }
+    }
+
+    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color borderCol) {
+        if (!vg || w <= 0 || h <= 0) return;
+        float r = std::min((float)radius, std::min(w, h) * 0.5f);
+
+        if (c1.a > 0) {
+            NVGpaint mesh = nvgLinearGradient(
+                vg, (float)x, (float)y, (float)(x + w), (float)(y + h),
+                c1.ToNVG(), c2.ToNVG()
+            );
+            nvgBeginPath(vg);
+            nvgRoundedRect(vg, (float)x, (float)y, (float)w, (float)h, r);
+            nvgFillPaint(vg, mesh);
+            nvgFill(vg);
+        }
+        if (borderCol.a > 0) {
             nvgBeginPath(vg);
             nvgRoundedRect(vg, x + 0.5f, y + 0.5f, std::max(0.0f, w - 1.0f), std::max(0.0f, h - 1.0f), r);
             nvgStrokeColor(vg, borderCol.ToNVG());

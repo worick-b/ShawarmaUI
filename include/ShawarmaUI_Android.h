@@ -203,27 +203,27 @@ public:
             style.toggleHover  = Color(156, 39, 176, 255);
         } else if (theme == Theme::LightClean) {
             style.windowBg      = Color(235, 238, 245, 255);
-            style.panelBg       = Color(255, 255, 255, 165);
-            style.childBg       = Color(248, 250, 252, 150);
+            style.panelBg       = Color(255, 255, 255, 185);
+            style.childBg       = Color(248, 250, 252, 165);
             style.popupBg       = Color(255, 255, 255, 245);
             style.tooltipBg     = Color(30, 34, 42, 240);
-            style.border        = Color(255, 255, 255, 140);
-            style.borderFocus   = Color(45, 115, 215, 255);
-            style.text          = Color(28, 32, 40, 255);
-            style.textDim       = Color(110, 118, 132, 255);
-            style.frameBg       = Color(232, 236, 242, 170);
-            style.frameHover    = Color(220, 226, 236, 200);
-            style.checkMark     = Color(45, 115, 215, 255);
-            style.sliderGrab    = Color(45, 115, 215, 255);
-            style.button        = Color(215, 222, 235, 220);
-            style.buttonHover   = Color(200, 210, 226, 240);
-            style.buttonActive  = Color(185, 198, 220, 255);
-            style.toggleActive  = Color(45, 115, 215, 240);
-            style.toggleHover   = Color(60, 130, 230, 255);
-            style.disabledBg    = Color(235, 237, 240, 160);
-            style.disabledText  = Color(160, 166, 176, 255);
-            style.scrollbarBg   = Color(232, 236, 242, 160);
-            style.scrollbarGrab = Color(180, 188, 202, 220);
+            style.border        = Color(180, 190, 208, 160); // Borda sutil visível no claro
+            style.borderFocus   = Color(35, 105, 210, 255);
+            style.text          = Color(24, 28, 36, 255);
+            style.textDim       = Color(95, 105, 120, 255);
+            style.frameBg       = Color(224, 230, 240, 190);
+            style.frameHover    = Color(210, 218, 232, 220);
+            style.checkMark     = Color(35, 105, 210, 255);
+            style.sliderGrab    = Color(35, 105, 210, 255);
+            style.button        = Color(208, 216, 230, 235);
+            style.buttonHover   = Color(192, 204, 224, 250);
+            style.buttonActive  = Color(175, 190, 215, 255);
+            style.toggleActive  = Color(35, 105, 210, 245);
+            style.toggleHover   = Color(50, 120, 225, 255);
+            style.disabledBg    = Color(228, 232, 238, 175);
+            style.disabledText  = Color(145, 152, 165, 255);
+            style.scrollbarBg   = Color(224, 230, 240, 170);
+            style.scrollbarGrab = Color(165, 175, 192, 225);
         }
     }
 
@@ -1056,7 +1056,8 @@ public:
             Color baseBg = Color::Lerp(style.frameBg, style.frameHover, pressT);
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, pressT);
             Color bgCol = disabled ? style.disabledBg : Color::Lerp(baseBg, activeBg, activeT);
-            Color txtCol = disabled ? style.disabledText : (isSelected ? style.text : Color::Lerp(style.textDim, style.text, pressT));
+            Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
+            Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
 
             QueueOrDraw([=, this]() {
                 DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, isSelected ? style.borderFocus : style.border);
@@ -1100,7 +1101,8 @@ public:
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, pressT);
             Color pressBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, (uint8_t)(pressT * 180));
             Color segCol   = disabled ? style.disabledBg : Color::Lerp(pressBg, activeBg, activeT);
-            Color txtCol   = disabled ? style.disabledText : (isSelected ? style.text : Color::Lerp(style.textDim, style.text, pressT));
+            Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
+            Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
 
             QueueOrDraw([=, this]() {
                 if (activeT > 0.02f || pressT > 0.02f) {

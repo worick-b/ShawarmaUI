@@ -219,6 +219,8 @@ public:
             style.toggleHover  = Color(60, 130, 230, 255);
             style.disabledBg   = Color(235, 237, 240, 255);
             style.disabledText = Color(160, 166, 176, 255);
+			style.scrollbarBg   = Color(232, 236, 242, 220);
+            style.scrollbarGrab = Color(180, 188, 202, 255);
         }
     }
 

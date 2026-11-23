@@ -96,6 +96,9 @@ public:
     int safeAreaTop = 0;
     int safeAreaBottom = 0;
 
+    std::function<void()> onRequestRedraw;
+    std::function<void(bool show)> onShowKeyboard;
+
     // --- ESCOPOS RAII OPCIONAIS ---
     struct PanelScope {
         Context& ctx;

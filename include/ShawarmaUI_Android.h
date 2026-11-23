@@ -56,8 +56,8 @@ struct Style {
     Color frameHover    = Color(54, 50, 60, 175);
     Color checkMark     = Color(224, 128, 108, 255);
     Color sliderGrab    = Color(230, 136, 115, 255);
-    Color button        = Color(214, 88, 96, 240);   // Início do mesh (Rosé intenso)
-    Color buttonGradEnd = Color(238, 152, 114, 240); // Fim do mesh (Cobre dourado)
+    Color button        = Color(214, 98, 96, 235)
+    Color buttonGradEnd = Color(168, 66, 68, 245)
     Color buttonHover   = Color(218, 118, 98, 245);
     Color buttonActive  = Color(168, 82, 66, 255);
     Color toggleActive  = Color(196, 102, 84, 235);
@@ -171,46 +171,46 @@ public:
         currentTheme = theme;
         style = Style{};
         if (theme == Theme::NeonRed) {
-            style.windowBg     = Color(12, 12, 16, 255);
-            style.panelBg      = Color(24, 16, 22, 125);
-            style.childBg      = Color(20, 14, 18, 115);
-            style.popupBg      = Color(24, 20, 28, 235);
-            style.border       = Color(230, 25, 65, 120);
-            style.borderFocus  = Color(255, 50, 90, 255);
-            style.frameBg      = Color(36, 18, 24, 140);
-            style.frameHover   = Color(62, 20, 34, 180);
-            style.checkMark    = Color(230, 35, 75, 255);
-            style.sliderGrab   = Color(255, 35, 80, 255);
-            style.button       = Color(185, 22, 55, 220);
-            style.buttonGradEnd = Color(245, 78, 52, 235); // Rubi -> Coral fogo
-            style.buttonHover  = Color(215, 25, 65, 245);
-            style.buttonActive = Color(255, 40, 85, 255);
-            style.toggleActive = Color(225, 25, 65, 240);
-            style.toggleHover  = Color(255, 45, 88, 255);
+            style.windowBg      = Color(12, 12, 16, 255);
+            style.panelBg       = Color(24, 16, 22, 125);
+            style.childBg       = Color(20, 14, 18, 115);
+            style.popupBg       = Color(24, 20, 28, 235);
+            style.border        = Color(230, 25, 65, 120);
+            style.borderFocus   = Color(255, 50, 90, 255);
+            style.frameBg       = Color(36, 18, 24, 140);
+            style.frameHover    = Color(62, 20, 34, 180);
+            style.checkMark     = Color(230, 35, 75, 255);
+            style.sliderGrab    = Color(255, 35, 80, 255);
+            style.button        = Color(225, 32, 68, 235)
+            style.buttonGradEnd = Color(165, 16, 42, 245)
+            style.buttonHover   = Color(215, 25, 65, 245);
+            style.buttonActive  = Color(255, 40, 85, 255);
+            style.toggleActive  = Color(225, 25, 65, 240);
+            style.toggleHover   = Color(255, 45, 88, 255);
         } else if (theme == Theme::CyberPurple) {
-            style.windowBg     = Color(13, 15, 20, 255);
-            style.panelBg      = Color(24, 27, 36, 125);
-            style.childBg      = Color(20, 23, 30, 115);
-            style.popupBg      = Color(28, 32, 42, 235);
-            style.border       = Color(140, 110, 190, 85);
-            style.borderFocus  = Color(186, 104, 200, 255);
-            style.frameBg      = Color(32, 36, 46, 140);
-            style.frameHover   = Color(46, 52, 66, 180);
-            style.checkMark    = Color(206, 147, 216, 255);
-            style.sliderGrab   = Color(186, 104, 200, 255);
-            style.button       = Color(106, 27, 154, 220);
-            style.buttonGradEnd = Color(68, 95, 235, 235);  // Roxo neon -> Azul índigo
-            style.buttonHover  = Color(142, 36, 170, 245);
-            style.buttonActive = Color(74, 20, 140, 255);
-            style.toggleActive = Color(123, 31, 162, 240);
-            style.toggleHover  = Color(156, 39, 176, 255);
+            style.windowBg      = Color(13, 15, 20, 255);
+            style.panelBg       = Color(24, 27, 36, 125);
+            style.childBg       = Color(20, 23, 30, 115);
+            style.popupBg       = Color(28, 32, 42, 235);
+            style.border        = Color(140, 110, 190, 85);
+            style.borderFocus   = Color(186, 104, 200, 255);
+            style.frameBg       = Color(32, 36, 46, 140);
+            style.frameHover    = Color(46, 52, 66, 180);
+            style.checkMark     = Color(206, 147, 216, 255);
+            style.sliderGrab    = Color(186, 104, 200, 255);
+            style.button        = Color(142, 44, 205, 235)
+            style.buttonGradEnd = Color(92, 22, 148, 245)
+            style.buttonHover   = Color(142, 36, 170, 245);
+            style.buttonActive  = Color(74, 20, 140, 255);
+            style.toggleActive  = Color(123, 31, 162, 240);
+            style.toggleHover   = Color(156, 39, 176, 255);
         } else if (theme == Theme::LightClean) {
             style.windowBg      = Color(235, 238, 245, 255);
             style.panelBg       = Color(255, 255, 255, 185);
             style.childBg       = Color(248, 250, 252, 165);
             style.popupBg       = Color(255, 255, 255, 245);
             style.tooltipBg     = Color(30, 34, 42, 240);
-            style.border        = Color(180, 190, 208, 160); // Borda sutil visível no claro
+            style.border        = Color(180, 190, 208, 160);
             style.borderFocus   = Color(35, 105, 210, 255);
             style.text          = Color(24, 28, 36, 255);
             style.textDim       = Color(95, 105, 120, 255);
@@ -219,10 +219,10 @@ public:
             style.checkMark     = Color(35, 105, 210, 255);
             style.sliderGrab    = Color(35, 105, 210, 255);
             style.button        = Color(208, 216, 230, 235);
-            style.buttonGradEnd = Color(56, 158, 242, 245); // Azul safira -> Ciano suave
+            style.buttonGradEnd = Color(24, 86, 192, 245)
             style.buttonHover   = Color(192, 204, 224, 250);
             style.buttonActive  = Color(175, 190, 215, 255);
-            style.toggleActive  = Color(35, 105, 210, 245);
+            style.toggleActive  = Color(48, 122, 235, 245)
             style.toggleHover   = Color(50, 120, 225, 255);
             style.disabledBg    = Color(228, 232, 238, 175);
             style.disabledText  = Color(145, 152, 165, 255);
@@ -1929,8 +1929,9 @@ private:
         float r = std::min((float)radius, std::min(w, h) * 0.5f);
 
         if (c1.a > 0) {
+            // Degradê vertical sutil (de cima para baixo) simulando iluminação natural
             NVGpaint mesh = nvgLinearGradient(
-                vg, (float)x, (float)y, (float)(x + w), (float)(y + h),
+                vg, (float)x, (float)y, (float)x, (float)(y + h),
                 c1.ToNVG(), c2.ToNVG()
             );
             nvgBeginPath(vg);
@@ -1938,13 +1939,18 @@ private:
             nvgFillPaint(vg, mesh);
             nvgFill(vg);
         }
-        if (borderCol.a > 0) {
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, x + 0.5f, y + 0.5f, std::max(0.0f, w - 1.0f), std::max(0.0f, h - 1.0f), r);
-            nvgStrokeColor(vg, borderCol.ToNVG());
-            nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
-            nvgStroke(vg);
-        }
+
+        // Brilho especular sutil na borda (mais claro no topo, mais suave embaixo)
+        NVGpaint rimLight = nvgLinearGradient(
+            vg, (float)x, (float)y, (float)x, (float)(y + h),
+            nvgRGBA(255, 255, 255, 75),
+            nvgRGBA(255, 255, 255, 12)
+        );
+        nvgBeginPath(vg);
+        nvgRoundedRect(vg, x + 0.5f, y + 0.5f, std::max(0.0f, w - 1.0f), std::max(0.0f, h - 1.0f), r);
+        nvgStrokePaint(vg, rimLight);
+        nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
+        nvgStroke(vg);
     }
 
     void DrawLine(int x1, int y1, int x2, int y2, Color col) {

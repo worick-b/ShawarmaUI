@@ -42,30 +42,30 @@ enum class Theme {
 };
 
 struct Style {
-    Color windowBg      = Color(12, 12, 14, 255);
-    Color panelBg       = Color(28, 28, 32, 120);   // Painel translúcido
-    Color childBg       = Color(20, 20, 24, 110);   // Sub-painel translúcido
-    Color popupBg       = Color(26, 26, 30, 225);
-    Color tooltipBg     = Color(22, 22, 26, 230);
-    Color modalDimBg    = Color(8, 8, 10, 180);
-    Color border        = Color(255, 255, 255, 38); // Borda sutil de vidro
-    Color borderFocus   = Color(232, 176, 56, 220);
-    Color text          = Color(245, 241, 234, 255);
-    Color textDim       = Color(168, 158, 146, 255);
-    Color frameBg       = Color(40, 40, 46, 130);   // Inputs translúcidos
-    Color frameHover    = Color(58, 58, 66, 165);
-    Color checkMark     = Color(232, 176, 56, 255);
-    Color sliderGrab    = Color(232, 176, 56, 255);
-    Color button        = Color(194, 136, 30, 220);
-    Color buttonHover   = Color(219, 158, 42, 240);
-    Color buttonActive  = Color(164, 112, 22, 255);
-    Color toggleActive  = Color(196, 54, 44, 235);
-    Color toggleHover   = Color(222, 68, 56, 250);
-    Color separator     = Color(255, 255, 255, 30);
-    Color disabledBg    = Color(30, 28, 26, 140);
-    Color disabledText  = Color(115, 108, 100, 255);
-    Color scrollbarBg   = Color(28, 25, 23, 150);
-    Color scrollbarGrab = Color(92, 84, 78, 220);
+    Color windowBg      = Color(12, 12, 15, 255);
+    Color panelBg       = Color(26, 25, 30, 125);   // Vidro fumê neutro
+    Color childBg       = Color(20, 19, 24, 115);
+    Color popupBg       = Color(24, 23, 28, 235);
+    Color tooltipBg     = Color(20, 20, 25, 240);
+    Color modalDimBg    = Color(6, 6, 9, 185);
+    Color border        = Color(255, 255, 255, 38);
+    Color borderFocus   = Color(224, 128, 108, 230);// Borda Cobre Rosé
+    Color text          = Color(246, 243, 242, 255);// Branco quente suave
+    Color textDim       = Color(164, 156, 154, 255);
+    Color frameBg       = Color(38, 36, 43, 135);
+    Color frameHover    = Color(54, 50, 60, 175);
+    Color checkMark     = Color(224, 128, 108, 255);
+    Color sliderGrab    = Color(230, 136, 115, 255);
+    Color button        = Color(196, 102, 84, 230); // Cobre Rosé metálico
+    Color buttonHover   = Color(218, 118, 98, 245);
+    Color buttonActive  = Color(168, 82, 66, 255);
+    Color toggleActive  = Color(196, 102, 84, 235);
+    Color toggleHover   = Color(218, 118, 98, 250);
+    Color separator     = Color(255, 255, 255, 28);
+    Color disabledBg    = Color(28, 27, 32, 140);
+    Color disabledText  = Color(108, 102, 102, 255);
+    Color scrollbarBg   = Color(24, 23, 28, 150);
+    Color scrollbarGrab = Color(88, 82, 86, 220);
 
     // Dimensões confortáveis para toque no Android (em dp)
     int windowPadding   = 16;
@@ -1807,13 +1807,13 @@ private:
         float ox3 = std::sin(t * 0.41f + 2.1f) * S(28);
         float oy3 = std::cos(t * 0.37f + 1.1f) * S(22);
 
-        // Cores das luzes adaptadas ao tema atual
-        NVGcolor bgTop = nvgRGBA(14, 14, 16, 255);
+        // Cores das luzes adaptadas ao tema atual (Padrão: RoseGold)
+        NVGcolor bgTop = nvgRGBA(14, 13, 16, 255);
         NVGcolor bgBot = nvgRGBA(8, 8, 10, 255);
-        NVGcolor cOrb1 = nvgRGBA(240, 195, 95, 85);   // Dourado suave (ShawarmaGold)
-        NVGcolor cOrb2 = nvgRGBA(215, 185, 135, 75);
-        NVGcolor cOrb3 = nvgRGBA(190, 175, 150, 50);
-        NVGcolor cHole = nvgRGBA(12, 12, 14, 150);
+        NVGcolor cOrb1 = nvgRGBA(235, 145, 120, 90);  // Brilho Cobre Rosé superior
+        NVGcolor cOrb2 = nvgRGBA(205, 125, 110, 75);  // Anel Rosé inferior
+        NVGcolor cOrb3 = nvgRGBA(185, 135, 125, 50);  // Luz suave esquerda
+        NVGcolor cHole = nvgRGBA(12, 11, 14, 150);
 
         if (currentTheme == Theme::NeonRed) {
             bgTop = nvgRGBA(14, 10, 14, 255);

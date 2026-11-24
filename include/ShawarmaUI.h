@@ -47,50 +47,53 @@ struct Color {
 };
 
 enum class Theme {
-    ShawarmaGold,
-    NeonRed,
+    NeonRed = 0,
     CyberPurple,
+    RoseGold,
     LightClean
 };
 
 struct Style {
-    Color windowBg      = Color(22, 20, 19, 255);
-    Color panelBg       = Color(33, 30, 28, 245);
-    Color childBg       = Color(27, 25, 23, 240);
-    Color popupBg       = Color(38, 34, 32, 252);
-    Color tooltipBg     = Color(28, 25, 23, 245);
-    Color modalDimBg    = Color(10, 9, 8, 175);
-    Color border        = Color(64, 58, 54, 255);
-    Color borderFocus   = Color(232, 176, 56, 255);
-    Color text          = Color(245, 241, 234, 255);
-    Color textDim       = Color(158, 148, 136, 255);
-    Color frameBg       = Color(46, 42, 39, 255);
-    Color frameHover    = Color(61, 55, 51, 255);
-    Color checkMark     = Color(232, 176, 56, 255);
-    Color sliderGrab    = Color(232, 176, 56, 255);
-    Color button        = Color(194, 136, 30, 255);
-    Color buttonHover   = Color(219, 158, 42, 255);
-    Color buttonActive  = Color(164, 112, 22, 255);
-    Color toggleActive  = Color(196, 54, 44, 255);
-    Color toggleHover   = Color(222, 68, 56, 255);
-    Color separator     = Color(64, 58, 54, 255);
-    Color disabledBg    = Color(30, 28, 26, 255);
-    Color disabledText  = Color(115, 108, 100, 255);
-    Color scrollbarBg   = Color(28, 25, 23, 200);
-    Color scrollbarGrab = Color(92, 84, 78, 255);
+    Color windowBg      = Color(12, 12, 16, 255);
+    Color panelBg       = Color(24, 16, 22, 145);   // Vidro fumê com toque rubi
+    Color childBg       = Color(20, 14, 18, 135);
+    Color popupBg       = Color(24, 20, 28, 240);
+    Color tooltipBg     = Color(20, 18, 24, 245);
+    Color modalDimBg    = Color(8, 6, 10, 185);
+    Color border        = Color(230, 25, 65, 110);  // Borda neon sutil
+    Color borderFocus   = Color(255, 50, 90, 255);
+    Color text          = Color(246, 243, 244, 255);
+    Color textDim       = Color(168, 156, 160, 255);
+    Color frameBg       = Color(36, 18, 24, 155);
+    Color frameHover    = Color(62, 20, 34, 195);
+    Color checkMark     = Color(235, 35, 75, 255);
+    Color sliderGrab    = Color(255, 40, 85, 255);
+    Color button        = Color(225, 32, 68, 235);  // Topo do degradê 3D (Vermelho Neon)
+    Color buttonGradEnd = Color(165, 16, 42, 245);  // Base do degradê 3D (Carmesim escuro)
+    Color buttonHover   = Color(245, 45, 82, 250);
+    Color buttonActive  = Color(185, 20, 50, 255);
+    Color toggleActive  = Color(225, 32, 68, 240);
+    Color toggleHover   = Color(250, 48, 88, 255);
+    Color separator     = Color(255, 255, 255, 28);
+    Color disabledBg    = Color(30, 24, 26, 150);
+    Color disabledText  = Color(115, 104, 108, 255);
+    Color scrollbarBg   = Color(28, 22, 25, 160);
+    Color scrollbarGrab = Color(98, 76, 84, 225);
 
     int windowPadding   = 16;
     int framePaddingX   = 10;
     int framePaddingY   = 6;
     int itemSpacingX    = 10;
     int itemSpacingY    = 8;
-    int rounding        = 6;
+    int rounding        = 8;
     int animFps         = 30;
 };
 
 class Context {
 public:
     Style style;
+    Theme currentTheme = Theme::NeonRed;
+    float backdropSeed = 0.0f;
     HWND hwnd = nullptr;
     float dpiScale = 1.0f;
     std::function<void(const std::string&)> onFileDrop;
@@ -164,62 +167,66 @@ public:
     }
 
     void ApplyTheme(Theme theme) {
+        currentTheme = theme;
         style = Style{};
-        if (theme == Theme::NeonRed) {
-            style.windowBg     = Color(16, 16, 20, 255);
-            style.panelBg      = Color(18, 14, 20, 232);
-            style.childBg      = Color(22, 18, 25, 235);
-            style.popupBg      = Color(24, 20, 28, 252);
-            style.border       = Color(230, 25, 65, 210);
-            style.borderFocus  = Color(255, 50, 90, 255);
-            style.frameBg      = Color(32, 16, 22, 235);
-            style.frameHover   = Color(62, 20, 34, 245);
-            style.checkMark    = Color(230, 35, 75, 255);
-            style.sliderGrab   = Color(255, 35, 80, 255);
-            style.button       = Color(36, 18, 24, 235);
-            style.buttonHover  = Color(215, 25, 65, 245);
-            style.buttonActive = Color(255, 40, 85, 255);
-            style.toggleActive = Color(225, 25, 65, 250);
-            style.toggleHover  = Color(255, 45, 88, 255);
-        } else if (theme == Theme::CyberPurple) {
-            style.windowBg     = Color(17, 19, 24, 255);
-            style.panelBg      = Color(24, 27, 34, 245);
-            style.childBg      = Color(20, 23, 30, 245);
-            style.popupBg      = Color(28, 32, 42, 252);
-            style.border       = Color(46, 52, 66, 255);
-            style.borderFocus  = Color(186, 104, 200, 255);
-            style.frameBg      = Color(30, 34, 42, 255);
-            style.frameHover   = Color(42, 48, 60, 255);
-            style.checkMark    = Color(206, 147, 216, 255);
-            style.sliderGrab   = Color(186, 104, 200, 255);
-            style.button       = Color(106, 27, 154, 255);
-            style.buttonHover  = Color(142, 36, 170, 255);
-            style.buttonActive = Color(74, 20, 140, 255);
-            style.toggleActive = Color(123, 31, 162, 255);
-            style.toggleHover  = Color(156, 39, 176, 255);
+        if (theme == Theme::CyberPurple) {
+            style.windowBg      = Color(13, 15, 20, 255);
+            style.panelBg       = Color(24, 27, 36, 145);
+            style.childBg       = Color(20, 23, 30, 135);
+            style.popupBg       = Color(28, 32, 42, 240);
+            style.border        = Color(140, 110, 190, 85);
+            style.borderFocus   = Color(186, 104, 200, 255);
+            style.frameBg       = Color(32, 36, 46, 155);
+            style.frameHover    = Color(46, 52, 66, 195);
+            style.checkMark     = Color(206, 147, 216, 255);
+            style.sliderGrab    = Color(186, 104, 200, 255);
+            style.button        = Color(142, 44, 205, 235);
+            style.buttonGradEnd = Color(92, 22, 148, 245);
+            style.buttonHover   = Color(142, 36, 170, 245);
+            style.buttonActive  = Color(74, 20, 140, 255);
+            style.toggleActive  = Color(123, 31, 162, 240);
+            style.toggleHover   = Color(156, 39, 176, 255);
+        } else if (theme == Theme::RoseGold) {
+            style.windowBg      = Color(12, 12, 15, 255);
+            style.panelBg       = Color(26, 25, 30, 145);
+            style.childBg       = Color(20, 19, 24, 135);
+            style.popupBg       = Color(24, 23, 28, 240);
+            style.border        = Color(255, 255, 255, 38);
+            style.borderFocus   = Color(224, 128, 108, 230);
+            style.frameBg       = Color(38, 36, 43, 150);
+            style.frameHover    = Color(54, 50, 60, 190);
+            style.checkMark     = Color(224, 128, 108, 255);
+            style.sliderGrab    = Color(230, 136, 115, 255);
+            style.button        = Color(214, 98, 96, 235);
+            style.buttonGradEnd = Color(168, 66, 68, 245);
+            style.buttonHover   = Color(230, 114, 112, 250);
+            style.buttonActive  = Color(178, 68, 76, 255);
+            style.toggleActive  = Color(214, 98, 96, 245);
+            style.toggleHover   = Color(235, 118, 116, 255);
         } else if (theme == Theme::LightClean) {
-            style.windowBg      = Color(242, 244, 248, 255);
-            style.panelBg       = Color(255, 255, 255, 250);
-            style.childBg       = Color(248, 250, 252, 250);
-            style.popupBg       = Color(255, 255, 255, 255);
-            style.tooltipBg     = Color(30, 34, 42, 245);
-            style.border        = Color(205, 212, 224, 255);
-            style.borderFocus   = Color(45, 115, 215, 255);
-            style.text          = Color(28, 32, 40, 255);
-            style.textDim       = Color(110, 118, 132, 255);
-            style.frameBg       = Color(232, 236, 242, 255);
-            style.frameHover    = Color(220, 226, 236, 255);
-            style.checkMark     = Color(45, 115, 215, 255);
-            style.sliderGrab    = Color(45, 115, 215, 255);
-            style.button        = Color(225, 230, 240, 255);
-            style.buttonHover   = Color(208, 216, 230, 255);
-            style.buttonActive  = Color(190, 202, 222, 255);
-            style.toggleActive  = Color(45, 115, 215, 255);
-            style.toggleHover   = Color(60, 130, 230, 255);
-            style.disabledBg    = Color(235, 237, 240, 255);
-            style.disabledText  = Color(160, 166, 176, 255);
-            style.scrollbarBg   = Color(232, 236, 242, 220);
-            style.scrollbarGrab = Color(180, 188, 202, 255);
+            style.windowBg      = Color(210, 220, 234, 255);
+            style.panelBg       = Color(234, 240, 248, 205);
+            style.childBg       = Color(226, 234, 244, 190);
+            style.popupBg       = Color(238, 243, 250, 245);
+            style.tooltipBg     = Color(28, 34, 46, 240);
+            style.border        = Color(155, 172, 196, 165);
+            style.borderFocus   = Color(38, 106, 210, 255);
+            style.text          = Color(26, 32, 44, 255);
+            style.textDim       = Color(88, 98, 116, 255);
+            style.frameBg       = Color(204, 215, 230, 200);
+            style.frameHover    = Color(190, 204, 222, 225);
+            style.checkMark     = Color(38, 106, 210, 255);
+            style.sliderGrab    = Color(38, 106, 210, 255);
+            style.button        = Color(188, 202, 222, 235);
+            style.buttonGradEnd = Color(24, 86, 192, 245);
+            style.buttonHover   = Color(172, 188, 212, 250);
+            style.buttonActive  = Color(156, 174, 202, 255);
+            style.toggleActive  = Color(48, 122, 235, 245);
+            style.toggleHover   = Color(62, 134, 242, 255);
+            style.disabledBg    = Color(206, 216, 228, 180);
+            style.disabledText  = Color(135, 146, 164, 255);
+            style.scrollbarBg   = Color(204, 215, 230, 175);
+            style.scrollbarGrab = Color(148, 162, 184, 225);
         }
     }
 
@@ -318,6 +325,7 @@ public:
         if (!d2dContext) return;
         d2dContext->BeginDraw();
         d2dContext->SetTransform(D2D1::Matrix3x2F::Identity());
+        DrawGlassBackdrop(width, height);
         BeginFrameState();
     }
 
@@ -524,13 +532,15 @@ public:
         if (!panelActive) return;
         int pad = S(10);
         int panelBottom = cursorY + pad - S(style.itemSpacingY);
+        int w = panelRight - panelLeft;
+        int h = panelBottom - panelStartY;
 
-        DrawRoundRect(panelLeft, panelStartY, panelRight - panelLeft, panelBottom - panelStartY,
-                      S(style.rounding), style.panelBg, style.border);
+        // Fundo translúcido do painel + borda simulando espessura de vidro
+        DrawGlassPanelRect(panelLeft, panelStartY, w, h, S(style.rounding), style.panelBg, style.border);
 
         if (!panelTitle.empty()) {
             int titleY = panelStartY + S(8);
-            DrawTextInternal(panelLeft + pad, titleY, (panelRight - panelLeft) - pad * 2, S(20),
+            DrawTextInternal(panelLeft + pad, titleY, w - pad * 2, S(20),
                              panelTitle, panelTitleColor, true, DT_LEFT);
             int sepY = titleY + S(22);
             DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
@@ -650,8 +660,8 @@ public:
         int w = std::min(textW + padX * 2, GetAvailWidth());
         int x = cursorX, y = cursorY;
 
-        Color bgCol = Color::Lerp(style.panelBg, accentColor, 0.18f);
-        Color borderCol = Color::Lerp(style.panelBg, accentColor, 0.65f);
+        Color bgCol = Color::Lerp(style.panelBg, accentColor, 0.20f);
+        Color borderCol = Color::Lerp(style.panelBg, accentColor, 0.68f);
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, h / 2, bgCol, borderCol);
@@ -927,7 +937,12 @@ public:
         Color txtCol  = disabled ? style.disabledText : style.text;
 
         QueueOrDraw([=, this]() {
-            DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
+            if (!disabled && customBg.a == 0) {
+                Color endCol = Color::Lerp(style.buttonGradEnd, style.buttonHover, hoverT);
+                DrawMeshRect(x, y, w, h, S(style.rounding), bgCol, endCol, bgCol);
+            } else {
+                DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
+            }
             DrawTextInternal(x, y, w, h, labelUtf8, txtCol, true, DT_CENTER);
         });
 
@@ -1000,10 +1015,15 @@ public:
             Color baseBg = Color::Lerp(style.frameBg, style.frameHover, hoverT);
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, hoverT);
             Color bgCol = disabled ? style.disabledBg : Color::Lerp(baseBg, activeBg, activeT);
-            Color txtCol = disabled ? style.disabledText : (isSelected ? style.text : Color::Lerp(style.textDim, style.text, hoverT));
+            Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
+            Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, hoverT));
 
             QueueOrDraw([=, this]() {
-                DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, isSelected ? style.borderFocus : style.border);
+                if (!disabled && isSelected) {
+                    DrawMeshRect(tx, y, curW, h, S(style.rounding), bgCol, style.buttonGradEnd, style.borderFocus);
+                } else {
+                    DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
+                }
                 DrawTextInternal(tx, y, curW, h, labels.at(i), txtCol, isSelected, DT_CENTER);
             });
         }
@@ -1044,13 +1064,20 @@ public:
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, hoverT);
             Color hoverBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, (uint8_t)(hoverT * 180));
             Color segCol   = disabled ? style.disabledBg : Color::Lerp(hoverBg, activeBg, activeT);
-            Color txtCol   = disabled ? style.disabledText : (isSelected ? style.text : Color::Lerp(style.textDim, style.text, hoverT));
+            Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
+            Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, hoverT));
 
             QueueOrDraw([=, this]() {
                 if (activeT > 0.02f || hoverT > 0.02f) {
                     int pad = S(2);
-                    DrawRoundRect(sx + pad, y + pad, std::max(0, curW - pad * 2), std::max(0, h - pad * 2),
-                                  std::max(2, S(style.rounding) - 2), segCol, segCol);
+                    int rx = sx + pad, ry = y + pad;
+                    int rw = std::max(0, curW - pad * 2), rh = std::max(0, h - pad * 2);
+                    int rr = std::max(2, S(style.rounding) - 2);
+                    if (!disabled && isSelected) {
+                        DrawMeshRect(rx, ry, rw, rh, rr, segCol, style.buttonGradEnd, Color(0, 0, 0, 0));
+                    } else {
+                        DrawRoundRect(rx, ry, rw, rh, rr, segCol, segCol);
+                    }
                 }
                 DrawTextInternal(sx, y, curW, h, options.at(i), txtCol, isSelected, DT_CENTER);
             });
@@ -1162,7 +1189,7 @@ public:
             }
 
             comboOverlayDraws.push_back([=, this]() {
-                DrawRoundRect(x + S(2), dropY + S(3), w, dropH, S(style.rounding), Color(10, 10, 14, 200), Color(10, 10, 14, 200));
+                DrawRoundRect(x + S(2), dropY + S(3), w, dropH, S(style.rounding), Color(10, 10, 14, 210), Color(10, 10, 14, 210));
                 DrawRoundRect(x, dropY, w, dropH, S(style.rounding), style.popupBg, style.borderFocus);
                 for (int i = 0; i < (int)items.size(); ++i) {
                     int optY = dropY + S(3) + i * itemH;
@@ -1216,7 +1243,7 @@ public:
         Color fillCol  = disabled ? style.disabledText : style.sliderGrab;
 
         QueueOrDraw([=, this]() {
-            int trackH = std::max(S(6), h / 2);
+            int trackH = (h > S(18)) ? h : std::max(S(6), h / 2);
             int trackY = y + (h - trackH) / 2;
             DrawRoundRect(x, trackY, w, trackH, trackH / 2, trackCol, style.border);
 
@@ -1224,11 +1251,6 @@ public:
             if (fillW > 0) {
                 DrawRoundRect(x, trackY, fillW, trackH, trackH / 2, fillCol, fillCol);
             }
-
-            int grabSz = std::max(S(12), h);
-            int grabX = std::clamp(x + fillW - grabSz / 2, x, x + std::max(0, w - grabSz));
-            int grabY = y + (h - grabSz) / 2;
-            DrawRoundRect(grabX, grabY, grabSz, grabSz, grabSz / 2, style.text, fillCol);
 
             if (!overlayUtf8.empty()) {
                 DrawTextInternal(x, y, w, h, overlayUtf8, style.text, true, DT_CENTER);
@@ -1281,7 +1303,7 @@ public:
         int sz = S(diameter);
         int x = cursorX, y = cursorY;
         Color col = (color.a > 0) ? color : style.sliderGrab;
-        float angle = (GetTickCount() % 1000) * 0.0062831853f; // 2 * PI * t
+        float angle = (GetTickCount() % 1000) * 0.0062831853f;
 
         QueueOrDraw([=, this]() {
             float cx = x + sz * 0.5f;
@@ -1368,8 +1390,8 @@ public:
         modalDraws.clear();
         modalDraws.push_back([=, this]() {
             DrawDimOverlay(style.modalDimBg);
-            DrawRoundRect(mx + S(3), my + S(4), modalW, modalH, S(6), Color(14, 14, 17, 220), Color(14, 14, 17, 220));
-            DrawRoundRect(mx, my, modalW, modalH, S(6), style.popupBg, style.checkMark);
+            DrawRoundRect(mx + S(3), my + S(4), modalW, modalH, S(style.rounding), Color(10, 10, 14, 220), Color(10, 10, 14, 220));
+            DrawRoundRect(mx, my, modalW, modalH, S(style.rounding), style.popupBg, style.checkMark);
         });
 
         regionLeft = mx + S(16);
@@ -1603,7 +1625,7 @@ private:
 
     int GetHoveredRectIndex(POINT pt) const {
         for (int i = 0; i < (int)interactiveRects.size(); ++i) {
-            const RECT& r = interactiveRects[i];
+            const RECT& r = interactiveRects.at(i);
             if (pt.x >= r.left && pt.x <= r.right && pt.y >= r.top && pt.y <= r.bottom) {
                 return i;
             }
@@ -1718,7 +1740,7 @@ private:
     }
 
     void DrawTooltipInternal(int x, int y, const std::string& textUtf8) {
-        int padX = S(8), padY = S(4);
+        int padX = S(8);
         int textW = CalcTextWidth(textUtf8, false);
         int boxW = textW + padX * 2;
         int boxH = S(22);
@@ -1865,6 +1887,103 @@ private:
         return 0;
     }
 
+    void DrawGlassBackdrop(int w, int h) {
+        ID2D1RenderTarget* rt = ActiveD2DTarget();
+        if (!rt || w <= 0 || h <= 0) return;
+
+        static DWORD backdropStartMs = 0;
+        DWORD now = GetTickCount();
+        if (backdropStartMs == 0) {
+            backdropStartMs = now;
+            backdropSeed = static_cast<float>(now % 10000) * 0.137f;
+        }
+
+        hasActiveAnimations = true;
+        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+
+        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
+        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
+
+        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
+        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
+
+        float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
+        float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
+
+        Color bgTop(14, 10, 14, 255);
+        Color bgBot(8, 8, 10, 255);
+        Color cOrb1(245, 55, 95, 85);
+        Color cOrb2(210, 40, 80, 70);
+        Color cOrb3(180, 60, 100, 45);
+        Color cHole(12, 11, 14, 150);
+
+        if (currentTheme == Theme::RoseGold) {
+            bgTop = Color(14, 13, 16, 255);
+            cOrb1 = Color(235, 145, 120, 90);
+            cOrb2 = Color(205, 125, 110, 75);
+            cOrb3 = Color(185, 135, 125, 50);
+        } else if (currentTheme == Theme::CyberPurple) {
+            bgTop = Color(13, 14, 22, 255);
+            cOrb1 = Color(185, 110, 235, 85);
+            cOrb2 = Color(130, 95, 220, 75);
+            cOrb3 = Color(110, 140, 230, 50);
+        } else if (currentTheme == Theme::LightClean) {
+            bgTop = Color(206, 218, 234, 255);
+            bgBot = Color(190, 205, 224, 255);
+            cOrb1 = Color(110, 160, 235, 80);
+            cOrb2 = Color(135, 180, 242, 70);
+            cOrb3 = Color(235, 242, 252, 95);
+            cHole = Color(198, 210, 228, 140);
+        }
+
+        D2D1_RECT_F fullRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
+
+        // 1. Fundo base degradê
+        {
+            std::vector<D2D1_GRADIENT_STOP> stops = {
+                { 0.0f, bgTop.ToD2D() },
+                { 1.0f, bgBot.ToD2D() }
+            };
+            Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
+            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
+                if (SUCCEEDED(rt->CreateLinearGradientBrush(
+                    D2D1::LinearGradientBrushProperties(D2D1::Point2F(0.0f, 0.0f), D2D1::Point2F((float)w, (float)h)),
+                    stopCol.Get(), &gradBrush))) {
+                    rt->FillRectangle(fullRect, gradBrush.Get());
+                }
+            }
+        }
+
+        float minDim = (float)std::min(w, h);
+        float maxDim = (float)std::max(w, h);
+
+        auto drawRadialOrb = [&](float cx, float cy, float rx, float ry, Color col) {
+            Color edgeCol(col.r, col.g, col.b, 0);
+            std::vector<D2D1_GRADIENT_STOP> stops = {
+                { 0.0f, col.ToD2D() },
+                { 1.0f, edgeCol.ToD2D() }
+            };
+            Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
+            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                Microsoft::WRL::ComPtr<ID2D1RadialGradientBrush> radBrush;
+                if (SUCCEEDED(rt->CreateRadialGradientBrush(
+                    D2D1::RadialGradientBrushProperties(D2D1::Point2F(cx, cy), D2D1::Point2F(0.0f, 0.0f), rx, ry),
+                    stopCol.Get(), &radBrush))) {
+                    rt->FillRectangle(fullRect, radBrush.Get());
+                }
+            }
+        };
+
+        // 2. Orbe 1 (superior direito)
+        drawRadialOrb(w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.46f, minDim * 0.46f, cOrb1);
+        // 3. Anel 2 (inferior direito)
+        drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.43f, minDim * 0.43f, cOrb2);
+        drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.16f, minDim * 0.16f, cHole);
+        // 4. Luz secundária 3 (esquerda)
+        drawRadialOrb(w * 0.14f + ox3, h * 0.54f + oy3, maxDim * 0.36f, maxDim * 0.36f, cOrb3);
+    }
+
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || !d2dBrush) return;
@@ -1876,6 +1995,73 @@ private:
         if (borderCol.a > 0 && borderCol.Pack() != fill.Pack()) {
             d2dBrush->SetColor(borderCol.ToD2D());
             rt->DrawRoundedRectangle(&rr, d2dBrush.Get(), 1.0f);
+        }
+    }
+
+    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color) {
+        ID2D1RenderTarget* rt = ActiveD2DTarget();
+        if (!rt || w <= 0 || h <= 0) return;
+        D2D1_ROUNDED_RECT rr = { D2D1::RectF((float)x, (float)y, (float)(x + w), (float)(y + h)), (float)radius, (float)radius };
+
+        if (c1.a > 0) {
+            std::vector<D2D1_GRADIENT_STOP> stops = {
+                { 0.0f, c1.ToD2D() },
+                { 1.0f, c2.ToD2D() }
+            };
+            Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
+            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
+                if (SUCCEEDED(rt->CreateLinearGradientBrush(
+                    D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                    stopCol.Get(), &gradBrush))) {
+                    rt->FillRoundedRectangle(&rr, gradBrush.Get());
+                }
+            }
+        }
+
+        // Brilho especular sutil na borda superior
+        std::vector<D2D1_GRADIENT_STOP> rimStops = {
+            { 0.0f, Color(255, 255, 255, 75).ToD2D() },
+            { 1.0f, Color(255, 255, 255, 12).ToD2D() }
+        };
+        Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> rimCol;
+        if (SUCCEEDED(rt->CreateGradientStopCollection(rimStops.data(), (UINT32)rimStops.size(), &rimCol))) {
+            Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> rimBrush;
+            if (SUCCEEDED(rt->CreateLinearGradientBrush(
+                D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                rimCol.Get(), &rimBrush))) {
+                D2D1_ROUNDED_RECT borderRR = {
+                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, (float)(x + w) - 0.5f), std::max(0.0f, (float)(y + h) - 0.5f)),
+                    (float)radius, (float)radius
+                };
+                rt->DrawRoundedRectangle(&borderRR, rimBrush.Get(), 1.0f);
+            }
+        }
+    }
+
+    void DrawGlassPanelRect(int x, int y, int w, int h, int radius, Color fill, Color) {
+        ID2D1RenderTarget* rt = ActiveD2DTarget();
+        if (!rt || w <= 0 || h <= 0) return;
+
+        DrawRoundRect(x, y, w, h, radius, fill, Color(0, 0, 0, 0));
+
+        // Borda com degradê simulando espessura de vidro
+        std::vector<D2D1_GRADIENT_STOP> glassStops = {
+            { 0.0f, Color(255, 255, 255, 75).ToD2D() },
+            { 1.0f, Color(255, 255, 255, 18).ToD2D() }
+        };
+        Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> glassCol;
+        if (SUCCEEDED(rt->CreateGradientStopCollection(glassStops.data(), (UINT32)glassStops.size(), &glassCol))) {
+            Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> glassBrush;
+            if (SUCCEEDED(rt->CreateLinearGradientBrush(
+                D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                glassCol.Get(), &glassBrush))) {
+                D2D1_ROUNDED_RECT borderRR = {
+                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, (float)(x + w) - 0.5f), std::max(0.0f, (float)(y + h) - 0.5f)),
+                    (float)radius, (float)radius
+                };
+                rt->DrawRoundedRectangle(&borderRR, glassBrush.Get(), 1.0f);
+            }
         }
     }
 
@@ -2034,13 +2220,116 @@ private:
         return sz.cx;
     }
 
+    void DrawGlassBackdrop(int w, int h) {
+        if (!hdc || w <= 0 || h <= 0) return;
+
+        static DWORD backdropStartMs = 0;
+        DWORD now = GetTickCount();
+        if (backdropStartMs == 0) {
+            backdropStartMs = now;
+            backdropSeed = static_cast<float>(now % 10000) * 0.137f;
+        }
+
+        hasActiveAnimations = true;
+        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+
+        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
+        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
+
+        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
+        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
+
+        Color bgTop(14, 10, 14, 255);
+        Color bgBot(8, 8, 10, 255);
+        Color cOrb1(245, 55, 95, 65);
+        Color cOrb2(210, 40, 80, 55);
+
+        if (currentTheme == Theme::RoseGold) {
+            bgTop = Color(14, 13, 16, 255);
+            cOrb1 = Color(235, 145, 120, 65);
+            cOrb2 = Color(205, 125, 110, 55);
+        } else if (currentTheme == Theme::CyberPurple) {
+            bgTop = Color(13, 14, 22, 255);
+            cOrb1 = Color(185, 110, 235, 65);
+            cOrb2 = Color(130, 95, 220, 55);
+        } else if (currentTheme == Theme::LightClean) {
+            bgTop = Color(206, 218, 234, 255);
+            bgBot = Color(190, 205, 224, 255);
+            cOrb1 = Color(110, 160, 235, 65);
+            cOrb2 = Color(135, 180, 242, 55);
+        }
+
+        // Fundo base em degradê vertical usando GradientFill
+        std::vector<TRIVERTEX> verts = {
+            { 0, 0, (COLOR16)(bgTop.r << 8), (COLOR16)(bgTop.g << 8), (COLOR16)(bgTop.b << 8), 0xFF00 },
+            { w, h, (COLOR16)(bgBot.r << 8), (COLOR16)(bgBot.g << 8), (COLOR16)(bgBot.b << 8), 0xFF00 }
+        };
+        GRADIENT_RECT gRect = { 0, 1 };
+        GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+
+        // Brilhos translúcidos animados
+        auto drawSoftOrb = [&](int cx, int cy, int r, Color col) {
+            HDC orbDC = CreateCompatibleDC(hdc);
+            HBITMAP orbBM = CreateCompatibleBitmap(hdc, 1, 1);
+            HGDIOBJ oldBM = SelectObject(orbDC, orbBM);
+            SetPixel(orbDC, 0, 0, col.ToWin32());
+
+            for (int step = 4; step >= 1; --step) {
+                int curR = (r * step) / 4;
+                BYTE alpha = (BYTE)(col.a / 4);
+                BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
+                AlphaBlend(hdc, cx - curR, cy - curR, curR * 2, curR * 2, orbDC, 0, 0, 1, 1, bf);
+            }
+
+            SelectObject(orbDC, oldBM);
+            DeleteObject(orbBM);
+            DeleteDC(orbDC);
+        };
+
+        int minDim = std::min(w, h);
+        drawSoftOrb((int)(w * 0.80f + ox1), (int)(h * 0.22f + oy1), (int)(minDim * 0.35f), cOrb1);
+        drawSoftOrb((int)(w * 0.66f + ox2), (int)(h * 0.72f + oy2), (int)(minDim * 0.32f), cOrb2);
+    }
+
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
+        if (!hdc || w <= 0 || h <= 0) return;
         HGDIOBJ oldB = SelectObject(hdc, GetBrush(fill));
         HGDIOBJ oldP = SelectObject(hdc, GetPen(borderCol, 1));
         if (radius > 0) RoundRect(hdc, x, y, x + w, y + h, radius, radius);
         else Rectangle(hdc, x, y, x + w, y + h);
         SelectObject(hdc, oldB);
         SelectObject(hdc, oldP);
+    }
+
+    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color) {
+        if (!hdc || w <= 0 || h <= 0) return;
+
+        int saved = SaveDC(hdc);
+        HRGN rgn = CreateRoundRectRgn(x, y, x + w + 1, y + h + 1, radius, radius);
+        SelectClipRgn(hdc, rgn);
+
+        std::vector<TRIVERTEX> verts = {
+            { x, y, (COLOR16)(c1.r << 8), (COLOR16)(c1.g << 8), (COLOR16)(c1.b << 8), 0xFF00 },
+            { x + w, y + h, (COLOR16)(c2.r << 8), (COLOR16)(c2.g << 8), (COLOR16)(c2.b << 8), 0xFF00 }
+        };
+        GRADIENT_RECT gRect = { 0, 1 };
+        GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+
+        RestoreDC(hdc, saved);
+        DeleteObject(rgn);
+
+        Color rimCol = Color::Lerp(c1, Color(255, 255, 255, 255), 0.25f);
+        HGDIOBJ oldB = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        HGDIOBJ oldP = SelectObject(hdc, GetPen(rimCol, 1));
+        RoundRect(hdc, x, y, x + w, y + h, radius, radius);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+    }
+
+    void DrawGlassPanelRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
+        if (!hdc || w <= 0 || h <= 0) return;
+        Color glassRim = Color::Lerp(borderCol, Color(255, 255, 255, 255), 0.18f);
+        DrawRoundRect(x, y, w, h, radius, fill, glassRim);
     }
 
     void DrawLine(int x1, int y1, int x2, int y2, Color col) {
@@ -2293,7 +2582,7 @@ private:
                     if (d2dHwndTarget) {
                         d2dHwndTarget->BeginDraw();
                         d2dHwndTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-                        d2dHwndTarget->Clear(style.windowBg.ToD2D());
+                        DrawGlassBackdrop(clientW, clientH);
                         BeginFrameState();
                         if (renderCallback) renderCallback(*this);
                         EndFrameState();
@@ -2306,7 +2595,7 @@ private:
                     EnsureBackBuffer(realDC, clientW, clientH);
                     hdc = backDC;
                     BeginFrameState();
-                    DrawRoundRect(0, 0, clientW, clientH, 0, style.windowBg, style.windowBg);
+                    DrawGlassBackdrop(clientW, clientH);
                     if (renderCallback) renderCallback(*this);
                     EndFrameState();
                     BitBlt(realDC, 0, 0, clientW, clientH, backDC, 0, 0, SRCCOPY);

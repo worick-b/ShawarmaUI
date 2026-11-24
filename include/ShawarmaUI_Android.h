@@ -1811,19 +1811,11 @@ private:
         if (backdropStartMs == 0) backdropStartMs = now;
 
         hasActiveAnimations = true;
-        float t = (now - backdropStartMs) * 0.00085f; // Ritmo suave e hipnótico
+        float t = (now - backdropStartMs) * 0.00014f; // Velocidade suave da primeira animação
 
-        // 1. Orbe 1: percorre a curva em "8" (infinito) pela tela inteira
-        float ox1 = std::sin(t) * (w * 0.38f);
-        float oy1 = std::sin(t * 2.0f) * (h * 0.34f);
-
-        // 2. Anel 2: mesma curva em "8", mas defasado 180° (+ PI) -> enquanto um sobe, o outro desce e se cruzam no meio
-        float ox2 = std::sin(t + 3.14159f) * (w * 0.38f);
-        float oy2 = std::sin((t + 3.14159f) * 2.0f) * (h * 0.34f);
-
-        // 3. Luz ambiente central: pulso suave acompanhando o encontro no centro
-        float ox3 = std::cos(t * 0.5f) * (w * 0.22f);
-        float oy3 = std::sin(t * 0.5f) * (h * 0.18f);
+        // Movimento circular sutil original
+        float offsetX = std::sin(t) * S(25);
+        float offsetY = std::cos(t * 0.8f) * S(18);
 
         // Cores das luzes adaptadas ao tema atual (Padrão: NeonRed)
         NVGcolor bgTop = nvgRGBA(14, 10, 14, 255);
@@ -1852,7 +1844,7 @@ private:
             cHole = nvgRGBA(198, 210, 228, 140);
         }
 
-        // 1. Fundo base
+        // 1. Base escura profunda
         NVGpaint bgGrad = nvgLinearGradient(vg, 0.0f, 0.0f, (float)w, (float)h, bgTop, bgBot);
         nvgBeginPath(vg);
         nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
@@ -1862,9 +1854,9 @@ private:
         float minDim = (float)std::min(w, h);
         float maxDim = (float)std::max(w, h);
 
-        // 2. Orbe 1 (superior direito)
+        // 2. Orbe superior direito
         NVGpaint orb1 = nvgRadialGradient(
-            vg, w * 0.50f + ox1, h * 0.50f + oy1, minDim * 0.04f, minDim * 0.48f,
+            vg, w * 0.82f + offsetX, h * 0.22f + offsetY, minDim * 0.04f, minDim * 0.45f,
             cOrb1, nvgRGBA(cOrb1.r * 255, cOrb1.g * 255, cOrb1.b * 255, 0)
         );
         nvgBeginPath(vg);
@@ -1872,9 +1864,9 @@ private:
         nvgFillPaint(vg, orb1);
         nvgFill(vg);
 
-        // 3. Anel 2 (inferior direito)
+        // 3. Anel inferior direito (movendo no sentido oposto: -offsetX)
         NVGpaint orb2Outer = nvgRadialGradient(
-            vg, w * 0.50f + ox2, h * 0.50f + oy2, minDim * 0.08f, minDim * 0.45f,
+            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.08f, minDim * 0.42f,
             cOrb2, nvgRGBA(cOrb2.r * 255, cOrb2.g * 255, cOrb2.b * 255, 0)
         );
         nvgBeginPath(vg);
@@ -1883,7 +1875,7 @@ private:
         nvgFill(vg);
 
         NVGpaint orb2Hole = nvgRadialGradient(
-            vg, w * 0.50f + ox2, h * 0.50f + oy2, minDim * 0.01f, minDim * 0.16f,
+            vg, w * 0.68f - offsetX, h * 0.72f - offsetY, minDim * 0.01f, minDim * 0.16f,
             cHole, nvgRGBA(cHole.r * 255, cHole.g * 255, cHole.b * 255, 0)
         );
         nvgBeginPath(vg);
@@ -1891,9 +1883,9 @@ private:
         nvgFillPaint(vg, orb2Hole);
         nvgFill(vg);
 
-        // 4. Luz secundária 3 (esquerda)
+        // 4. Ponto de luz secundário à esquerda
         NVGpaint orb3 = nvgRadialGradient(
-            vg, w * 0.50f + ox3, h * 0.50f + oy3, minDim * 0.02f, maxDim * 0.38f,
+            vg, w * 0.12f + (offsetY * 0.6f), h * 0.55f + (offsetX * 0.6f), minDim * 0.02f, maxDim * 0.35f,
             cOrb3, nvgRGBA(cOrb3.r * 255, cOrb3.g * 255, cOrb3.b * 255, 0)
         );
         nvgBeginPath(vg);

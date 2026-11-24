@@ -623,7 +623,8 @@ public:
             activeScrollChildId = id;
         }
 
-        float scrollY = std::max(0.0f, childScrollMap[id]);
+        float maxPrev = childMaxScrollMap[id];
+        float scrollY = std::clamp(childScrollMap[id], 0.0f, maxPrev);
         childScrollMap[id] = scrollY;
 
         ChildState cs{};
@@ -677,6 +678,7 @@ public:
 
         int contentH = (cursorY - cs.startContentY) + S(8);
         int maxScroll = std::max(0, contentH - cs.h);
+		childMaxScrollMap[cs.id] = (float)maxScroll;
         float& scrollY = childScrollMap[cs.id];
         scrollY = std::clamp(scrollY, 0.0f, (float)maxScroll);
 
@@ -1622,6 +1624,7 @@ private:
     };
     std::vector<ChildState> childStack;
     std::unordered_map<int, float> childScrollMap;
+    std::unordered_map<int, float> childMaxScrollMap;
 
     std::vector<RectI> clipStack;
 

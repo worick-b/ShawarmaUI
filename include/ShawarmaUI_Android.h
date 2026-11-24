@@ -947,6 +947,7 @@ public:
         int boxSz = S(22);
         int h = S(30);
         int textW = CalcTextWidth(disp, false);
+        int totalW = std::min(boxSz + S(10) + textW + S(4), GetAvailWidth());
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
 
@@ -1103,7 +1104,7 @@ public:
 
         for (int i = 0; i < count; ++i) {
             int id = MakeWidgetId("tab_" + std::to_string(i));
-			std::string disp = StripIdSuffix(options.at(i));
+            std::string disp = StripIdSuffix(labels.at(i));
             int tx = x + i * (tabW + spacing);
             int curW = (i == count - 1) ? std::max(tabW, (x + totalW) - tx) : tabW;
             bool isSelected = (currentTab == i);
@@ -1129,7 +1130,7 @@ public:
                 } else {
                     DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
                 }
-                DrawTextInternal(sx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
+                DrawTextInternal(tx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
             });
         }
 

@@ -337,8 +337,8 @@ public:
         if (!d2dContext) return;
         d2dContext->BeginDraw();
         d2dContext->SetTransform(D2D1::Matrix3x2F::Identity());
-        DrawGlassBackdrop(width, height);
         BeginFrameState();
+        DrawGlassBackdrop(width, height);
     }
 
     void EndExternalFrame() {
@@ -661,7 +661,8 @@ public:
             }
         }
 
-        float scrollY = std::max(0.0f, childScrollMap[id]);
+        float maxPrev = childMaxScrollMap[id];
+        float scrollY = std::clamp(childScrollMap[id], 0.0f, maxPrev);
         childScrollMap[id] = scrollY;
 
         ChildState cs{};
@@ -712,6 +713,7 @@ public:
 
         int contentH = (cursorY - cs.startContentY) + S(6);
         int maxScroll = std::max(0, contentH - cs.h);
+        childMaxScrollMap[cs.id] = (float)maxScroll;
         float& scrollY = childScrollMap[cs.id];
         scrollY = std::clamp(scrollY, 0.0f, (float)maxScroll);
 
@@ -1714,6 +1716,7 @@ private:
     };
     std::vector<ChildState> childStack;
     std::unordered_map<int, float> childScrollMap;
+	std::unordered_map<int, float> childMaxScrollMap;
     int hoveredChildId = 0;
     float pendingWheelDelta = 0.0f;
     float childDragOffsetY = 0.0f;
@@ -2304,7 +2307,7 @@ private:
 
         if (layoutPtr) {
             d2dBrush->SetColor(col.ToD2D());
-            rt->DrawTextLayout(D2D1::Point2F((float)x, (float)y), layoutPtr, d2dBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_CLIP);
+            rt->DrawTextLayout(D2D1::Point2F((float)x, (float)y), layoutPtr, d2dBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_NONE);
         }
     }
 
@@ -2839,8 +2842,8 @@ private:
                     if (d2dHwndTarget) {
                         d2dHwndTarget->BeginDraw();
                         d2dHwndTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-                        DrawGlassBackdrop(clientW, clientH);
                         BeginFrameState();
+                        DrawGlassBackdrop(clientW, clientH);
                         if (renderCallback) renderCallback(*this);
                         EndFrameState();
                         if (d2dHwndTarget->EndDraw() == D2DERR_RECREATE_TARGET) {

@@ -11,7 +11,6 @@
 #include <cmath>
 #include <cstdint>
 #include <chrono>
-#include <random>
 
 namespace ShawarmaUI {
 
@@ -1808,34 +1807,23 @@ private:
         if (!vg || w <= 0 || h <= 0) return;
 
         static uint64_t backdropStartMs = 0;
-        static float phase[6] = { 0 };
-        static float dir[6] = { 1, 1, 1, 1, 1, 1 };
-
         uint64_t now = NowMs();
-        if (backdropStartMs == 0) {
-            backdropStartMs = now;
-            std::mt19937 rng(static_cast<uint32_t>(now ^ (now >> 16)));
-            std::uniform_real_distribution<float> distPhase(0.0f, 6.2831f);
-            for (int i = 0; i < 6; ++i) {
-                phase[i] = distPhase(rng);
-                dir[i] = (rng() % 2 == 0) ? 1.0f : -1.0f; // Sorteia sentido horário ou anti-horário
-            }
-        }
+        if (backdropStartMs == 0) backdropStartMs = now;
 
         hasActiveAnimations = true;
-        float t = (now - backdropStartMs) * 0.0011f;
+        float t = (now - backdropStartMs) * 0.0010f; // Velocidade suave e relaxante
 
-        // Orbe 1: trajetória lenta em frequência prima (0.53 / 0.37)
-        float ox1 = dir[0] * (std::sin(t * 0.53f + phase[0]) * 0.65f + std::cos(t * 0.23f + phase[1]) * 0.35f) * (w * 0.42f);
-        float oy1 = dir[1] * (std::cos(t * 0.37f + phase[1]) * 0.65f + std::sin(t * 0.19f + phase[0]) * 0.35f) * (h * 0.36f);
+        // 1. Orbe superior: órbita circular ampla cruzando toda a largura (esquerda -> direita)
+        float ox1 = std::cos(t) * (w * 0.40f);
+        float oy1 = std::sin(t) * (h * 0.14f);
 
-        // Orbe 2 (Anel): defasado ~120° e em ritmo diferente (0.41 / 0.61)
-        float ox2 = dir[2] * (std::cos(t * 0.41f + phase[2] + 2.1f) * 0.65f + std::sin(t * 0.29f + phase[3]) * 0.35f) * (w * 0.44f);
-        float oy2 = dir[3] * (std::sin(t * 0.61f + phase[3] + 2.1f) * 0.65f + std::cos(t * 0.17f + phase[2]) * 0.35f) * (h * 0.38f);
+        // 2. Anel inferior: órbita circular oposta (-cos) cruzando de ponta a ponta embaixo
+        float ox2 = -std::cos(t * 0.85f) * (w * 0.40f);
+        float oy2 = -std::sin(t * 0.85f) * (h * 0.14f);
 
-        // Orbe 3: defasado ~240° e ritmo próprio (0.31 / 0.47)
-        float ox3 = dir[4] * (std::sin(t * 0.31f + phase[4] + 4.2f) * 0.70f + std::cos(t * 0.13f + phase[5]) * 0.30f) * (w * 0.40f);
-        float oy3 = dir[5] * (std::cos(t * 0.47f + phase[5] + 4.2f) * 0.70f + std::sin(t * 0.21f + phase[4]) * 0.30f) * (h * 0.35f);
+        // 3. Luz suave de fundo: flutuação lenta no centro
+        float ox3 = std::sin(t * 0.5f) * (w * 0.25f);
+        float oy3 = std::cos(t * 0.5f) * (h * 0.12f);
 
         // Cores das luzes adaptadas ao tema atual (Padrão: NeonRed)
         NVGcolor bgTop = nvgRGBA(14, 10, 14, 255);

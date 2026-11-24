@@ -678,7 +678,12 @@ public:
         cs.startContentY = y + S(6) - (int)std::round(scrollY);
         childStack.push_back(cs);
 
-        DrawRoundRect(x, y, w, h, S(style.rounding), style.childBg, border ? style.border : style.childBg);
+        Color bgCol = style.childBg;
+        Color bdrCol = border ? style.border : style.childBg;
+        int rad = S(style.rounding);
+        QueueOrDraw([=]() {
+            DrawRoundRect(x, y, w, h, rad, bgCol, bdrCol);
+        });
 
         int pad = S(8);
         int scrollBarSpace = S(10);
@@ -687,7 +692,12 @@ public:
         cursorX = regionLeft;
         cursorY = cs.startContentY;
 
-        PushClip(x + 1, y + 1, std::max(0, w - 2), std::max(0, h - 2));
+        int cx = x + 1, cy = y + 1;
+        int cw = std::max(0, w - 2), ch = std::max(0, h - 2);
+        PushClipLogical(cx, cy, cw, ch);
+        QueueOrDraw([=]() {
+            ApplyClipRect({ cx, cy, cx + cw, cy + ch });
+        });
     }
 
     void EndChild() {
@@ -695,7 +705,10 @@ public:
         ChildState cs = childStack.back();
         childStack.pop_back();
 
-        PopClip();
+        PopClipLogical();
+        QueueOrDraw([=]() {
+            RemoveClipRect();
+        });
 
         int contentH = (cursorY - cs.startContentY) + S(6);
         int maxScroll = std::max(0, contentH - cs.h);
@@ -730,8 +743,11 @@ public:
             }
 
             Color grabCol = (activeDragId == sbId || sbHovered) ? style.borderFocus : style.scrollbarGrab;
-            DrawRoundRect(barX, barY, barW, barH, barW / 2, style.scrollbarBg, style.scrollbarBg);
-            DrawRoundRect(barX, grabY, barW, grabH, barW / 2, grabCol, grabCol);
+            Color sbBg = style.scrollbarBg;
+            QueueOrDraw([=]() {
+                DrawRoundRect(barX, barY, barW, barH, barW / 2, sbBg, sbBg);
+                DrawRoundRect(barX, grabY, barW, grabH, barW / 2, grabCol, grabCol);
+            });
         }
 
         regionLeft = cs.savedRegionLeft;
@@ -2586,7 +2602,7 @@ private:
     }
 #endif
 
-    void PushClip(int x, int y, int w, int h) {
+    void PushClipLogical(int x, int y, int w, int h) {
         RECT r = { x, y, x + w, y + h };
         if (!clipStack.empty()) {
             const RECT& prev = clipStack.back();
@@ -2596,7 +2612,15 @@ private:
             r.bottom = std::max(r.top, std::min(r.bottom, prev.bottom));
         }
         clipStack.push_back(r);
-        ApplyClipRect(r);
+    }
+
+    void PopClipLogical() {
+        if (!clipStack.empty()) clipStack.pop_back();
+    }
+
+    void PushClip(int x, int y, int w, int h) {
+        PushClipLogical(x, y, w, h);
+        ApplyClipRect(clipStack.back());
     }
 
     void PopClip() {

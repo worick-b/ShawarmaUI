@@ -44,7 +44,7 @@
 ## 🚀 Quick Start & Compilation
 
 <details>
-<summary><b>🪟 Windows — Code Example & MinGW Compilation</b> (Click to expand)</summary>
+<summary><b> Windows — Code Example & MinGW Compilation</b> (Click to expand)</summary>
 
 ```cpp
 #define SHAWARMAUI_USE_D2D // Optional: omit for pure GDI mode
@@ -97,7 +97,7 @@ g++ -std=c++17 -O3 -s -DSHAWARMAUI_USE_D2D main.cpp -o app.exe -ld2d1 -ldxgi -ld
 </details>
 
 <details>
-<summary><b>📱 Android — OpenGL ES 3.0 + NanoVG Example</b> (Click to expand)</summary>
+<summary><b> Android — OpenGL ES 3.0 + NanoVG Example</b> (Click to expand)</summary>
 
 ```cpp
 #include "ShawarmaUI_Android.h"

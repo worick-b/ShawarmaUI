@@ -133,6 +133,6 @@ void OnDrawFrame(int width, int height) {
 - [x] Windows GDI & Direct2D backends with frosted-glass panels & living backdrop
 - [x] Fluent API, RAII scopes, and 18+ core widgets (100% C-array free)
 - [x] Zero-copy DXGI SwapChain & D2D HUD overlay mode
-- [x] Android Backend **(`Zero Material Design Baby! S2`)** powered by OpenGL ES 3.0 + NanoVG (`stb_truetype` & `stb_image`)
+- [x] Android Backend powered by OpenGL ES 3.0 + NanoVG (`Updated stb_truetype & stb_image`)
 - [x] Translucent frosted-glass panels, 3D vertical gradients & 10 FPS battery-friendly ambient backdrop
 - [x] Unified themes (`NeonRed`, `CyberPurple`, `RoseGold`, `LightClean`)

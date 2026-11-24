@@ -474,7 +474,7 @@ public:
         int y = cursorY + S(3);
         int l = regionLeft, r = regionRight;
         Color c = style.border;
-        QueueOrDraw([=, this]() { DrawLine(l, y, r, y, c); });
+        QueueOrDraw([=]() { DrawLine(l, y, r, y, c); });
         cursorY += S(10);
         return *this;
     }

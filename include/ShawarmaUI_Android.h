@@ -150,17 +150,49 @@ public:
     DisabledScope Disabled(bool disabled = true) {
         return DisabledScope(*this, disabled);
     }
+	
+    struct IdScope {
+        Context& ctx;
+        IdScope(Context& c, int id) : ctx(c) { ctx.PushID(id); }
+        IdScope(Context& c, const std::string& id) : ctx(c) { ctx.PushID(id); }
+        ~IdScope() { ctx.PopID(); }
+        explicit operator bool() const { return true; }
+    };
+
     ModalScope Modal(const std::string& id, int customW = 340, int customH = 160) {
         return ModalScope(*this, id, customW, customH);
+    }
+    IdScope ID(int id) { return IdScope(*this, id); }
+    IdScope ID(const std::string& id) { return IdScope(*this, id); }
+
+    void PushID(int intId) {
+        uint32_t seed = idStack.empty() ? 2166136261u : idStack.back();
+        seed ^= static_cast<uint32_t>(intId);
+        seed *= 16777619u;
+        idStack.push_back(seed);
+    }
+
+    void PushID(const std::string& strId) {
+        uint32_t seed = idStack.empty() ? 2166136261u : idStack.back();
+        for (unsigned char c : strId) {
+            seed ^= c;
+            seed *= 16777619u;
+        }
+        idStack.push_back(seed);
+    }
+
+    void PopID() {
+        if (!idStack.empty()) idStack.pop_back();
     }
 
     Context() {
         interactiveRects.reserve(64);
-        deferredDraws.reserve(64);
+        panelStack.reserve(4);
         modalDraws.reserve(16);
         comboOverlayDraws.reserve(8);
         clipStack.reserve(8);
         childStack.reserve(4);
+        idStack.reserve(8);
     }
 
     ~Context() {
@@ -448,11 +480,12 @@ public:
     }
 
     Context& SeparatorText(const std::string& labelUtf8, Color labelCol = Color(0, 0, 0, 0)) {
+        std::string disp = StripIdSuffix(labelUtf8);
         int h = S(22);
         int y = cursorY;
         int l = regionLeft, r = regionRight;
         int midY = y + h / 2;
-        int textW = CalcTextWidth(labelUtf8, true);
+        int textW = CalcTextWidth(disp, true);
         int pad = S(8);
         Color col = (labelCol.a > 0) ? labelCol : style.textDim;
         Color lineCol = style.border;
@@ -462,7 +495,7 @@ public:
             if (line1End > l) DrawLine(l, midY, line1End, midY, lineCol);
             int textX = line1End + pad;
             int drawW = std::min(textW + S(4), std::max(0, r - textX));
-            DrawTextInternal(textX, y, drawW, h, labelUtf8, col, true, ALIGN_LEFT);
+            DrawTextInternal(textX, y, drawW, h, disp, col, true, ALIGN_LEFT);
             int line2Start = textX + drawW + pad;
             if (line2Start < r) DrawLine(line2Start, midY, r, midY, lineCol);
         });
@@ -506,61 +539,76 @@ public:
     // --- CONTAINERS (PAINÉIS E ÁREA COM SCROLL POR TOQUE) ---
 
     void BeginPanel(const std::string& titleUtf8 = "", Color titleColor = Color(115, 191, 250), int customWidth = -1) {
-        panelActive = true;
-        panelStartY = cursorY;
-        panelLeft = cursorX;
-        panelRight = (customWidth > 0) ? (cursorX + S(customWidth)) : regionRight;
-        panelTitle = titleUtf8;
-        panelTitleColor = titleColor;
+        PanelState ps{};
+        ps.startY = cursorY;
+        ps.left = cursorX;
+        ps.right = (customWidth > 0) ? (cursorX + S(customWidth)) : regionRight;
+        ps.savedRegionLeft = regionLeft;
+        ps.savedRegionRight = regionRight;
+        ps.title = StripIdSuffix(titleUtf8);
+        ps.titleColor = titleColor;
+        panelStack.push_back(std::move(ps));
 
         int pad = S(12);
-        regionLeft = panelLeft + pad;
-        regionRight = panelRight - pad;
+        regionLeft = panelStack.back().left + pad;
+        regionRight = panelStack.back().right - pad;
         cursorX = regionLeft;
         cursorY += pad;
-        if (!panelTitle.empty()) cursorY += S(26);
+        if (!panelStack.back().title.empty()) cursorY += S(26);
     }
 
     void EndPanel() {
-        if (!panelActive) return;
+        if (panelStack.empty()) return;
+        PanelState ps = std::move(panelStack.back());
+        panelStack.pop_back();
+
         int pad = S(12);
         int panelBottom = cursorY + pad - S(style.itemSpacingY);
-        int w = panelRight - panelLeft;
-        int h = panelBottom - panelStartY;
+        int w = ps.right - ps.left;
+        int h = panelBottom - ps.startY;
         float r = (float)S(style.rounding);
+        Color bg = style.panelBg;
+        Color bdr = style.border;
 
-        // Fundo translúcido do painel
-        DrawRoundRect(panelLeft, panelStartY, w, h, S(style.rounding), style.panelBg, Color(0, 0, 0, 0));
+        auto drawSelf = [=, this]() {
+            DrawRoundRect(ps.left, ps.startY, w, h, S(style.rounding), bg, Color(0, 0, 0, 0));
 
-        // Borda com degradê de luz simulando espessura de vidro
-        if (vg && w > 0 && h > 0) {
-            NVGpaint glassBorder = nvgLinearGradient(
-                vg, (float)panelLeft, (float)panelStartY, (float)panelLeft, (float)panelBottom,
-                nvgRGBA(255, 255, 255, 75),
-                nvgRGBA(255, 255, 255, 18)
-            );
-            nvgBeginPath(vg);
-            nvgRoundedRect(vg, panelLeft + 0.5f, panelStartY + 0.5f, w - 1.0f, h - 1.0f, r);
-            nvgStrokePaint(vg, glassBorder);
-            nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
-            nvgStroke(vg);
+            if (vg && w > 0 && h > 0) {
+                NVGpaint glassBorder = nvgLinearGradient(
+                    vg, (float)ps.left, (float)ps.startY, (float)ps.left, (float)panelBottom,
+                    nvgRGBA(255, 255, 255, 75),
+                    nvgRGBA(255, 255, 255, 18)
+                );
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, ps.left + 0.5f, ps.startY + 0.5f, w - 1.0f, h - 1.0f, r);
+                nvgStrokePaint(vg, glassBorder);
+                nvgStrokeWidth(vg, std::max(1.0f, 1.0f * dpiScale * 0.5f));
+                nvgStroke(vg);
+            }
+
+            if (!ps.title.empty()) {
+                int titleY = ps.startY + S(10);
+                DrawTextInternal(ps.left + pad, titleY, w - pad * 2, S(22),
+                                 ps.title, ps.titleColor, true, ALIGN_LEFT);
+                int sepY = titleY + S(24);
+                DrawLine(ps.left + pad, sepY, ps.right - pad, sepY, bdr);
+            }
+
+            for (auto& fn : ps.deferredDraws) fn();
+        };
+
+        if (inModalRender) {
+            modalDraws.emplace_back(std::move(drawSelf));
+        } else if (!panelStack.empty()) {
+            panelStack.back().deferredDraws.emplace_back(std::move(drawSelf));
+        } else {
+            drawSelf();
         }
 
-        if (!panelTitle.empty()) {
-            int titleY = panelStartY + S(10);
-            DrawTextInternal(panelLeft + pad, titleY, w - pad * 2, S(22),
-                             panelTitle, panelTitleColor, true, ALIGN_LEFT);
-            int sepY = titleY + S(24);
-            DrawLine(panelLeft + pad, sepY, panelRight - pad, sepY, style.border);
-        }
-
-        regionLeft = panelLeft;
-        regionRight = panelRight;
+        regionLeft = ps.savedRegionLeft;
+        regionRight = ps.savedRegionRight;
         cursorX = regionLeft;
         cursorY = panelBottom + S(style.itemSpacingY);
-        panelActive = false;
-
-        FlushDeferredDraws();
     }
 
     void BeginChild(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
@@ -644,25 +692,27 @@ public:
     }
 
     Context& TextColored(Color color, const std::string& textUtf8, bool bold = false) {
+        std::string disp = StripIdSuffix(textUtf8);
         int offsetY = alignTextToFrame ? S(8) : 0;
         alignTextToFrame = false;
         if (IsDisabled()) color = style.disabledText;
         int h = S(22);
-        int w = CalcTextWidth(textUtf8, bold);
+        int w = CalcTextWidth(disp, bold);
         int drawW = std::min(w + S(4), GetAvailWidth());
         int x = cursorX, y = cursorY + offsetY;
 
         QueueOrDraw([=, this]() {
-            DrawTextInternal(x, y, drawW, h, textUtf8, color, bold, ALIGN_LEFT);
+            DrawTextInternal(x, y, drawW, h, disp, color, bold, ALIGN_LEFT);
         });
         AdvanceCursor(drawW, h);
         return *this;
     }
 
     Context& Badge(const std::string& textUtf8, Color accentColor = Color(89, 173, 250)) {
+        std::string disp = StripIdSuffix(textUtf8);
         int padX = S(10);
         int h = S(24);
-        int textW = CalcTextWidth(textUtf8, true);
+        int textW = CalcTextWidth(disp, true);
         int w = std::min(textW + padX * 2, GetAvailWidth());
         int x = cursorX, y = cursorY;
 
@@ -671,25 +721,27 @@ public:
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, h / 2, bgCol, borderCol);
-            DrawTextInternal(x + padX, y, std::max(0, w - padX * 2), h, textUtf8, accentColor, true, ALIGN_CENTER);
+            DrawTextInternal(x + padX, y, std::max(0, w - padX * 2), h, disp, accentColor, true, ALIGN_CENTER);
         });
         AdvanceCursor(w, h);
         return *this;
     }
 
     Context& KeyValue(const std::string& keyUtf8, const std::string& valUtf8, Color valColor = Color(0, 0, 0, 0)) {
+        std::string dispKey = StripIdSuffix(keyUtf8);
+        std::string dispVal = StripIdSuffix(valUtf8);
         int h = S(22);
         int x = cursorX, y = cursorY;
         int availW = GetAvailWidth();
-        int keyW = std::min(CalcTextWidth(keyUtf8 + ": ", false), availW);
+        int keyW = std::min(CalcTextWidth(dispKey + ": ", false), availW);
         int valW = std::max(0, availW - keyW);
         Color kCol = IsDisabled() ? style.disabledText : style.textDim;
         Color vCol = IsDisabled() ? style.disabledText : ((valColor.a > 0) ? valColor : style.text);
 
         QueueOrDraw([=, this]() {
-            DrawTextInternal(x, y, keyW, h, keyUtf8 + ": ", kCol, false, ALIGN_LEFT);
+            DrawTextInternal(x, y, keyW, h, dispKey + ": ", kCol, false, ALIGN_LEFT);
             if (valW > 0) {
-                DrawTextInternal(x + keyW, y, valW, h, valUtf8, vCol, true, ALIGN_LEFT);
+                DrawTextInternal(x + keyW, y, valW, h, dispVal, vCol, true, ALIGN_LEFT);
             }
         });
         AdvanceCursor(availW, h);
@@ -890,11 +942,11 @@ public:
     }
 
     bool Checkbox(const std::string& labelUtf8, bool& value) {
-        int id = ++widgetCounter;
+        int id = MakeWidgetId("chk_" + labelUtf8);
+        std::string disp = StripIdSuffix(labelUtf8);
         int boxSz = S(22);
         int h = S(30);
-        int textW = CalcTextWidth(labelUtf8, false);
-        int totalW = std::min(boxSz + S(10) + textW + S(4), GetAvailWidth());
+        int textW = CalcTextWidth(disp, false);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
 
@@ -916,7 +968,7 @@ public:
             if (checkT > 0.02f) {
                 DrawCheckmarkNVG(x, boxY, boxSz, chkCol);
             }
-            DrawTextInternal(x + boxSz + S(10), y, std::max(0, totalW - boxSz - S(10)), h, labelUtf8, txtCol, false, ALIGN_LEFT);
+            DrawTextInternal(x + boxSz + S(10), y, std::max(0, totalW - boxSz - S(10)), h, disp, txtCol, false, ALIGN_LEFT);
         });
 
         AdvanceCursor(totalW, h);
@@ -924,11 +976,12 @@ public:
     }
 
     bool ToggleSwitch(const std::string& labelUtf8, bool& value) {
-        int id = ++widgetCounter;
+        int id = MakeWidgetId("tgl_" + labelUtf8);
+        std::string disp = StripIdSuffix(labelUtf8);
         int swW = S(44);
         int swH = S(24);
         int h = S(30);
-        int textW = labelUtf8.empty() ? 0 : (CalcTextWidth(labelUtf8, false) + S(10));
+        int textW = disp.empty() ? 0 : (CalcTextWidth(disp, false) + S(10));
         int totalW = std::min(swW + textW + S(4), GetAvailWidth());
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -958,7 +1011,7 @@ public:
             DrawRoundRect(knobX, knobY, knobSz, knobSz, knobSz / 2, knobCol, knobCol);
 
             if (!labelUtf8.empty() && totalW > swW + S(10)) {
-                DrawTextInternal(x + swW + S(10), y, totalW - swW - S(10), h, labelUtf8, txtCol, false, ALIGN_LEFT);
+                DrawTextInternal(x + swW + S(10), y, totalW - swW - S(10), h, disp, txtCol, false, ALIGN_LEFT);
             }
         });
 
@@ -968,8 +1021,9 @@ public:
 
     bool Button(const std::string& labelUtf8, int customW = 0, int customH = 0,
                 Color customBg = Color(0, 0, 0, 0), Color customHover = Color(0, 0, 0, 0)) {
-        int id = ++widgetCounter;
-        int w = (customW > 0) ? S(customW) : (CalcTextWidth(labelUtf8, true) + S(style.framePaddingX * 2));
+        int id = MakeWidgetId("btn_" + labelUtf8);
+        std::string disp = StripIdSuffix(labelUtf8);
+        int w = (customW > 0) ? S(customW) : (CalcTextWidth(disp, true) + S(style.framePaddingX * 2));
         if (customW == -1) w = GetAvailWidth();
         int h = (customH > 0) ? S(customH) : S(style.touchHeight);
         int x = cursorX, y = cursorY;
@@ -994,7 +1048,7 @@ public:
             } else {
                 DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
             }
-            DrawTextInternal(x, y, w, h, labelUtf8, txtCol, true, ALIGN_CENTER);
+            DrawTextInternal(x, y, w, h, disp, txtCol, true, ALIGN_CENTER);
         });
 
         AdvanceCursor(w, h);
@@ -1048,7 +1102,8 @@ public:
         bool changed = false;
 
         for (int i = 0; i < count; ++i) {
-            int id = ++widgetCounter;
+            int id = MakeWidgetId("tab_" + std::to_string(i));
+			std::string disp = StripIdSuffix(options.at(i));
             int tx = x + i * (tabW + spacing);
             int curW = (i == count - 1) ? std::max(tabW, (x + totalW) - tx) : tabW;
             bool isSelected = (currentTab == i);
@@ -1074,7 +1129,7 @@ public:
                 } else {
                     DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
                 }
-                DrawTextInternal(tx, y, curW, h, labels.at(i), txtCol, isSelected, ALIGN_CENTER);
+                DrawTextInternal(sx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
             });
         }
 
@@ -1097,7 +1152,8 @@ public:
         });
 
         for (int i = 0; i < count; ++i) {
-            int id = ++widgetCounter;
+            int id = MakeWidgetId("seg_" + std::to_string(i));
+			std::string disp = StripIdSuffix(options.at(i));
             int sx = x + i * segW;
             int curW = (i == count - 1) ? std::max(segW, (x + totalW) - sx) : segW;
             bool isSelected = (currentIndex == i);
@@ -1129,7 +1185,7 @@ public:
                         DrawRoundRect(rx, ry, rw, rh, rr, segCol, segCol);
                     }
                 }
-                DrawTextInternal(sx, y, curW, h, options.at(i), txtCol, isSelected, ALIGN_CENTER);
+                DrawTextInternal(sx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
             });
         }
 
@@ -1138,7 +1194,9 @@ public:
     }
 
     bool SelectableRow(const std::string& titleUtf8, const std::string& subtitleUtf8 = "", bool selected = false, int customHeight = 46) {
-        int id = ++widgetCounter;
+        int id = MakeWidgetId("row_" + titleUtf8);
+        std::string dispTitle = StripIdSuffix(titleUtf8);
+        std::string dispSub = StripIdSuffix(subtitleUtf8);
         int w = GetAvailWidth();
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
@@ -1158,11 +1216,11 @@ public:
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, bdrCol);
             int padX = S(12);
-            int subW = subtitleUtf8.empty() ? 0 : (CalcTextWidth(subtitleUtf8, false) + S(12));
+            int subW = dispSub.empty() ? 0 : (CalcTextWidth(dispSub, false) + S(12));
             int titleW = std::max(0, w - padX * 2 - subW);
-            DrawTextInternal(x + padX, y, titleW, h, titleUtf8, disabled ? style.disabledText : style.text, true, ALIGN_LEFT);
+            DrawTextInternal(x + padX, y, titleW, h, dispTitle, disabled ? style.disabledText : style.text, true, ALIGN_LEFT);
             if (subW > 0) {
-                DrawTextInternal(x + w - padX - subW, y, subW, h, subtitleUtf8, style.textDim, false, ALIGN_RIGHT);
+                DrawTextInternal(x + w - padX - subW, y, subW, h, dispSub, style.textDim, false, ALIGN_RIGHT);
             }
         });
 
@@ -1196,7 +1254,7 @@ public:
         Color borderCol = isOpen ? style.borderFocus : style.border;
 
         std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < (int)items.size())
-                              ? items.at(currentIndex) : "Selecionar...";
+                              ? StripIdSuffix(items.at(currentIndex)) : "Selecionar...";
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
@@ -1250,7 +1308,7 @@ public:
                     } else if (i == currentIndex) {
                         DrawRoundRect(x + S(4), optY, w - S(8), itemH, S(6), style.frameHover, style.frameHover);
                     }
-                    DrawTextInternal(x + S(12), optY, std::max(0, w - S(24)), itemH, items.at(i), style.text, i == currentIndex, ALIGN_LEFT);
+                    DrawTextInternal(x + S(12), optY, std::max(0, w - S(24)), itemH, StripIdSuffix(items.at(i)), style.text, i == currentIndex, ALIGN_LEFT);
                 }
             });
         }
@@ -1521,12 +1579,16 @@ private:
     int colStartY = 0, colMaxY = 0;
 
     std::vector<bool> disabledStack;
+	std::vector<uint32_t> idStack;
 
-    bool panelActive = false;
-    int panelStartY = 0, panelLeft = 0, panelRight = 0;
-    std::string panelTitle;
-    Color panelTitleColor;
-    std::vector<std::function<void()>> deferredDraws;
+    struct PanelState {
+        int startY = 0, left = 0, right = 0;
+        int savedRegionLeft = 0, savedRegionRight = 0;
+        std::string title;
+        Color titleColor;
+        std::vector<std::function<void()>> deferredDraws;
+    };
+    std::vector<PanelState> panelStack;
 
     struct ChildState {
         int id;
@@ -1578,14 +1640,27 @@ private:
     int S(int v) const { return (int)std::round(v * dpiScale); }
     bool IsDisabled() const { return !disabledStack.empty() && disabledStack.back(); }
 
-    static int HashString(const std::string& str) {
-        uint32_t h = 2166136261u;
+    static std::string StripIdSuffix(const std::string& label) {
+        size_t pos = label.find("##");
+        return (pos == std::string::npos) ? label : label.substr(0, pos);
+    }
+
+    int HashString(const std::string& str) const {
+        uint32_t h = idStack.empty() ? 2166136261u : idStack.back();
         for (unsigned char c : str) {
             h ^= c;
             h *= 16777619u;
         }
         int res = static_cast<int>(h & 0x7FFFFFFF);
         return (res == 0) ? 1 : res;
+    }
+
+    int MakeWidgetId(const std::string& tag) {
+        int idx = ++widgetCounter;
+        if (!idStack.empty()) {
+            return HashString(tag + "_" + std::to_string(idx));
+        }
+        return idx;
     }
 
     static size_t CountUtf8Chars(const std::string& s) {
@@ -1671,13 +1746,8 @@ private:
     template<typename Fn>
     void QueueOrDraw(Fn&& fn) {
         if (inModalRender) modalDraws.emplace_back(std::forward<Fn>(fn));
-        else if (panelActive) deferredDraws.emplace_back(std::forward<Fn>(fn));
+        else if (!panelStack.empty()) panelStack.back().deferredDraws.emplace_back(std::forward<Fn>(fn));
         else fn();
-    }
-
-    void FlushDeferredDraws() {
-        for (auto& fn : deferredDraws) fn();
-        deferredDraws.clear();
     }
 
     void BeginFrameState() {
@@ -1687,6 +1757,8 @@ private:
         pendingTooltipText.clear();
         clipStack.clear();
         childStack.clear();
+		panelStack.clear();
+		idStack.clear();
         inputRenderedThisFrame = false;
 
         uint64_t now = NowMs();
@@ -1711,6 +1783,9 @@ private:
     }
 
     void EndFrameState() {
+		while (!childStack.empty()) EndChild();
+        while (!panelStack.empty()) EndPanel();
+        while (!clipStack.empty()) PopClip();
         int bottomSafe = std::max(S(style.windowPadding), safeAreaBottom);
         int contentBottom = cursorY + static_cast<int>(std::round(windowScrollY)) + bottomSafe;
         int maxWinScroll = std::max(0, contentBottom - clientH);

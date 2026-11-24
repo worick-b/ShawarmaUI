@@ -612,7 +612,7 @@ public:
     }
 
     void BeginChild(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
-        int id = HashString(idStr);
+        int id = HashString("child_" + idStr);
         int w = (customW < 0) ? GetAvailWidth() : S(customW);
         int bottomSafe = std::max(S(style.windowPadding), safeAreaBottom);
         int h = (customH <= 0) ? std::max(S(80), clientH - cursorY - bottomSafe) : S(customH);
@@ -640,7 +640,12 @@ public:
         cs.startContentY = y + S(8) - (int)std::round(scrollY);
         childStack.push_back(cs);
 
-        DrawRoundRect(x, y, w, h, S(style.rounding), style.childBg, border ? style.border : style.childBg);
+        Color bgCol = style.childBg;
+        Color bdrCol = border ? style.border : style.childBg;
+        int rad = S(style.rounding);
+        QueueOrDraw([=]() {
+            DrawRoundRect(x, y, w, h, rad, bgCol, bdrCol);
+        });
 
         int pad = S(10);
         int scrollBarSpace = S(8);
@@ -649,7 +654,15 @@ public:
         cursorX = regionLeft;
         cursorY = cs.startContentY;
 
-        PushClip(x + 1, y + 1, std::max(0, w - 2), std::max(0, h - 2));
+        int cx = x + 1, cy = y + 1;
+        int cw = std::max(0, w - 2), ch = std::max(0, h - 2);
+        PushClipLogical(cx, cy, cw, ch);
+        QueueOrDraw([=]() {
+            if (vg) {
+                nvgSave(vg);
+                nvgIntersectScissor(vg, (float)cx, (float)cy, (float)cw, (float)ch);
+            }
+        });
     }
 
     void EndChild() {
@@ -657,7 +670,10 @@ public:
         ChildState cs = childStack.back();
         childStack.pop_back();
 
-        PopClip();
+        PopClipLogical();
+        QueueOrDraw([=]() {
+            if (vg) nvgRestore(vg);
+        });
 
         int contentH = (cursorY - cs.startContentY) + S(8);
         int maxScroll = std::max(0, contentH - cs.h);
@@ -669,13 +685,18 @@ public:
             int barX = cs.x + cs.w - barW - S(3);
             int barY = cs.y + S(6);
             int barH = cs.h - S(12);
-            DrawRoundRect(barX, barY, barW, barH, barW / 2, style.scrollbarBg, style.scrollbarBg);
+            Color sbBg = style.scrollbarBg;
+            Color sbGrab = style.scrollbarGrab;
 
             float visibleRatio = std::clamp(float(cs.h) / float(contentH), 0.12f, 1.0f);
             int grabH = std::max(S(22), (int)std::round(barH * visibleRatio));
             float scrollRatio = scrollY / float(maxScroll);
             int grabY = barY + (int)std::round((barH - grabH) * scrollRatio);
-            DrawRoundRect(barX, grabY, barW, grabH, barW / 2, style.scrollbarGrab, style.scrollbarGrab);
+
+            QueueOrDraw([=]() {
+                DrawRoundRect(barX, barY, barW, barH, barW / 2, sbBg, sbBg);
+                DrawRoundRect(barX, grabY, barW, grabH, barW / 2, sbGrab, sbGrab);
+            });
         }
 
         regionLeft = cs.savedRegionLeft;
@@ -2105,7 +2126,7 @@ private:
         DrawRoundRect(0, 0, clientW, clientH, 0, dimCol, dimCol);
     }
 
-    void PushClip(int x, int y, int w, int h) {
+    void PushClipLogical(int x, int y, int w, int h) {
         RectI r = { x, y, x + w, y + h };
         if (!clipStack.empty()) {
             const RectI& prev = clipStack.back();
@@ -2115,6 +2136,15 @@ private:
             r.bottom = std::max(r.top, std::min(r.bottom, prev.bottom));
         }
         clipStack.push_back(r);
+    }
+
+    void PopClipLogical() {
+        if (!clipStack.empty()) clipStack.pop_back();
+    }
+
+    void PushClip(int x, int y, int w, int h) {
+        PushClipLogical(x, y, w, h);
+        const RectI& r = clipStack.back();
         if (vg) {
             nvgSave(vg);
             nvgIntersectScissor(vg, (float)r.left, (float)r.top,

@@ -3,38 +3,48 @@
 
 > *A UI Sexy Model — Ultra-lightweight, single-header C++17 Immediate-Mode GUI library for Windows and Android.*
 
-**ShawarmaUI** is a `single-header` retained/immediate hybrid GUI library built from scratch with zero external dependencies and **zero C-style arrays** (100% modern C++17 containers). Designed for high-performance utilities, launchers, media players or anything your stomach wants. Native speed, crisp typography, and near-zero RAM/CPU overhead.
+**ShawarmaUI** is a `single-header` retained/immediate hybrid GUI library built from scratch with zero external dependencies and **zero C-style arrays** (100% modern C++17 containers). Designed for high-performance utilities, launchers, media players or anything your stomach wants — native speed, crisp typography, and **~2–15 MB RAM** footprint even on legacy CPUs.
 
 ---
 
 ## ✨ Key Features
 
-- **Single-Header & Zero Dependencies:** `~I've got to break free, I've fallen in love"`
-- **Unified Frosted Glass & Living Backdrop (Windows & Android):** Translucent smoked-glass panels with specular rim-light borders over an organically drifting ambient orb backdrop.
-- **3D Vertical Gradients:** Subtle top-to-bottom lighting gradients and specular edge highlights on active buttons, tabs, and segmented controls.
-- **For Windows (`ShawarmaUI.h`):** Drop it into your project, choose `GDI` or `Direct2D`, and compile.
-  - **GDI (Default):** Works on every Windows machine out of the box (including Safe Mode, Windows PE, and basic video drivers) with `GradientFill` and `AlphaBlend` effects.
-  - **Direct2D + DirectWrite (`#define SHAWARMAUI_USE_D2D`):** Hardware-accelerated rendering with cached `IDWriteTextLayout` for zero per-frame allocations.
-- **For Android (`ShawarmaUI_Android.h`):** Powered by OpenGL ES 3.0 + NanoVG — zero Material Design, zero XML bloat.
-  - **Battery-Friendly & Responsive:** Throttled redraws (~30 FPS during drag/scroll, immediate response on tap) and embedded icon font fallback support (`LoadIconFontFromMemory`, compatible with `ShawarmaIcons.h`).
-- **Event-Driven & Ultra-Light:** Consumes **~2–15 MB of RAM** and near-zero CPU when idle (runs smoothly even on legacy CPUs).
-- **Fluent API & RAII Scopes:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`) and use automatic RAII scopes (`if (auto p = ui.Panel("Title")) { ... }`).
-- **Built-in Themes:** Switch entire color schemes in one line (`NeonRed` [Default], `CyberPurple`, `RoseGold`, `LightClean`).
-- **Zero-Copy External Render Target Integration:** Embed ShawarmaUI HUD overlays directly into existing `IDXGISwapChain1` (DirectX 11 / ReShade compatible), `ID2D1HwndRenderTarget` (Direct2D), or Android OpenGL ES video pipelines (`BeginHUDFrame`).
-- **It's:** `A personal project, don't expect a dev master blaster (12" Version)`.
+* **Single-Header & Zero Dependencies:** `~I've got to break free, I've fallen in love"`
+* **Unified Frosted Glass & Living Backdrop:** Smoked-glass panels with specular rim-light borders over an organically drifting ambient orb backdrop (Windows & Android).
+* **3D Vertical Gradients:** Subtle top-to-bottom lighting gradients and specular edge highlights on active buttons, tabs, and segmented controls.
+* **Fluent API & RAII Scopes:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`) and use automatic RAII scopes (`if (auto p = ui.Panel("Title")) { ... }`).
+* **Zero-Copy HUD Overlays:** Embed directly into existing `IDXGISwapChain1` (DirectX 11 / ReShade compatible), `ID2D1HwndRenderTarget` (Direct2D), or Android OpenGL ES video pipelines (`BeginHUDFrame`).
+* **Built-in Themes:** Switch entire color schemes in one line (`NeonRed` *[Default]*, `CyberPurple`, `RoseGold`, `LightClean`).
+* **It's:** `A personal project, don't expect a dev master blaster (12" Version)`.
+
+---
+
+## 🖥️ Supported Backends
+
+| Platform | Header | Rendering | Details |
+| :--- | :--- | :--- | :--- |
+| **Windows (Default)** | `ShawarmaUI.h` | Pure Win32 GDI | Out-of-the-box compatibility (Safe Mode, Windows PE, basic drivers) with `GradientFill` & `AlphaBlend` |
+| **Windows (GPU)** | `ShawarmaUI.h` | Direct2D + DirectWrite | `#define SHAWARMAUI_USE_D2D` • Cached `IDWriteTextLayout` for zero per-frame allocations |
+| **Android** | `ShawarmaUI_Android.h` | OpenGL ES 3.0 + NanoVG | Zero Material Design, zero XML bloat, ~30 FPS throttled redraws & `LoadIconFontFromMemory` (`ShawarmaIcons.h`) |
 
 ---
 
 ## 🧩 Included Widgets
 
-- **Containers & Layout:** `Panel` (RAII), `Child` (scrollable area), `Modal` (RAII popup), `Columns`, `SameLine`, `SameLineRight`, `Separator`, `SeparatorText`
-- **Inputs & Controls:** `Button`, `ToggleButton`, `IconButton`, `Checkbox`, `ToggleSwitch`, `SliderFloat`, `SliderInt`, `InputText` (single-line & password support), `InputTextMultiline` (scrollable text/code editor on Android), `Combo`
-- **Navigation & Lists:** `TabBar`, `SegmentedControl`, `SelectableRow`
-- **Feedback & Display:** `Text`, `TextColored`, `Badge`, `KeyValue`, `ProgressBar`, `Spinner`, `Toast` (auto-fading notifications), `Tooltip` (hover on Windows / long-press on Android)
+| Category | Available Widgets |
+| :--- | :--- |
+| **Layout & Containers** | `Panel` *(RAII)*, `Child` *(scrollable)*, `Modal` *(RAII)*, `Columns`, `SameLine`, `SameLineRight`, `Separator`, `SeparatorText` |
+| **Inputs & Controls** | `Button`, `ToggleButton`, `IconButton`, `Checkbox`, `ToggleSwitch`, `SliderFloat`, `SliderInt`, `InputText`, `InputTextMultiline` *(Android)*, `Combo` |
+| **Navigation & Lists** | `TabBar`, `SegmentedControl`, `SelectableRow` |
+| **Feedback & Display** | `Text`, `TextColored`, `Badge`, `KeyValue`, `ProgressBar`, `Spinner`, `Toast`, `Tooltip` |
+
 
 ---
 
-## 🚀 Quick Start (Windows)
+## 🚀 Quick Start & Compilation
+
+<details>
+<summary><b>🪟 Windows — Code Example & MinGW Compilation</b> (Click to expand)</summary>
 
 ```cpp
 #define SHAWARMAUI_USE_D2D // Optional: omit for pure GDI mode
@@ -42,7 +52,7 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     ShawarmaUI::Context ui;
-    ui.ApplyTheme(ShawarmaUI::Theme::NeonRed); // NeonRed, CyberPurple, RoseGold, LightClean, ShawarmaGold
+    ui.ApplyTheme(ShawarmaUI::Theme::NeonRed); // NeonRed, CyberPurple, RoseGold, LightClean
 
     if (!ui.Create("ShawarmaUI Demo", 480, 320)) return 1;
 
@@ -75,9 +85,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 }
 ```
 
----
+**Pure GDI Mode (Maximum Compatibility):**
+```bash
+g++ -std=c++17 -O3 -s main.cpp -o app.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -mwindows -static
+```
 
-## 📱 Quick Start (Android / OpenGL ES 3.0)
+**Direct2D + DirectWrite Mode (Hardware Accelerated):**
+```bash
+g++ -std=c++17 -O3 -s -DSHAWARMAUI_USE_D2D main.cpp -o app.exe -ld2d1 -ldxgi -ldwrite -ldwmapi -lshell32 -mwindows -static
+```
+</details>
+
+<details>
+<summary><b>📱 Android — OpenGL ES 3.0 + NanoVG Example</b> (Click to expand)</summary>
 
 ```cpp
 #include "ShawarmaUI_Android.h"
@@ -104,20 +124,7 @@ void OnDrawFrame(int width, int height) {
     ui.EndFrame();
 }
 ```
-
----
-
-## 🛠️ Compilation (Windows — MinGW / GCC)
-
-### Pure GDI Mode (Maximum Compatibility)
-```bash
-g++ -std=c++17 -O3 -s main.cpp -o app.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -mwindows -static
-```
-
-### Direct2D + DirectWrite Mode (Hardware Accelerated)
-```bash
-g++ -std=c++17 -O3 -s main.cpp -o app.exe -ld2d1 -ldxgi -ldwrite -ldwmapi -lshell32 -mwindows -static
-```
+</details>
 
 ---
 

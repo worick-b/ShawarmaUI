@@ -9,10 +9,10 @@
 
 ## ✨ Key Features
 
-* **Single-Header & Zero Dependencies:** `~I've got to break free, I've fallen in love"`
+* **Single-Header & Zero Dependencies:** `"~I've got to break free, I've fallen in love"`
 * **Unified Frosted Glass & Living Backdrop:** Smoked-glass panels with specular rim-light borders over an organically drifting ambient orb backdrop (Windows & Android).
 * **3D Vertical Gradients:** Subtle top-to-bottom lighting gradients and specular edge highlights on active buttons, tabs, and segmented controls.
-* **Fluent API & RAII Scopes:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`) and use automatic RAII scopes (`if (auto p = ui.Panel("Title")) { ... }`).
+* **Fluent API, RAII Scopes & Dynamic IDs:** Chain layout modifiers (`ui.SameLine().AlignText().Text(...)`), nest panels, and isolate dynamic list items with `ctx.ID(...)` or `"Label##id"` suffixes across both Windows and Android.
 * **Zero-Copy HUD Overlays:** Embed directly into existing `IDXGISwapChain1` (DirectX 11 / ReShade compatible), `ID2D1HwndRenderTarget` (Direct2D), or Android OpenGL ES video pipelines (`BeginHUDFrame`).
 * **Built-in Themes:** Switch entire color schemes in one line (`NeonRed` *[Default]*, `CyberPurple`, `RoseGold`, `LightClean`).
 * **It's:** `A personal project, don't expect a dev master blaster (12" Version)`.
@@ -23,7 +23,7 @@
 
 | Platform | Header | Rendering | Details |
 | :--- | :--- | :--- | :--- |
-| **Windows (Default)** | `ShawarmaUI.h` | Pure Win32 GDI | Out-of-the-box compatibility (Safe Mode, Windows PE, basic drivers) with `GradientFill` & `AlphaBlend` |
+| **Windows (Default)** | `ShawarmaUI.h` | Pure Win32 GDI | Out-of-the-box compatibility (Safe Mode, Windows PE, basic drivers) with persistent GDI buffers, `GradientFill` & `AlphaBlend` |
 | **Windows (GPU)** | `ShawarmaUI.h` | Direct2D + DirectWrite | `#define SHAWARMAUI_USE_D2D` • Cached `IDWriteTextLayout` for zero per-frame allocations |
 | **Android** | `ShawarmaUI_Android.h` | OpenGL ES 3.0 + NanoVG | Zero Material Design, zero XML bloat, ~30 FPS throttled redraws & `LoadIconFontFromMemory` (`ShawarmaIcons.h`) |
 
@@ -33,11 +33,10 @@
 
 | Category | Available Widgets |
 | :--- | :--- |
-| **Layout & Containers** | `Panel` *(RAII)*, `Child` *(scrollable)*, `Modal` *(RAII)*, `Columns`, `SameLine`, `SameLineRight`, `Separator`, `SeparatorText` |
+| **Layout & Containers** | `Panel` *(RAII, nestable)*, `Child` *(scrollable)*, `Modal` *(RAII)*, `ID` / `PushID` *(RAII)*, `Columns`, `SameLine`, `SameLineRight`, `Separator`, `SeparatorText` |
 | **Inputs & Controls** | `Button`, `ToggleButton`, `IconButton`, `Checkbox`, `ToggleSwitch`, `SliderFloat`, `SliderInt`, `InputText`, `InputTextMultiline` *(Android)*, `Combo` |
 | **Navigation & Lists** | `TabBar`, `SegmentedControl`, `SelectableRow` |
 | **Feedback & Display** | `Text`, `TextColored`, `Badge`, `KeyValue`, `ProgressBar`, `Spinner`, `Toast`, `Tooltip` |
-
 
 ---
 

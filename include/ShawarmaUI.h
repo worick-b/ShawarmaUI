@@ -1121,7 +1121,14 @@ public:
         Color bgCol   = disabled ? style.disabledBg : activeCol;
 
         QueueOrDraw([=, this]() {
-            DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
+            if (!disabled) {
+                Color endCol = (customBg.a == 0)
+                    ? Color::Lerp(style.buttonGradEnd, style.buttonHover, hoverT)
+                    : Color::Lerp(bgCol, Color(0, 0, 0, bgCol.a), 0.25f);
+                DrawMeshRect(x, y, w, h, S(style.rounding), bgCol, endCol, bgCol);
+            } else {
+                DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, style.border);
+            }
             if (onDrawIcon) onDrawIcon(x, y, w, h);
         });
 
@@ -1937,8 +1944,9 @@ private:
         if (x < S(4)) x = S(4);
         if (y < S(4)) y = mousePos.y + S(18);
 
+        Color tipTextCol = (currentTheme == Theme::LightClean) ? Color(246, 243, 244, 255) : style.text;
         DrawRoundRect(x, y, boxW, boxH, S(4), style.tooltipBg, style.border);
-        DrawTextInternal(x + padX, y, textW, boxH, textUtf8, style.text, false, DT_LEFT);
+        DrawTextInternal(x + padX, y, textW, boxH, textUtf8, tipTextCol, false, DT_LEFT);
     }
 
     std::wstring GetClipboardTextW() const {

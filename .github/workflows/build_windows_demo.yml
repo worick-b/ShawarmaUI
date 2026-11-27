@@ -7,46 +7,31 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    name: Build Windows (GDI & Direct2D)
+  build-and-release:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Add MinGW-w64 to PATH
+      - name: Setup MinGW-w64
         shell: pwsh
         run: |
           if (Test-Path "C:\msys64\mingw64\bin") {
             "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
 
-      - name: Verify g++ version
+      - name: Build GDI & Direct2D
         shell: cmd
-        run: g++ --version
+        run: |
+          g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
+          g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -Wl,--gc-sections -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static
 
-      - name: Compile Win32 GDI Demo
-        shell: cmd
-        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
-
-      - name: Compile Direct2D Demo
-        shell: cmd
-        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -Wl,--gc-sections -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ShawarmaUI-Windows-x64
-          path: |
-            ShawarmaUI_GDI.exe
-            ShawarmaUI_D2D.exe
-
-      - name: Create GitHub Release (on tag push)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: latest
+          name: ShawarmaUI Windows Demos (Latest)
           files: |
             ShawarmaUI_GDI.exe
             ShawarmaUI_D2D.exe
-          generate_release_notes: true

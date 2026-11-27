@@ -67,5 +67,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: ShawarmaUI Demos (Windows & Android)
+          name: Demos (Windows & Android)
           files: ShawarmaUI_Android.apk

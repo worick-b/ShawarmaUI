@@ -1,14 +1,6 @@
 name: Build Android Demo
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'include/ShawarmaUI_Android.h'
-      - 'include/ShawarmaIcons.h'
-      - 'examples/android_demo/**'
-      - 'third_party/nanovg/**'
-      - '.github/workflows/build-android_demo.yml'
   workflow_dispatch:
 
 permissions:

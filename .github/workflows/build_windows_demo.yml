@@ -1,11 +1,6 @@
-name: Build ShawarmaUI Showcases
+name: Build ShawarmaUI Windows Demo
 
 on:
-  push:
-    branches: [ main, master ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 permissions:
@@ -20,10 +15,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup MinGW-w64 (w64devkit)
-        uses: egraphs-good/setup-mingw@v2
-        with:
-          platform: x64
+      - name: Add MinGW-w64 to PATH
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\msys64\mingw64\bin") {
+            "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Verify g++ version
+        shell: pwsh
+        run: g++ --version
 
       - name: Compile Win32 GDI Showcase
         shell: pwsh

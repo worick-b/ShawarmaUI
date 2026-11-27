@@ -81,7 +81,8 @@ struct Style {
     int itemSpacingY    = 10;
     int rounding        = 8;
     int touchHeight     = 38;
-    int animFps         = 30;
+    int animFps         = 30; // Interface (botões, scroll, widgets)
+    int backdropFps     = 15; // Animação de fundo (orbes)
 };
 
 struct RectI {
@@ -324,8 +325,8 @@ public:
     void RequestRedraw(bool force = false) {
         if (!onRequestRedraw) return;
         uint64_t now = NowMs();
-        // Limita pedidos contínuos (arrastar/scroll) a ~30 FPS (33ms), mas aceita cliques imediatos (force = true)
-        if (force || (now - lastRedrawRequestMs >= 33)) {
+        uint64_t intervalMs = (style.animFps > 0) ? (1000ULL / style.animFps) : 33ULL;
+        if (force || (now - lastRedrawRequestMs >= intervalMs)) {
             lastRedrawRequestMs = now;
             onRequestRedraw();
         }
@@ -437,7 +438,7 @@ public:
         nvgEndFrame(vg);
     }
 
-    bool HasActiveAnimations() const { return hasActiveAnimations; }
+    bool HasActiveAnimations() const { return hasActiveAnimations || hasBackdropAnimation; }
 
     // --- LAYOUT E CONTROLE FLUENTE ---
 
@@ -1604,6 +1605,7 @@ private:
     int activeScrollChildId = 0;
     std::unordered_map<int, float> animValues;
     bool hasActiveAnimations = false;
+    bool hasBackdropAnimation = false;
     uint64_t lastFrameTimeMs = 0;
     uint64_t lastRedrawRequestMs = 0;
     uint64_t lastBackdropTickMs = 0;
@@ -1816,6 +1818,7 @@ private:
         lastFrameTimeMs = now;
         widgetCounter = 0;
         hasActiveAnimations = false;
+		hasBackdropAnimation = false;
 
         int pad = S(style.windowPadding);
         int topStart = std::max(pad, safeAreaTop + S(8));
@@ -1880,6 +1883,17 @@ private:
         pendingTextCommits.clear();
         pendingBackspaceCount = 0;
         pendingEnterPressed = false;
+
+		if ((hasActiveAnimations || hasBackdropAnimation) && onRequestRedraw) {
+            uint64_t now = NowMs();
+            int targetFps = hasActiveAnimations ? style.animFps : style.backdropFps;
+            uint64_t intervalMs = (targetFps > 0) ? (1000ULL / targetFps) : 33ULL;
+
+            if (now - lastRedrawRequestMs >= intervalMs) {
+                lastRedrawRequestMs = now;
+                onRequestRedraw();
+            }
+        }
     }
 
     void DrawToastInternal(const std::string& textUtf8, Color accent, float alpha) {
@@ -1932,16 +1946,24 @@ private:
         if (!vg || w <= 0 || h <= 0) return;
 
         static uint64_t backdropStartMs = 0;
+        static float cachedBackdropT = 0.0f;
         uint64_t now = NowMs();
+
         if (backdropStartMs == 0) {
             backdropStartMs = now;
             backdropSeed = static_cast<float>(now % 10000) * 0.137f;
+            cachedBackdropT = backdropSeed;
+            lastBackdropTickMs = now;
         }
 
-        hasActiveAnimations = true;
+        uint64_t backdropIntervalMs = (style.backdropFps > 0) ? (1000ULL / style.backdropFps) : 66ULL;
+        if (now - lastBackdropTickMs >= backdropIntervalMs) {
+            lastBackdropTickMs = now;
+            cachedBackdropT = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+        }
 
-        // Tempo relativo ao início do app (evita perda de precisão de float) e velocidade ~3x mais visível
-        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+        hasBackdropAnimation = true;
+        float t = cachedBackdropT;
 
         // Ondas combinadas com amplitude maior para cruzar por trás dos painéis
         float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);

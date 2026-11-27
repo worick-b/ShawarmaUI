@@ -20,7 +20,7 @@ class MainActivity : Activity() {
 
     private external fun nativeInit(density: Float)
     private external fun nativeResize(w: Int, h: Int, topInset: Int, bottomInset: Int)
-    private external fun nativeRender(): Boolean
+    private external fun nativeRender(): Int
     private external fun nativeTouch(action: Int, x: Int, y: Int)
     private external fun nativeTextCommit(text: String)
     private external fun nativeKeySpecial(code: Int)
@@ -43,6 +43,16 @@ class MainActivity : Activity() {
             }
             v.onApplyWindowInsets(insets)
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        glView.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        glView.onResume()
     }
 
     fun requestRenderFromNative() {
@@ -78,6 +88,8 @@ class MainActivity : Activity() {
         override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
             nativeResize(width, height, topInset, bottomInset)
         }
+
+        private val renderRunnable = Runnable { requestRender() }
 
         override fun onDrawFrame(gl: GL10?) {
             val keepAnimating = nativeRender()

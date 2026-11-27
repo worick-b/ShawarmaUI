@@ -56,6 +56,7 @@ class MainActivity : Activity() {
     }
 
     fun requestRenderFromNative() {
+        glView.removeCallbacks(glView.renderRunnable)
         glView.requestRender()
     }
 
@@ -89,11 +90,14 @@ class MainActivity : Activity() {
             nativeResize(width, height, topInset, bottomInset)
         }
 
-        private val renderRunnable = Runnable { requestRender() }
+        val renderRunnable = Runnable { requestRender() }
 
         override fun onDrawFrame(gl: GL10?) {
-            val keepAnimating = nativeRender()
-            if (keepAnimating) requestRender()
+            removeCallbacks(renderRunnable)
+            val delayMs = nativeRender()
+            if (delayMs > 0) {
+                postDelayed(renderRunnable, delayMs.toLong())
+            }
         }
 
         override fun onTouchEvent(event: MotionEvent): Boolean {

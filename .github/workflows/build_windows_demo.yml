@@ -31,7 +31,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: ShawarmaUI Windows Demos (Latest)
+          name: Windows Demos (Latest)
           files: |
             ShawarmaUI_GDI.exe
             ShawarmaUI_D2D.exe

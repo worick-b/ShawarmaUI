@@ -42,31 +42,36 @@ enum class Theme {
 };
 
 struct Style {
-    Color windowBg      = Color(12, 12, 16, 255);
-    Color panelBg       = Color(24, 16, 22, 125);   // Vidro fumê com toque rubi
-    Color childBg       = Color(20, 14, 18, 115);
-    Color popupBg       = Color(24, 20, 28, 235);
-    Color tooltipBg     = Color(20, 18, 24, 240);
-    Color modalDimBg    = Color(8, 6, 10, 185);
-    Color border        = Color(230, 25, 65, 110);  // Borda neon sutil
-    Color borderFocus   = Color(255, 50, 90, 255);
-    Color text          = Color(246, 243, 244, 255);
-    Color textDim       = Color(168, 156, 160, 255);
-    Color frameBg       = Color(36, 18, 24, 140);
-    Color frameHover    = Color(62, 20, 34, 180);
-    Color checkMark     = Color(235, 35, 75, 255);
-    Color sliderGrab    = Color(255, 40, 85, 255);
-    Color button        = Color(225, 32, 68, 235);  // Topo do degradê 3D (Vermelho Neon)
-    Color buttonGradEnd = Color(165, 16, 42, 245);  // Base do degradê 3D (Carmesim escuro)
-    Color buttonHover   = Color(245, 45, 82, 250);
-    Color buttonActive  = Color(185, 20, 50, 255);
-    Color toggleActive  = Color(225, 32, 68, 240);
-    Color toggleHover   = Color(250, 48, 88, 255);
-    Color separator     = Color(255, 255, 255, 28);
-    Color disabledBg    = Color(30, 24, 26, 140);
-    Color disabledText  = Color(115, 104, 108, 255);
-    Color scrollbarBg   = Color(28, 22, 25, 150);
-    Color scrollbarGrab = Color(98, 76, 84, 220);
+    Color windowBg          = Color(12, 12, 16, 255);
+    Color panelBg           = Color(24, 16, 22, 125);
+    Color childBg           = Color(20, 14, 18, 115);
+    Color popupBg           = Color(24, 20, 28, 235);
+    Color tooltipBg         = Color(20, 18, 24, 240);
+    Color modalDimBg        = Color(8, 6, 10, 185);
+    Color border            = Color(230, 25, 65, 110);
+    Color borderFocus       = Color(255, 50, 90, 255);
+    Color text              = Color(246, 243, 244, 255);
+    Color textDim           = Color(168, 156, 160, 255);
+    Color frameBg           = Color(36, 18, 24, 140);
+    Color frameHover        = Color(62, 20, 34, 180);
+    Color checkMark         = Color(235, 35, 75, 255);
+    Color sliderGrab        = Color(255, 40, 85, 255);
+    Color button            = Color(225, 32, 68, 235);
+    Color buttonGradEnd     = Color(165, 16, 42, 245);
+    Color buttonHover       = Color(245, 45, 82, 250);
+    Color buttonActive      = Color(185, 20, 50, 255);
+    Color toggleActive      = Color(225, 32, 68, 240);
+    Color toggleHover       = Color(250, 48, 88, 255);
+    Color separator         = Color(255, 255, 255, 28);
+    Color disabledBg        = Color(30, 24, 26, 140);
+    Color disabledText      = Color(115, 104, 108, 255);
+    Color scrollbarBg       = Color(28, 22, 25, 150);
+    Color scrollbarGrab     = Color(98, 76, 84, 220);
+    Color secondaryBtn      = Color(43, 50, 64, 240);
+    Color secondaryBtnHover = Color(58, 68, 86, 250);
+    Color success           = Color(129, 199, 132, 255);
+    Color warning           = Color(255, 213, 79, 255);
+    Color danger            = Color(229, 115, 115, 255);
 
     // Dimensões confortáveis para toque no Android (em dp)
     int windowPadding   = 16;
@@ -237,29 +242,35 @@ public:
             style.toggleActive  = Color(214, 98, 96, 245);
             style.toggleHover   = Color(235, 118, 116, 255);
         } else if (theme == Theme::LightClean) {
-            style.windowBg      = Color(210, 220, 234, 255);
-            style.panelBg       = Color(234, 240, 248, 195);
-            style.childBg       = Color(226, 234, 244, 180);
-            style.popupBg       = Color(238, 243, 250, 245);
-            style.tooltipBg     = Color(28, 34, 46, 240);
-            style.border        = Color(155, 172, 196, 165);
-            style.borderFocus   = Color(38, 106, 210, 255);
-            style.text          = Color(26, 32, 44, 255);
-            style.textDim       = Color(88, 98, 116, 255);
-            style.frameBg       = Color(204, 215, 230, 200);
-            style.frameHover    = Color(190, 204, 222, 225);
-            style.checkMark     = Color(38, 106, 210, 255);
-            style.sliderGrab    = Color(38, 106, 210, 255);
-            style.button        = Color(188, 202, 222, 235);
-            style.buttonGradEnd = Color(24, 86, 192, 245);
-            style.buttonHover   = Color(172, 188, 212, 250);
-            style.buttonActive  = Color(156, 174, 202, 255);
-            style.toggleActive  = Color(48, 122, 235, 245);
-            style.toggleHover   = Color(62, 134, 242, 255);
-            style.disabledBg    = Color(206, 216, 228, 180);
-            style.disabledText  = Color(135, 146, 164, 255);
-            style.scrollbarBg   = Color(204, 215, 230, 175);
-            style.scrollbarGrab = Color(148, 162, 184, 225);
+            style.windowBg          = Color(210, 220, 234, 255);
+            style.panelBg           = Color(234, 240, 248, 195);
+            style.childBg           = Color(226, 234, 244, 180);
+            style.popupBg           = Color(238, 243, 250, 245);
+            style.tooltipBg         = Color(28, 34, 46, 240);
+            style.border            = Color(155, 172, 196, 165);
+            style.borderFocus       = Color(38, 106, 210, 255);
+            style.text              = Color(26, 32, 44, 255);
+            style.textDim           = Color(88, 98, 116, 255);
+            style.frameBg           = Color(204, 215, 230, 200);
+            style.frameHover        = Color(190, 204, 222, 225);
+            style.checkMark         = Color(38, 106, 210, 255);
+            style.sliderGrab        = Color(38, 106, 210, 255);
+            style.button            = Color(188, 202, 222, 235);
+            style.buttonGradEnd     = Color(24, 86, 192, 245);
+            style.buttonHover       = Color(172, 188, 212, 250);
+            style.buttonActive      = Color(156, 174, 202, 255);
+            style.toggleActive      = Color(48, 122, 235, 245);
+            style.toggleHover       = Color(62, 134, 242, 255);
+            style.disabledBg        = Color(206, 216, 228, 180);
+            style.disabledText      = Color(135, 146, 164, 255);
+            style.scrollbarBg       = Color(204, 215, 230, 175);
+            style.scrollbarGrab     = Color(148, 162, 184, 225);
+            style.secondaryBtn      = Color(186, 198, 216, 240);
+            style.secondaryBtnHover = Color(168, 184, 206, 250);
+            style.success           = Color(32, 132, 52, 255);
+            style.warning           = Color(180, 108, 0, 255);
+            style.danger            = Color(195, 42, 42, 255);
+			
         }
     }
 
@@ -719,6 +730,7 @@ public:
         int offsetY = alignTextToFrame ? S(8) : 0;
         alignTextToFrame = false;
         if (IsDisabled()) color = style.disabledText;
+        else color = EnsureContrast(color);
         int h = S(22);
         int w = CalcTextWidth(disp, bold);
         int drawW = std::min(w + S(4), GetAvailWidth());
@@ -732,6 +744,7 @@ public:
     }
 
     Context& Badge(const std::string& textUtf8, Color accentColor = Color(89, 173, 250)) {
+        accentColor = EnsureContrast(accentColor);
         std::string disp = StripIdSuffix(textUtf8);
         int padX = S(10);
         int h = S(24);
@@ -1063,7 +1076,10 @@ public:
         Color cHover  = (customHover.a > 0) ? customHover : style.buttonHover;
         Color activeCol = Color::Lerp(cNormal, cHover, pressT);
         Color bgCol   = disabled ? style.disabledBg : activeCol;
-        Color txtCol  = disabled ? style.disabledText : style.text;
+		
+        float luma    = 0.299f * bgCol.r + 0.587f * bgCol.g + 0.114f * bgCol.b;
+        Color autoTxt = (luma < 145.0f) ? Color(246, 243, 244, 255) : Color(26, 32, 44, 255);
+        Color txtCol  = disabled ? style.disabledText : autoTxt;
 
         QueueOrDraw([=, this]() {
             if (!disabled && customBg.a == 0) {
@@ -1278,7 +1294,7 @@ public:
         Color borderCol = isOpen ? style.borderFocus : style.border;
 
         std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < (int)items.size())
-                              ? StripIdSuffix(items.at(currentIndex)) : "Selecionar...";
+                              ? StripIdSuffix(items.at(currentIndex)) : "Select...";
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
@@ -1664,6 +1680,15 @@ private:
 
     int S(int v) const { return (int)std::round(v * dpiScale); }
     bool IsDisabled() const { return !disabledStack.empty() && disabledStack.back(); }
+
+    Color EnsureContrast(Color col) const {
+        if (currentTheme != Theme::LightClean) return col;
+        float luma = 0.299f * col.r + 0.587f * col.g + 0.114f * col.b;
+        if (luma > 135.0f) {
+            return Color::Lerp(col, Color(15, 20, 30, col.a), 0.48f);
+        }
+        return col;
+    }
 
     static std::string StripIdSuffix(const std::string& label) {
         size_t pos = label.find("##");

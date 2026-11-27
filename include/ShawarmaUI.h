@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <dwmapi.h>
 #include <shellapi.h>
+#include <winreg.h>
 #include <string>
 #include <vector>
 #include <array>
@@ -97,6 +98,8 @@ public:
     float backdropSeed = 0.0f;
     HWND hwnd = nullptr;
     float dpiScale = 1.0f;
+	int minW = 280;
+    int minH = 180;
     std::function<void(const std::string&)> onFileDrop;
     std::function<void()> onTimer;
 
@@ -240,6 +243,57 @@ public:
             style.scrollbarBg   = Color(204, 215, 230, 175);
             style.scrollbarGrab = Color(148, 162, 184, 225);
         }
+		if (!themeRegSubKey.empty()) {
+            HKEY hKey = nullptr;
+            if (RegCreateKeyExW(HKEY_CURRENT_USER, themeRegSubKey.c_str(), 0, nullptr,
+                                REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+                DWORD val = static_cast<DWORD>(theme);
+                RegSetValueExW(hKey, L"Theme", 0, REG_DWORD, reinterpret_cast<const BYTE*>(&val), sizeof(val));
+                RegCloseKey(hKey);
+            }
+        }
+        if (hwnd) {
+            BOOL useDark = (theme != Theme::LightClean) ? TRUE : FALSE;
+            DwmSetWindowAttribute(hwnd, 20, &useDark, sizeof(useDark));
+            DwmSetWindowAttribute(hwnd, 19, &useDark, sizeof(useDark));
+        }
+    }
+	
+	void EnableThemePersistence(const std::wstring& appName) {
+        themeRegSubKey = L"Software\\ShawarmaUI\\" + appName;
+        HKEY hKey = nullptr;
+        DWORD val = 0;
+        DWORD size = sizeof(val);
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, themeRegSubKey.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+            if (RegQueryValueExW(hKey, L"Theme", nullptr, nullptr, reinterpret_cast<BYTE*>(&val), &size) == ERROR_SUCCESS && val <= 3) {
+                ApplyTheme(static_cast<Theme>(val));
+            }
+            RegCloseKey(hKey);
+        }
+    }
+
+    void CycleTheme() {
+        int next = (static_cast<int>(currentTheme) + 1) % 4;
+        ApplyTheme(static_cast<Theme>(next));
+    }
+
+    const char* GetCurrentThemeName() const {
+        switch (currentTheme) {
+            case Theme::CyberPurple: return "Cyber Purple";
+            case Theme::RoseGold:    return "Rose Gold";
+            case Theme::LightClean:  return "Light Clean";
+            default:                 return "Neon Red";
+        }
+    }
+
+    bool ThemeSwitcherButton(int customW = 135, int customH = 24) {
+        std::string label = std::string("Tema: ") + GetCurrentThemeName();
+        if (Button(label, customW, customH)) {
+            CycleTheme();
+            RequestRedraw();
+            return true;
+        }
+        return false;
     }
 
     // Modo 1: Cria janela gerenciada pela ShawarmaUI
@@ -269,7 +323,7 @@ public:
         if (!hwnd) return false;
 
         DragAcceptFiles(hwnd, TRUE);
-        BOOL useDark = TRUE;
+        BOOL useDark = (currentTheme != Theme::LightClean) ? TRUE : FALSE;
         DwmSetWindowAttribute(hwnd, 20, &useDark, sizeof(useDark));
         DwmSetWindowAttribute(hwnd, 19, &useDark, sizeof(useDark));
 
@@ -303,6 +357,10 @@ public:
     }
 
     void ReleaseDXGISwapChain() {
+        d2dBgBitmap.Reset();
+        d2dBgTarget.Reset();
+        d2dBgW = 0;
+        d2dBgH = 0;
         if (!d2dContext) return;
         d2dContext->SetTarget(nullptr);
         d2dTargetBitmap.Reset();
@@ -326,6 +384,10 @@ public:
     }
 
     void ReleaseD2DHwndTarget() {
+        d2dBgBitmap.Reset();
+        d2dBgTarget.Reset();
+        d2dBgW = 0;
+        d2dBgH = 0;
         textLayoutCache.clear();
         d2dBrush.Reset();
         d2dHwndTarget.Reset();
@@ -493,6 +555,19 @@ public:
     int GetCursorY() const { return cursorY; }
     int GetClientWidth() const { return clientW; }
     int GetClientHeight() const { return clientH; }
+	int GetLogicalWidth() const { return (dpiScale > 0.0f) ? (int)(clientW / dpiScale) : clientW; }
+    int GetLogicalHeight() const { return (dpiScale > 0.0f) ? (int)(clientH / dpiScale) : clientH; }
+
+    Context& SameLineWrap(int nextItemWidth) {
+        int nextX = lastItemRight + S(style.itemSpacingX);
+        if (nextX + S(nextItemWidth) <= regionRight) {
+            cursorX = nextX;
+            cursorY = lastItemTop;
+        } else {
+            cursorX = regionLeft;
+        }
+        return *this;
+    }
 
     Context& AlignTextToFramePadding() {
         alignTextToFrame = true;
@@ -1576,7 +1651,7 @@ public:
     // --- AUTO-AJUSTE DA JANELA ---
 
     void AutoResizeWindowHeight() {
-        if (!hwnd || !activePopupId.empty()) return;
+        if (!hwnd || !activePopupId.empty() || IsZoomed(hwnd)) return;
         int neededClientH = cursorY + S(style.windowPadding);
         RECT rcClient = {}, rcWindow = {};
         GetClientRect(hwnd, &rcClient);
@@ -1614,6 +1689,8 @@ public:
     }
 
 private:
+    std::wstring themeRegSubKey;
+
 #ifdef SHAWARMAUI_USE_D2D
     Microsoft::WRL::ComPtr<ID2D1Factory1> d2dFactory;
     Microsoft::WRL::ComPtr<ID2D1Device> d2dDevice;
@@ -1621,6 +1698,11 @@ private:
     Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dTargetBitmap;
     Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> d2dHwndTarget;
     Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dBrush;
+	Microsoft::WRL::ComPtr<ID2D1BitmapRenderTarget> d2dBgTarget;
+    Microsoft::WRL::ComPtr<ID2D1Bitmap> d2dBgBitmap;
+    int d2dBgW = 0, d2dBgH = 0;
+    DWORD lastD2dBgTime = 0;
+    Theme lastD2dBgTheme = Theme::NeonRed;
     Microsoft::WRL::ComPtr<IDWriteFactory> dwriteFactory;
     Microsoft::WRL::ComPtr<IDWriteTextFormat> dwriteRegular;
     Microsoft::WRL::ComPtr<IDWriteTextFormat> dwriteBold;
@@ -1650,6 +1732,14 @@ private:
     HBITMAP backBM = nullptr;
     HGDIOBJ oldBackBM = nullptr;
     int backW = 0, backH = 0;
+	
+	HDC bgDC = nullptr;
+    HBITMAP bgBM = nullptr;
+    HGDIOBJ oldBgBM = nullptr;
+    int bgW = 0, bgH = 0;
+    DWORD lastBgDrawTime = 0;
+    Theme lastBgTheme = Theme::NeonRed;
+	
 
     HDC checkDC = nullptr;
     HBITMAP checkBM = nullptr;
@@ -2065,6 +2155,10 @@ private:
     }
 
     void CleanupResources() {
+		d2dBgBitmap.Reset();
+        d2dBgTarget.Reset();
+        d2dBgW = 0;
+        d2dBgH = 0;
         textLayoutCache.clear();
         d2dBrush.Reset();
         d2dTargetBitmap.Reset();
@@ -2098,96 +2192,127 @@ private:
     }
 
     void DrawGlassBackdrop(int w, int h) {
-        ID2D1RenderTarget* rt = ActiveD2DTarget();
-        if (!rt || w <= 0 || h <= 0) return;
-
-        static DWORD backdropStartMs = 0;
-        DWORD now = GetTickCount();
-        if (backdropStartMs == 0) {
-            backdropStartMs = now;
-            backdropSeed = static_cast<float>(now % 10000) * 0.137f;
-        }
+        ID2D1RenderTarget* mainRt = ActiveD2DTarget();
+        if (!mainRt || w <= 0 || h <= 0) return;
 
         hasActiveAnimations = true;
-        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+        DWORD now = GetTickCount();
+        bool sizeChanged = (!d2dBgTarget || d2dBgW != w || d2dBgH != h);
+        bool themeChanged = (lastD2dBgTheme != currentTheme);
+        bool timeElapsed = (now - lastD2dBgTime >= 100); // 10 FPS no fundo
 
-        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
-        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
-
-        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
-        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
-
-        float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
-        float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
-
-        Color bgTop(14, 10, 14, 255);
-        Color bgBot(8, 8, 10, 255);
-        Color cOrb1(245, 55, 95, 85);
-        Color cOrb2(210, 40, 80, 70);
-        Color cOrb3(180, 60, 100, 45);
-        Color cHole(12, 11, 14, 150);
-
-        if (currentTheme == Theme::RoseGold) {
-            bgTop = Color(14, 13, 16, 255);
-            cOrb1 = Color(235, 145, 120, 90);
-            cOrb2 = Color(205, 125, 110, 75);
-            cOrb3 = Color(185, 135, 125, 50);
-        } else if (currentTheme == Theme::CyberPurple) {
-            bgTop = Color(13, 14, 22, 255);
-            cOrb1 = Color(185, 110, 235, 85);
-            cOrb2 = Color(130, 95, 220, 75);
-            cOrb3 = Color(110, 140, 230, 50);
-        } else if (currentTheme == Theme::LightClean) {
-            bgTop = Color(206, 218, 234, 255);
-            bgBot = Color(190, 205, 224, 255);
-            cOrb1 = Color(110, 160, 235, 80);
-            cOrb2 = Color(135, 180, 242, 70);
-            cOrb3 = Color(235, 242, 252, 95);
-            cHole = Color(198, 210, 228, 140);
-        }
-
-        D2D1_RECT_F fullRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
-
-        {
-            std::array<D2D1_GRADIENT_STOP, 2> stops = {{
-                { 0.0f, bgTop.ToD2D() },
-                { 1.0f, bgBot.ToD2D() }
-            }};
-            Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
-            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
-                Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
-                if (SUCCEEDED(rt->CreateLinearGradientBrush(
-                    D2D1::LinearGradientBrushProperties(D2D1::Point2F(0.0f, 0.0f), D2D1::Point2F((float)w, (float)h)),
-                    stopCol.Get(), &gradBrush))) {
-                    rt->FillRectangle(fullRect, gradBrush.Get());
-                }
+        if (sizeChanged) {
+            d2dBgBitmap.Reset();
+            d2dBgTarget.Reset();
+            D2D1_SIZE_F sz = D2D1::SizeF((float)w, (float)h);
+            if (SUCCEEDED(mainRt->CreateCompatibleRenderTarget(sz, &d2dBgTarget))) {
+                d2dBgTarget->GetBitmap(&d2dBgBitmap);
+                d2dBgW = w;
+                d2dBgH = h;
             }
         }
 
-        float minDim = (float)std::min(w, h);
-        float maxDim = (float)std::max(w, h);
+        if (d2dBgTarget && (sizeChanged || themeChanged || timeElapsed)) {
+            lastD2dBgTime = now;
+            lastD2dBgTheme = currentTheme;
 
-        auto drawRadialOrb = [&](float cx, float cy, float rx, float ry, Color col) {
-            Color edgeCol(col.r, col.g, col.b, 0);
-            std::array<D2D1_GRADIENT_STOP, 2> stops = {{
-                { 0.0f, col.ToD2D() },
-                { 1.0f, edgeCol.ToD2D() }
-            }};
-            Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
-            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
-                Microsoft::WRL::ComPtr<ID2D1RadialGradientBrush> radBrush;
-                if (SUCCEEDED(rt->CreateRadialGradientBrush(
-                    D2D1::RadialGradientBrushProperties(D2D1::Point2F(cx, cy), D2D1::Point2F(0.0f, 0.0f), rx, ry),
-                    stopCol.Get(), &radBrush))) {
-                    rt->FillRectangle(fullRect, radBrush.Get());
+            d2dBgTarget->BeginDraw();
+            d2dBgTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+            ID2D1RenderTarget* rt = d2dBgTarget.Get();
+
+            static DWORD backdropStartMs = 0;
+            if (backdropStartMs == 0) {
+                backdropStartMs = now;
+                backdropSeed = static_cast<float>(now % 10000) * 0.137f;
+            }
+
+            float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+
+            float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
+            float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
+
+            float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
+            float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
+
+            float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
+            float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
+
+            Color bgTop(14, 10, 14, 255);
+            Color bgBot(8, 8, 10, 255);
+            Color cOrb1(245, 55, 95, 85);
+            Color cOrb2(210, 40, 80, 70);
+            Color cOrb3(180, 60, 100, 45);
+            Color cHole(12, 11, 14, 150);
+
+            if (currentTheme == Theme::RoseGold) {
+                bgTop = Color(14, 13, 16, 255);
+                cOrb1 = Color(235, 145, 120, 90);
+                cOrb2 = Color(205, 125, 110, 75);
+                cOrb3 = Color(185, 135, 125, 50);
+            } else if (currentTheme == Theme::CyberPurple) {
+                bgTop = Color(13, 14, 22, 255);
+                cOrb1 = Color(185, 110, 235, 85);
+                cOrb2 = Color(130, 95, 220, 75);
+                cOrb3 = Color(110, 140, 230, 50);
+            } else if (currentTheme == Theme::LightClean) {
+                bgTop = Color(206, 218, 234, 255);
+                bgBot = Color(190, 205, 224, 255);
+                cOrb1 = Color(110, 160, 235, 80);
+                cOrb2 = Color(135, 180, 242, 70);
+                cOrb3 = Color(235, 242, 252, 95);
+                cHole = Color(198, 210, 228, 140);
+            }
+
+            D2D1_RECT_F fullRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
+
+            {
+                std::array<D2D1_GRADIENT_STOP, 2> stops = {{
+                    { 0.0f, bgTop.ToD2D() },
+                    { 1.0f, bgBot.ToD2D() }
+                }};
+                Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
+                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                    Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
+                    if (SUCCEEDED(rt->CreateLinearGradientBrush(
+                        D2D1::LinearGradientBrushProperties(D2D1::Point2F(0.0f, 0.0f), D2D1::Point2F((float)w, (float)h)),
+                        stopCol.Get(), &gradBrush))) {
+                        rt->FillRectangle(fullRect, gradBrush.Get());
+                    }
                 }
             }
-        };
 
-        drawRadialOrb(w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.46f, minDim * 0.46f, cOrb1);
-        drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.43f, minDim * 0.43f, cOrb2);
-        drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.16f, minDim * 0.16f, cHole);
-        drawRadialOrb(w * 0.14f + ox3, h * 0.54f + oy3, maxDim * 0.36f, maxDim * 0.36f, cOrb3);
+            float minDim = (float)std::min(w, h);
+            float maxDim = (float)std::max(w, h);
+
+            auto drawRadialOrb = [&](float cx, float cy, float rx, float ry, Color col) {
+                Color edgeCol(col.r, col.g, col.b, 0);
+                std::array<D2D1_GRADIENT_STOP, 2> stops = {{
+                    { 0.0f, col.ToD2D() },
+                    { 1.0f, edgeCol.ToD2D() }
+                }};
+                Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
+                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                    Microsoft::WRL::ComPtr<ID2D1RadialGradientBrush> radBrush;
+                    if (SUCCEEDED(rt->CreateRadialGradientBrush(
+                        D2D1::RadialGradientBrushProperties(D2D1::Point2F(cx, cy), D2D1::Point2F(0.0f, 0.0f), rx, ry),
+                        stopCol.Get(), &radBrush))) {
+                        rt->FillRectangle(fullRect, radBrush.Get());
+                    }
+                }
+            };
+
+            drawRadialOrb(w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.46f, minDim * 0.46f, cOrb1);
+            drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.43f, minDim * 0.43f, cOrb2);
+            drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.16f, minDim * 0.16f, cHole);
+            drawRadialOrb(w * 0.14f + ox3, h * 0.54f + oy3, maxDim * 0.36f, maxDim * 0.36f, cOrb3);
+
+            d2dBgTarget->EndDraw();
+        }
+
+        if (d2dBgBitmap) {
+            D2D1_RECT_F destRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
+            mainRt->DrawBitmap(d2dBgBitmap.Get(), destRect);
+        }
     }
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
@@ -2426,6 +2551,12 @@ private:
             DeleteDC(backDC);
             backDC = nullptr;
         }
+		if (bgDC) {
+            SelectObject(bgDC, oldBgBM);
+            DeleteObject(bgBM);
+            DeleteDC(bgDC);
+            bgDC = nullptr;
+        }
 		if (pixelDC) {
             SelectObject(pixelDC, oldPixelBM);
             DeleteObject(pixelBM);
@@ -2451,63 +2582,91 @@ private:
 
     void DrawGlassBackdrop(int w, int h) {
         if (!hdc || w <= 0 || h <= 0) return;
-
-        static DWORD backdropStartMs = 0;
-        DWORD now = GetTickCount();
-        if (backdropStartMs == 0) {
-            backdropStartMs = now;
-            backdropSeed = static_cast<float>(now % 10000) * 0.137f;
-        }
-
         hasActiveAnimations = true;
-        float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
 
-        float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
-        float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
+        DWORD now = GetTickCount();
+        bool sizeChanged = (!bgDC || bgW != w || bgH != h);
+        bool themeChanged = (lastBgTheme != currentTheme);
+        bool timeElapsed = (now - lastBgDrawTime >= 66); // 15 FPS no fundo
 
-        float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
-        float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
-
-        Color bgTop(14, 10, 14, 255);
-        Color bgBot(8, 8, 10, 255);
-        Color cOrb1(245, 55, 95, 65);
-        Color cOrb2(210, 40, 80, 55);
-
-        if (currentTheme == Theme::RoseGold) {
-            bgTop = Color(14, 13, 16, 255);
-            cOrb1 = Color(235, 145, 120, 65);
-            cOrb2 = Color(205, 125, 110, 55);
-        } else if (currentTheme == Theme::CyberPurple) {
-            bgTop = Color(13, 14, 22, 255);
-            cOrb1 = Color(185, 110, 235, 65);
-            cOrb2 = Color(130, 95, 220, 55);
-        } else if (currentTheme == Theme::LightClean) {
-            bgTop = Color(206, 218, 234, 255);
-            bgBot = Color(190, 205, 224, 255);
-            cOrb1 = Color(110, 160, 235, 65);
-            cOrb2 = Color(135, 180, 242, 55);
+        if (sizeChanged) {
+            if (bgDC) {
+                SelectObject(bgDC, oldBgBM);
+                DeleteObject(bgBM);
+                DeleteDC(bgDC);
+            }
+            bgDC = CreateCompatibleDC(hdc);
+            bgBM = CreateCompatibleBitmap(hdc, w, h);
+            oldBgBM = SelectObject(bgDC, bgBM);
+            bgW = w;
+            bgH = h;
         }
 
-        std::array<TRIVERTEX, 2> verts = {{
-            { 0, 0, (COLOR16)(bgTop.r << 8), (COLOR16)(bgTop.g << 8), (COLOR16)(bgTop.b << 8), 0xFF00 },
-            { w, h, (COLOR16)(bgBot.r << 8), (COLOR16)(bgBot.g << 8), (COLOR16)(bgBot.b << 8), 0xFF00 }
-        }};
-        GRADIENT_RECT gRect = { 0, 1 };
-        GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+        if (sizeChanged || themeChanged || timeElapsed) {
+            lastBgDrawTime = now;
+            lastBgTheme = currentTheme;
+            HDC prevHdc = hdc;
+            hdc = bgDC;
 
-        auto drawSoftOrb = [&](int cx, int cy, int r, Color col) {
-        HDC orbDC = GetSolidPixelDC(col);
-        for (int step = 4; step >= 1; --step) {
-        int curR = (r * step) / 4;
-        BYTE alpha = (BYTE)(col.a / 4);
-        BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
-        AlphaBlend(hdc, cx - curR, cy - curR, curR * 2, curR * 2, orbDC, 0, 0, 1, 1, bf);
-    }
-};
+            static DWORD backdropStartMs = 0;
+            if (backdropStartMs == 0) {
+                backdropStartMs = now;
+                backdropSeed = static_cast<float>(now % 10000) * 0.137f;
+            }
 
-        int minDim = std::min(w, h);
-        drawSoftOrb((int)(w * 0.80f + ox1), (int)(h * 0.22f + oy1), (int)(minDim * 0.35f), cOrb1);
-        drawSoftOrb((int)(w * 0.66f + ox2), (int)(h * 0.72f + oy2), (int)(minDim * 0.32f), cOrb2);
+            float t = ((now - backdropStartMs) * 0.0014f) + backdropSeed;
+
+            float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
+            float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
+
+            float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
+            float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
+
+            Color bgTop(14, 10, 14, 255);
+            Color bgBot(8, 8, 10, 255);
+            Color cOrb1(245, 55, 95, 65);
+            Color cOrb2(210, 40, 80, 55);
+
+            if (currentTheme == Theme::RoseGold) {
+                bgTop = Color(14, 13, 16, 255);
+                cOrb1 = Color(235, 145, 120, 65);
+                cOrb2 = Color(205, 125, 110, 55);
+            } else if (currentTheme == Theme::CyberPurple) {
+                bgTop = Color(13, 14, 22, 255);
+                cOrb1 = Color(185, 110, 235, 65);
+                cOrb2 = Color(130, 95, 220, 55);
+            } else if (currentTheme == Theme::LightClean) {
+                bgTop = Color(206, 218, 234, 255);
+                bgBot = Color(190, 205, 224, 255);
+                cOrb1 = Color(110, 160, 235, 65);
+                cOrb2 = Color(135, 180, 242, 55);
+            }
+
+            std::array<TRIVERTEX, 2> verts = {{
+                { 0, 0, (COLOR16)(bgTop.r << 8), (COLOR16)(bgTop.g << 8), (COLOR16)(bgTop.b << 8), 0xFF00 },
+                { w, h, (COLOR16)(bgBot.r << 8), (COLOR16)(bgBot.g << 8), (COLOR16)(bgBot.b << 8), 0xFF00 }
+            }};
+            GRADIENT_RECT gRect = { 0, 1 };
+            GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+
+            auto drawSoftOrb = [&](int cx, int cy, int r, Color col) {
+                HDC orbDC = GetSolidPixelDC(col);
+                for (int step = 4; step >= 1; --step) {
+                    int curR = (r * step) / 4;
+                    BYTE alpha = (BYTE)(col.a / 4);
+                    BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
+                    AlphaBlend(hdc, cx - curR, cy - curR, curR * 2, curR * 2, orbDC, 0, 0, 1, 1, bf);
+                }
+            };
+
+            int minDim = std::min(w, h);
+            drawSoftOrb((int)(w * 0.80f + ox1), (int)(h * 0.22f + oy1), (int)(minDim * 0.35f), cOrb1);
+            drawSoftOrb((int)(w * 0.66f + ox2), (int)(h * 0.72f + oy2), (int)(minDim * 0.32f), cOrb2);
+
+            hdc = prevHdc;
+        }
+
+        BitBlt(hdc, 0, 0, w, h, bgDC, 0, 0, SRCCOPY);
     }
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
@@ -2692,6 +2851,13 @@ private:
                                  SWP_NOZORDER | SWP_NOACTIVATE);
                 }
                 RequestRedraw();
+                return 0;
+            }
+			
+			case WM_GETMINMAXINFO: {
+                MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
+                mmi->ptMinTrackSize.x = S(minW);
+                mmi->ptMinTrackSize.y = S(minH);
                 return 0;
             }
 

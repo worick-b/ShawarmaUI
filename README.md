@@ -52,12 +52,12 @@
 
 **Pure GDI Mode (Maximum Compatibility):**
 ```bash
-g++ -Os -std=c++17 Demo-GDI.cpp -o ShawarmaUI-GDI.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
+g++ -Os -std=c++17 -Iinclude examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
 ```
 
 **Direct2D + DirectWrite Mode (Hardware Accelerated):**
 ```bash
-g++ -Os -std=c++17 Demo-D2D.cpp -o ShawarmaUI_D2D.exe -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
+g++ -Os -std=c++17 -Iinclude examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
 ```
 </details>
 

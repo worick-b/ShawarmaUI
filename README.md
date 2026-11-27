@@ -1,9 +1,9 @@
 # 🥙 ShawarmaUI
 ~Sweet Dreams (Are Made of This)
 
-> *A UI Sexy Model — Ultra-lightweight, single-header C++17 Immediate-Mode GUI library for Windows and Android.*
+> *A UI Sexy Model — Ultra-lightweight, single-header Immediate-Mode library for Windows and Android.*
 
-**ShawarmaUI** is a `single-header` retained/immediate hybrid GUI library built from scratch with zero external dependencies and **zero C-style arrays** (100% modern C++17 containers). Designed for high-performance utilities, launchers, media players or anything your stomach wants — native speed, crisp typography, and **~2–15 MB RAM** footprint even on legacy CPUs.
+**ShawarmaUI** is a `single-header` retained/immediate hybrid GUI library built from scratch with zero external dependencies and **zero C-style arrays** (modern C++17 containers). Designed for high-performance utilities, launchers, media players or anything your stomach wants — native speed, crisp typography, and **~2–15 MB RAM** footprint even on legacy CPUs.
 
 ---
 

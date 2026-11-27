@@ -24,8 +24,41 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Generate AndroidManifest.xml
+        working-directory: examples/android
+        run: |
+          python3 -c '
+          import os, textwrap
+          os.makedirs("app/src/main", exist_ok=True)
+          ns = bytes.fromhex("687474703a2f2f736368656d61732e616e64726f69642e636f6d2f61706b2f7265732f616e64726f6964").decode()
+          xml = textwrap.dedent(f"""\
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="{ns}">
+              <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+              <application
+                  android:allowBackup="false"
+                  android:label="ShawarmaUI Demo"
+                  android:hardwareAccelerated="true"
+                  android:extractNativeLibs="true"
+                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:windowSoftInputMode="adjustResize"
+                      android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          """)
+          open("app/src/main/AndroidManifest.xml", "w").write(xml)
+          '
+
       - name: Build APK
-        working-directory: examples/android_demo
+        working-directory: examples/android
         run: |
           gradle assembleDebug --no-daemon
           cp app/build/outputs/apk/debug/app-debug.apk ../../ShawarmaUI_Android.apk

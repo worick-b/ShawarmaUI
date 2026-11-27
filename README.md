@@ -43,90 +43,30 @@
 ## 🚀 Quick Start & Compilation
 
 <details>
-<summary><b> Windows — Code Example & MinGW Compilation</b> (Click to expand)</summary>
+<summary><b> Windows — Header Example & MinGW Compilation</b> (Click to expand)</summary>
 
 ```cpp
 #define SHAWARMAUI_USE_D2D // Optional: omit for pure GDI mode
 #include "ShawarmaUI.h"
-
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    ShawarmaUI::Context ui;
-    ui.EnableThemePersistence(L"ShawarmaDemo"); // Auto-loads & saves theme in Windows Registry
-    ui.minW = 360;
-    ui.minH = 260;
-
-    if (!ui.Create("ShawarmaUI Demo", 480, 320)) return 1;
-
-    int tab = 0;
-    bool turbo = true;
-    int targetFps = 60;
-
-    ui.Run([&](ShawarmaUI::Context& ctx) {
-        ctx.ThemeSwitcherButton(); // Cycles NeonRed, CyberPurple, RoseGold & LightClean
-        ctx.Spacing();
-
-        ctx.TabBar(tab, { "General", "About" });
-        ctx.Spacing();
-
-        if (tab == 0) {
-            if (auto p = ctx.Panel("Performance Settings")) {
-                ctx.ToggleSwitch("Enable Turbo Mode", turbo);
-                ctx.SliderInt(targetFps, 30, 144, -1, 18, " FPS");
-
-                if (ctx.Button("Apply Settings", -1, 32)) {
-                    ctx.Toast("Settings saved!", ShawarmaUI::Color(115, 224, 140));
-                }
-            }
-        } else {
-            if (auto p = ctx.Panel("System Info")) {
-                ctx.KeyValue("Library", "ShawarmaUI");
-                ctx.Badge("Header-Only • Modern C++17");
-            }
-        }
-    });
-
-    return 0;
-}
 ```
 
 **Pure GDI Mode (Maximum Compatibility):**
 ```bash
-g++ -std=c++17 -O2 -s main.cpp -o app.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
+g++ -Os -std=c++17 Demo-GDI.cpp -o ShawarmaUI-GDI.exe -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
 ```
 
 **Direct2D + DirectWrite Mode (Hardware Accelerated):**
 ```bash
-g++ -std=c++17 -O2 -s -DSHAWARMAUI_USE_D2D main.cpp -o app.exe -ld2d1 -ldxgi -ldwrite -ldwmapi -lshell32 -ladvapi32 -mwindows -static
+g++ -Os -std=c++17 Demo-D2D.cpp -o ShawarmaUI_D2D.exe -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static -s
 ```
 </details>
 
 <details>
-<summary><b> Android — OpenGL ES 3.0 + NanoVG Example</b> (Click to expand)</summary>
+<summary><b> Android — OpenGL ES 3.0 + NanoVG Header Example</b> (Click to expand)</summary>
 
 ```cpp
 #include "ShawarmaUI_Android.h"
 #include "ShawarmaIcons.h" // Optional vector icon font
-
-ShawarmaUI::Context ui;
-
-// Inside GLSurfaceView.Renderer::onSurfaceCreated:
-void OnSurfaceCreated(NVGcontext* vg, float density) {
-    ui.InitGLES3(vg, density);
-    ui.LoadIconFontFromMemory(ShawarmaUI::kIconFontTTF.data(), (int)ShawarmaUI::kIconFontTTF.size());
-    ui.ApplyTheme(ShawarmaUI::Theme::NeonRed); // NeonRed, CyberPurple, RoseGold, LightClean
-}
-
-// Inside GLSurfaceView.Renderer::onDrawFrame:
-void OnDrawFrame(int width, int height) {
-    ui.BeginFrame(width, height);
-    if (auto p = ui.Panel("Frosted Glass Panel")) {
-        ui.Text("Translucent glass over ambient lights.");
-        if (ui.Button("Action", -1, 38)) {
-            ui.Toast("Clicked!");
-        }
-    }
-    ui.EndFrame();
-}
 ```
 </details>
 

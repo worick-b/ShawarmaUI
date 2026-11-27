@@ -28,11 +28,11 @@ jobs:
 
       - name: Compile Win32 GDI Demo
         shell: cmd
-        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -I. examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
+        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
 
       - name: Compile Direct2D Demo
         shell: cmd
-        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -I. examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -Wl,--gc-sections -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static
+        run: g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -Wl,--gc-sections -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4

@@ -287,13 +287,13 @@ Java_com_shawarmaui_demo_MainActivity_nativeResize(JNIEnv*, jobject, jint w, jin
     g_ui.SetSafeAreaInsets(topInset, bottomInset);
 }
 
-JNIEXPORT jboolean JNICALL
+JNIEXPORT jint JNICALL
 Java_com_shawarmaui_demo_MainActivity_nativeRender(JNIEnv*, jobject) {
-    if (g_width <= 0 || g_height <= 0) return JNI_FALSE;
+    if (g_width <= 0 || g_height <= 0) return 0;
     g_ui.BeginFrame(g_width, g_height);
     RenderDemoUI();
     g_ui.EndFrame();
-    return g_ui.HasActiveAnimations() ? JNI_TRUE : JNI_FALSE;
+    return static_cast<jint>(g_ui.GetNextFrameDelayMs());
 }
 
 JNIEXPORT void JNICALL

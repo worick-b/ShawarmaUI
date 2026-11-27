@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.BaseInputConnection
@@ -47,6 +49,7 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         super.onPause()
+        glView.mainHandler.removeCallbacks(glView.renderRunnable) // <-- AQUI
         glView.onPause()
     }
 
@@ -56,7 +59,7 @@ class MainActivity : Activity() {
     }
 
     fun requestRenderFromNative() {
-        glView.removeCallbacks(glView.renderRunnable)
+        glView.mainHandler.removeCallbacks(glView.renderRunnable)
         glView.requestRender()
     }
 
@@ -90,13 +93,14 @@ class MainActivity : Activity() {
             nativeResize(width, height, topInset, bottomInset)
         }
 
+        val mainHandler = Handler(Looper.getMainLooper())
         val renderRunnable = Runnable { requestRender() }
 
         override fun onDrawFrame(gl: GL10?) {
-            removeCallbacks(renderRunnable)
+            mainHandler.removeCallbacks(renderRunnable)
             val delayMs = nativeRender()
             if (delayMs > 0) {
-                postDelayed(renderRunnable, delayMs.toLong())
+                mainHandler.postDelayed(renderRunnable, delayMs.toLong())
             }
         }
 

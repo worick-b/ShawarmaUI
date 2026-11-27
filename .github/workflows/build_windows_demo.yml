@@ -1,4 +1,4 @@
-name: Build ShawarmaUI Windows Demo
+name: Build Windows Demo
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: Windows Demos (Latest)
+          name: ShawarmaUI Demos (Windows & Android)
           files: |
             ShawarmaUI_GDI.exe
             ShawarmaUI_D2D.exe

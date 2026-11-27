@@ -87,6 +87,7 @@ class MainActivity : Activity() {
 
         override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
             nativeInit(resources.displayMetrics.density)
+            requestRender()
         }
 
         override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {

@@ -440,6 +440,12 @@ public:
 
     bool HasActiveAnimations() const { return hasActiveAnimations || hasBackdropAnimation; }
 
+    int GetNextFrameDelayMs() const {
+        if (hasActiveAnimations) return (style.animFps > 0) ? (1000 / style.animFps) : 33;
+        if (hasBackdropAnimation) return (style.backdropFps > 0) ? (1000 / style.backdropFps) : 66;
+        return 0;
+    }
+
     // --- LAYOUT E CONTROLE FLUENTE ---
 
     int GetAvailWidth() const { return std::max(0, regionRight - cursorX); }
@@ -1883,17 +1889,6 @@ private:
         pendingTextCommits.clear();
         pendingBackspaceCount = 0;
         pendingEnterPressed = false;
-
-		if ((hasActiveAnimations || hasBackdropAnimation) && onRequestRedraw) {
-            uint64_t now = NowMs();
-            int targetFps = hasActiveAnimations ? style.animFps : style.backdropFps;
-            uint64_t intervalMs = (targetFps > 0) ? (1000ULL / targetFps) : 33ULL;
-
-            if (now - lastRedrawRequestMs >= intervalMs) {
-                lastRedrawRequestMs = now;
-                onRequestRedraw();
-            }
-        }
     }
 
     void DrawToastInternal(const std::string& textUtf8, Color accent, float alpha) {

@@ -413,8 +413,8 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         nvgBeginFrame(vg, static_cast<float>(width), static_cast<float>(height), 1.0f);
-        DrawGlassBackdrop(width, height);
-        BeginFrameState();
+        BeginFrameState();              // <-- PRIMEIRO limpa o estado
+        DrawGlassBackdrop(width, height); // <-- DEPOIS desenha e marca hasBackdropAnimation = true
     }
 
     void EndFrame() {
@@ -2007,42 +2007,36 @@ private:
         float minDim = (float)std::min(w, h);
         float maxDim = (float)std::max(w, h);
 
-        // 2. Orbe 1 (superior direito)
+        // 2. Orbe 1 (superior direito) - desenha apenas o círculo do raio do orbe
+        float x1 = w * 0.80f + ox1, y1 = h * 0.22f + oy1, r1 = minDim * 0.46f;
         NVGpaint orb1 = nvgRadialGradient(
-            vg, w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.04f, minDim * 0.46f,
+            vg, x1, y1, minDim * 0.04f, r1,
             cOrb1, nvgRGBA(cOrb1.r * 255, cOrb1.g * 255, cOrb1.b * 255, 0)
         );
         nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgCircle(vg, x1, y1, r1);
         nvgFillPaint(vg, orb1);
         nvgFill(vg);
 
-        // 3. Anel 2 (inferior direito)
-        NVGpaint orb2Outer = nvgRadialGradient(
-            vg, w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.08f, minDim * 0.43f,
+        // 3. Orbe 2 (inferior direito)
+        float x2 = w * 0.66f + ox2, y2 = h * 0.72f + oy2, r2 = minDim * 0.43f;
+        NVGpaint orb2 = nvgRadialGradient(
+            vg, x2, y2, minDim * 0.08f, r2,
             cOrb2, nvgRGBA(cOrb2.r * 255, cOrb2.g * 255, cOrb2.b * 255, 0)
         );
         nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-        nvgFillPaint(vg, orb2Outer);
-        nvgFill(vg);
-
-        NVGpaint orb2Hole = nvgRadialGradient(
-            vg, w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.01f, minDim * 0.16f,
-            cHole, nvgRGBA(cHole.r * 255, cHole.g * 255, cHole.b * 255, 0)
-        );
-        nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
-        nvgFillPaint(vg, orb2Hole);
+        nvgCircle(vg, x2, y2, r2);
+        nvgFillPaint(vg, orb2);
         nvgFill(vg);
 
         // 4. Luz secundária 3 (esquerda)
+        float x3 = w * 0.14f + ox3, y3 = h * 0.54f + oy3, r3 = maxDim * 0.36f;
         NVGpaint orb3 = nvgRadialGradient(
-            vg, w * 0.14f + ox3, h * 0.54f + oy3, minDim * 0.02f, maxDim * 0.36f,
+            vg, x3, y3, minDim * 0.02f, r3,
             cOrb3, nvgRGBA(cOrb3.r * 255, cOrb3.g * 255, cOrb3.b * 255, 0)
         );
         nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgCircle(vg, x3, y3, r3);
         nvgFillPaint(vg, orb3);
         nvgFill(vg);
     }

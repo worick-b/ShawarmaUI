@@ -26,52 +26,54 @@ struct Color {
     static Color Lerp(Color a, Color b, float t) {
         t = std::clamp(t, 0.0f, 1.0f);
         return Color(
-            (uint8_t)std::round(a.r + (b.r - a.r) * t),
-            (uint8_t)std::round(a.g + (b.g - a.g) * t),
-            (uint8_t)std::round(a.b + (b.b - a.b) * t),
-            (uint8_t)std::round(a.a + (b.a - a.a) * t)
+            static_cast<uint8_t>(std::round(a.r + (b.r - a.r) * t)),
+            static_cast<uint8_t>(std::round(a.g + (b.g - a.g) * t)),
+            static_cast<uint8_t>(std::round(a.b + (b.b - a.b) * t)),
+            static_cast<uint8_t>(std::round(a.a + (b.a - a.a) * t))
         );
     }
 };
 
 enum class Theme {
-    NeonRed = 0,
+    TealGold = 0,
+    NeonRed,
     CyberPurple,
     RoseGold,
     LightClean
 };
 
 struct Style {
-    Color windowBg          = Color(12, 12, 16, 255);
-    Color panelBg           = Color(24, 16, 22, 125);
-    Color childBg           = Color(20, 14, 18, 115);
-    Color popupBg           = Color(24, 20, 28, 235);
-    Color tooltipBg         = Color(20, 18, 24, 240);
-    Color modalDimBg        = Color(8, 6, 10, 185);
-    Color border            = Color(230, 25, 65, 110);
-    Color borderFocus       = Color(255, 50, 90, 255);
+    Color windowBg          = Color(11, 14, 22, 255);
+    Color panelBg           = Color(16, 22, 32, 175);
+    Color childBg           = Color(13, 18, 26, 165);
+    Color popupBg           = Color(16, 22, 32, 245);
+    Color tooltipBg         = Color(14, 19, 28, 245);
+    Color modalDimBg        = Color(6, 8, 14, 195);
+    Color border            = Color(248, 212, 108, 165);
+    Color borderFocus       = Color(24, 218, 156, 255);
     Color text              = Color(246, 243, 244, 255);
     Color textDim           = Color(168, 156, 160, 255);
-    Color frameBg           = Color(36, 18, 24, 140);
-    Color frameHover        = Color(62, 20, 34, 180);
-    Color checkMark         = Color(235, 35, 75, 255);
-    Color sliderGrab        = Color(255, 40, 85, 255);
-    Color button            = Color(225, 32, 68, 235);
-    Color buttonGradEnd     = Color(165, 16, 42, 245);
-    Color buttonHover       = Color(245, 45, 82, 250);
-    Color buttonActive      = Color(185, 20, 50, 255);
-    Color toggleActive      = Color(225, 32, 68, 240);
-    Color toggleHover       = Color(250, 48, 88, 255);
+    Color frameBg           = Color(20, 28, 40, 175);
+    Color frameHover        = Color(26, 38, 52, 210);
+    Color checkMark         = Color(24, 218, 156, 255);
+    Color sliderGrab        = Color(18, 152, 118, 255);
+    Color button            = Color(18, 198, 148, 235);
+    Color buttonGradEnd     = Color(10, 122, 142, 245);
+    Color buttonHover       = Color(22, 162, 128, 255);
+    Color buttonActive      = Color(12, 145, 128, 255);
+    Color toggleActive      = Color(16, 184, 144, 240);
+    Color toggleHover       = Color(22, 162, 128, 255);
     Color separator         = Color(255, 255, 255, 28);
-    Color disabledBg        = Color(30, 24, 26, 140);
+    Color disabledBg        = Color(30, 24, 26, 150);
     Color disabledText      = Color(115, 104, 108, 255);
-    Color scrollbarBg       = Color(28, 22, 25, 150);
-    Color scrollbarGrab     = Color(98, 76, 84, 220);
-    Color secondaryBtn      = Color(43, 50, 64, 240);
-    Color secondaryBtnHover = Color(58, 68, 86, 250);
+    Color scrollbarBg       = Color(14, 20, 30, 170);
+    Color scrollbarGrab     = Color(248, 212, 108, 140);
+    Color secondaryBtn      = Color(22, 32, 46, 240);
+    Color secondaryBtnHover = Color(30, 44, 62, 250);
     Color success           = Color(129, 199, 132, 255);
     Color warning           = Color(255, 213, 79, 255);
     Color danger            = Color(229, 115, 115, 255);
+    Color accent            = Color(248, 212, 108, 255);
 
     // Dimensões confortáveis para toque no Android (em dp)
     int windowPadding   = 16;
@@ -81,8 +83,8 @@ struct Style {
     int itemSpacingY    = 10;
     int rounding        = 8;
     int touchHeight     = 38;
-    int animFps         = 30; // Interface (botões, scroll, widgets)
-    int backdropFps     = 15; // Animação de fundo (orbes)
+    int animFps         = 30;
+    int backdropFps     = 15;
 };
 
 struct RectI {
@@ -96,7 +98,7 @@ struct PointI {
 class Context {
 public:
     Style style;
-    Theme currentTheme = Theme::NeonRed;
+    Theme currentTheme = Theme::TealGold;
     float backdropSeed = 0.0f;
     NVGcontext* vg = nullptr;
     float dpiScale = 1.0f;
@@ -106,7 +108,6 @@ public:
     std::function<void()> onRequestRedraw;
     std::function<void(bool show)> onShowKeyboard;
 
-    // --- ESCOPOS RAII OPCIONAIS ---
     struct PanelScope {
         Context& ctx;
         bool active;
@@ -147,16 +148,6 @@ public:
         explicit operator bool() const { return open; }
     };
 
-    PanelScope Panel(const std::string& titleUtf8 = "", Color titleColor = Color(115, 191, 250), int customWidth = -1) {
-        return PanelScope(*this, titleUtf8, titleColor, customWidth);
-    }
-    ChildScope Child(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
-        return ChildScope(*this, idStr, customW, customH, border);
-    }
-    DisabledScope Disabled(bool disabled = true) {
-        return DisabledScope(*this, disabled);
-    }
-	
     struct IdScope {
         Context& ctx;
         IdScope(Context& c, int id) : ctx(c) { ctx.PushID(id); }
@@ -165,6 +156,15 @@ public:
         explicit operator bool() const { return true; }
     };
 
+    PanelScope Panel(const std::string& titleUtf8 = "", Color titleColor = Color(0, 0, 0, 0), int customWidth = -1) {
+        return PanelScope(*this, titleUtf8, titleColor, customWidth);
+    }
+    ChildScope Child(const std::string& idStr, int customW = -1, int customH = 220, bool border = true) {
+        return ChildScope(*this, idStr, customW, customH, border);
+    }
+    DisabledScope Disabled(bool disabled = true) {
+        return DisabledScope(*this, disabled);
+    }
     ModalScope Modal(const std::string& id, int customW = 340, int customH = 160) {
         return ModalScope(*this, id, customW, customH);
     }
@@ -208,15 +208,39 @@ public:
     void ApplyTheme(Theme theme) {
         currentTheme = theme;
         style = Style{};
-        if (theme == Theme::CyberPurple) {
+        if (theme == Theme::NeonRed) {
+            style.windowBg          = Color(12, 12, 16, 255);
+            style.panelBg           = Color(24, 16, 22, 145);
+            style.childBg           = Color(20, 14, 18, 135);
+            style.popupBg           = Color(24, 20, 28, 240);
+            style.tooltipBg         = Color(20, 18, 24, 245);
+            style.modalDimBg        = Color(8, 6, 10, 185);
+            style.border            = Color(230, 25, 65, 110);
+            style.borderFocus       = Color(255, 50, 90, 255);
+            style.frameBg           = Color(36, 18, 24, 155);
+            style.frameHover        = Color(62, 20, 34, 195);
+            style.checkMark         = Color(235, 35, 75, 255);
+            style.sliderGrab        = Color(255, 40, 85, 255);
+            style.button            = Color(225, 32, 68, 235);
+            style.buttonGradEnd     = Color(165, 16, 42, 245);
+            style.buttonHover       = Color(245, 45, 82, 250);
+            style.buttonActive      = Color(185, 20, 50, 255);
+            style.toggleActive      = Color(225, 32, 68, 240);
+            style.toggleHover       = Color(250, 48, 88, 255);
+            style.scrollbarBg       = Color(28, 22, 25, 160);
+            style.scrollbarGrab     = Color(98, 76, 84, 225);
+            style.secondaryBtn      = Color(43, 50, 64, 240);
+            style.secondaryBtnHover = Color(58, 68, 86, 250);
+            style.accent            = Color(255, 105, 130, 255);
+        } else if (theme == Theme::CyberPurple) {
             style.windowBg      = Color(13, 15, 20, 255);
-            style.panelBg       = Color(24, 27, 36, 125);
-            style.childBg       = Color(20, 23, 30, 115);
-            style.popupBg       = Color(28, 32, 42, 235);
+            style.panelBg       = Color(24, 27, 36, 145);
+            style.childBg       = Color(20, 23, 30, 135);
+            style.popupBg       = Color(28, 32, 42, 240);
             style.border        = Color(140, 110, 190, 85);
             style.borderFocus   = Color(186, 104, 200, 255);
-            style.frameBg       = Color(32, 36, 46, 140);
-            style.frameHover    = Color(46, 52, 66, 180);
+            style.frameBg       = Color(32, 36, 46, 155);
+            style.frameHover    = Color(46, 52, 66, 195);
             style.checkMark     = Color(206, 147, 216, 255);
             style.sliderGrab    = Color(186, 104, 200, 255);
             style.button        = Color(142, 44, 205, 235);
@@ -225,15 +249,16 @@ public:
             style.buttonActive  = Color(74, 20, 140, 255);
             style.toggleActive  = Color(123, 31, 162, 240);
             style.toggleHover   = Color(156, 39, 176, 255);
-            } else if (theme == Theme::RoseGold) {
+            style.accent        = Color(206, 147, 216, 255);
+        } else if (theme == Theme::RoseGold) {
             style.windowBg      = Color(12, 12, 15, 255);
-            style.panelBg       = Color(26, 25, 30, 125);
-            style.childBg       = Color(20, 19, 24, 115);
-            style.popupBg       = Color(24, 23, 28, 235);
+            style.panelBg       = Color(26, 25, 30, 145);
+            style.childBg       = Color(20, 19, 24, 135);
+            style.popupBg       = Color(24, 23, 28, 240);
             style.border        = Color(255, 255, 255, 38);
             style.borderFocus   = Color(224, 128, 108, 230);
-            style.frameBg       = Color(38, 36, 43, 135);
-            style.frameHover    = Color(54, 50, 60, 175);
+            style.frameBg       = Color(38, 36, 43, 150);
+            style.frameHover    = Color(54, 50, 60, 190);
             style.checkMark     = Color(224, 128, 108, 255);
             style.sliderGrab    = Color(230, 136, 115, 255);
             style.button        = Color(214, 98, 96, 235);
@@ -242,10 +267,11 @@ public:
             style.buttonActive  = Color(178, 68, 76, 255);
             style.toggleActive  = Color(214, 98, 96, 245);
             style.toggleHover   = Color(235, 118, 116, 255);
+            style.accent        = Color(242, 168, 148, 255);
         } else if (theme == Theme::LightClean) {
             style.windowBg          = Color(210, 220, 234, 255);
-            style.panelBg           = Color(234, 240, 248, 195);
-            style.childBg           = Color(226, 234, 244, 180);
+            style.panelBg           = Color(234, 240, 248, 205);
+            style.childBg           = Color(226, 234, 244, 190);
             style.popupBg           = Color(238, 243, 250, 245);
             style.tooltipBg         = Color(28, 34, 46, 240);
             style.border            = Color(155, 172, 196, 165);
@@ -271,16 +297,41 @@ public:
             style.success           = Color(32, 132, 52, 255);
             style.warning           = Color(180, 108, 0, 255);
             style.danger            = Color(195, 42, 42, 255);
-			
+            style.accent            = Color(28, 92, 196, 255);
         }
     }
 
-    // Inicializa NanoVG (deve ser chamado dentro de onSurfaceCreated no thread GL)
+    void CycleTheme() {
+        int next = (static_cast<int>(currentTheme) + 1) % 5;
+        ApplyTheme(static_cast<Theme>(next));
+    }
+
+    const char* GetCurrentThemeName() const {
+        switch (currentTheme) {
+            case Theme::NeonRed:     return "Neon Red";
+            case Theme::CyberPurple: return "Cyber Purple";
+            case Theme::RoseGold:    return "Rose Gold";
+            case Theme::LightClean:  return "Light Clean";
+            default:                 return "Teal Gold";
+        }
+    }
+
+    bool ThemeSwitcherButton(int customW = 145, int customH = 34) {
+        std::string label = std::string("Tema: ") + GetCurrentThemeName();
+        if (Button(label, customW, customH)) {
+            CycleTheme();
+            RequestRedraw(true);
+            return true;
+        }
+        return false;
+    }
+
     bool InitGLES3(NVGcontext* externalVg, float density = 2.5f) {
         vg = externalVg;
         dpiScale = std::max(1.0f, density);
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
+        wrapTextCache.clear();
 
         if (!vg) return false;
 
@@ -295,7 +346,6 @@ public:
         return (fontRegularId >= 0);
     }
 
-    // Registra uma fonte de icones (.ttf) da memoria como fallback para textos e botoes
     bool LoadIconFontFromMemory(const uint8_t* ttfData, int dataSize) {
         if (!vg || !ttfData || dataSize <= 0 || fontRegularId < 0) return false;
         unsigned char* ptr = const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(ttfData));
@@ -308,12 +358,14 @@ public:
         }
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
+        wrapTextCache.clear();
         return true;
     }
 
     void Shutdown() {
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
+        wrapTextCache.clear();
         vg = nullptr;
     }
 
@@ -331,8 +383,6 @@ public:
             onRequestRedraw();
         }
     }
-
-    // --- ENTRADA POR TOQUE (TOUCH EVENTS) ---
 
     void OnTouchDown(int x, int y) {
         touchPos = { x, y };
@@ -360,12 +410,12 @@ public:
 
         if (touchIsDraggingScroll) {
             if (activeScrollChildId != 0) {
-                childScrollMap[activeScrollChildId] -= static_cast<float>(dy);
+                childScrollMap.try_emplace(activeScrollChildId, 0.0f).first->second -= static_cast<float>(dy);
             } else {
                 windowScrollY -= static_cast<float>(dy);
             }
         }
-        RequestRedraw(false); // Limitado a 30 FPS durante o arrasto
+        RequestRedraw(false);
     }
 
     void OnTouchUp(int x, int y) {
@@ -377,8 +427,6 @@ public:
         touchIsDraggingScroll = false;
         RequestRedraw(true);
     }
-
-    // --- ENTRADA DE TECLADO VIRTUAL ---
 
     void OnTextCommit(const std::string& utf8Text) {
         if (focusedInputId != 0 && !utf8Text.empty()) {
@@ -401,8 +449,6 @@ public:
         }
     }
 
-    // --- CICLO DE FRAME (MODO APP COMPLETO OU HUD OVERLAY) ---
-
     void BeginFrame(int width, int height) {
         clientW = width;
         clientH = height;
@@ -413,8 +459,8 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         nvgBeginFrame(vg, static_cast<float>(width), static_cast<float>(height), 1.0f);
-        BeginFrameState();              // <-- PRIMEIRO limpa o estado
-        DrawGlassBackdrop(width, height); // <-- DEPOIS desenha e marca hasBackdropAnimation = true
+        BeginFrameState();
+        DrawGlassBackdrop(width, height);
     }
 
     void EndFrame() {
@@ -423,7 +469,6 @@ public:
         nvgEndFrame(vg);
     }
 
-    // Modo Overlay (para desenhar controles por cima de vídeo AMediaCodec ou imagem OpenGL ES)
     void BeginHUDFrame(int width, int height) {
         clientW = width;
         clientH = height;
@@ -450,6 +495,11 @@ public:
 
     int GetAvailWidth() const { return std::max(0, regionRight - cursorX); }
 
+    int GetTextWidth(const std::string& textUtf8, bool bold = false) {
+        int px = CalcTextWidth(StripIdSuffix(textUtf8), bold);
+        return (dpiScale > 0.0f) ? static_cast<int>(std::ceil(px / dpiScale)) : px;
+    }
+
     Context& SetCursorPos(int x, int y) {
         cursorX = x;
         cursorY = y;
@@ -460,6 +510,19 @@ public:
     int GetCursorY() const { return cursorY; }
     int GetClientWidth() const { return clientW; }
     int GetClientHeight() const { return clientH; }
+    int GetLogicalWidth() const { return (dpiScale > 0.0f) ? static_cast<int>(clientW / dpiScale) : clientW; }
+    int GetLogicalHeight() const { return (dpiScale > 0.0f) ? static_cast<int>(clientH / dpiScale) : clientH; }
+
+    Context& SameLineWrap(int nextItemWidth) {
+        int nextX = lastItemRight + S(style.itemSpacingX);
+        if (nextX + S(nextItemWidth) <= regionRight) {
+            cursorX = nextX;
+            cursorY = lastItemTop;
+        } else {
+            cursorX = regionLeft;
+        }
+        return *this;
+    }
 
     Context& AlignTextToFramePadding() {
         alignTextToFrame = true;
@@ -492,7 +555,7 @@ public:
         int y = cursorY + S(3);
         int l = regionLeft, r = regionRight;
         Color c = style.border;
-        QueueOrDraw([=]() { DrawLine(l, y, r, y, c); });
+        QueueOrDraw([=, this]() { DrawLine(l, y, r, y, c); });
         cursorY += S(10);
         return *this;
     }
@@ -505,7 +568,7 @@ public:
         int midY = y + h / 2;
         int textW = CalcTextWidth(disp, true);
         int pad = S(8);
-        Color col = (labelCol.a > 0) ? labelCol : style.textDim;
+        Color col = (labelCol.a > 0) ? labelCol : style.accent;
         Color lineCol = style.border;
 
         QueueOrDraw([=, this]() {
@@ -556,7 +619,7 @@ public:
 
     // --- CONTAINERS (PAINÉIS E ÁREA COM SCROLL POR TOQUE) ---
 
-    void BeginPanel(const std::string& titleUtf8 = "", Color titleColor = Color(115, 191, 250), int customWidth = -1) {
+    void BeginPanel(const std::string& titleUtf8 = "", Color titleColor = Color(0, 0, 0, 0), int customWidth = -1) {
         PanelState ps{};
         ps.startY = cursorY;
         ps.left = cursorX;
@@ -564,7 +627,7 @@ public:
         ps.savedRegionLeft = regionLeft;
         ps.savedRegionRight = regionRight;
         ps.title = StripIdSuffix(titleUtf8);
-        ps.titleColor = titleColor;
+        ps.titleColor = (titleColor.a > 0) ? titleColor : style.accent;
         panelStack.push_back(std::move(ps));
 
         int pad = S(12);
@@ -572,7 +635,14 @@ public:
         regionRight = panelStack.back().right - pad;
         cursorX = regionLeft;
         cursorY += pad;
-        if (!panelStack.back().title.empty()) cursorY += S(26);
+
+        if (!panelStack.back().title.empty()) {
+            int availTitleW = std::max(S(24), regionRight - regionLeft);
+            int logicalTitleW = (dpiScale > 0.0f) ? static_cast<int>(availTitleW / dpiScale) : availTitleW;
+            panelStack.back().titleLines = WrapTextCached(panelStack.back().title, logicalTitleW, true);
+            int rows = std::max(1, static_cast<int>(panelStack.back().titleLines.size()));
+            cursorY += rows * S(22) + (rows - 1) * S(2) + S(4);
+        }
     }
 
     void EndPanel() {
@@ -584,7 +654,7 @@ public:
         int panelBottom = cursorY + pad - S(style.itemSpacingY);
         int w = ps.right - ps.left;
         int h = panelBottom - ps.startY;
-        float r = (float)S(style.rounding);
+        float r = static_cast<float>(S(style.rounding));
         Color bg = style.panelBg;
         Color bdr = style.border;
 
@@ -593,7 +663,8 @@ public:
 
             if (vg && w > 0 && h > 0) {
                 NVGpaint glassBorder = nvgLinearGradient(
-                    vg, (float)ps.left, (float)ps.startY, (float)ps.left, (float)panelBottom,
+                    vg, static_cast<float>(ps.left), static_cast<float>(ps.startY),
+                    static_cast<float>(ps.left), static_cast<float>(panelBottom),
                     nvgRGBA(255, 255, 255, 75),
                     nvgRGBA(255, 255, 255, 18)
                 );
@@ -604,11 +675,17 @@ public:
                 nvgStroke(vg);
             }
 
-            if (!ps.title.empty()) {
+            if (!ps.titleLines.empty()) {
+                int lineH = S(22);
+                int innerGap = S(2);
                 int titleY = ps.startY + S(10);
-                DrawTextInternal(ps.left + pad, titleY, w - pad * 2, S(22),
-                                 ps.title, ps.titleColor, true, ALIGN_LEFT);
-                int sepY = titleY + S(24);
+                for (size_t i = 0; i < ps.titleLines.size(); ++i) {
+                    int ly = titleY + static_cast<int>(i) * (lineH + innerGap);
+                    DrawTextInternal(ps.left + pad, ly, std::max(0, w - pad * 2), lineH,
+                                     ps.titleLines.at(i), ps.titleColor, true, ALIGN_LEFT);
+                }
+                int rows = static_cast<int>(ps.titleLines.size());
+                int sepY = titleY + rows * lineH + (rows - 1) * innerGap + S(2);
                 DrawLine(ps.left + pad, sepY, ps.right - pad, sepY, bdr);
             }
 
@@ -641,9 +718,10 @@ public:
             activeScrollChildId = id;
         }
 
-        float maxPrev = childMaxScrollMap[id];
-        float scrollY = std::clamp(childScrollMap[id], 0.0f, maxPrev);
-        childScrollMap[id] = scrollY;
+        float& scrollRef = childScrollMap.try_emplace(id, 0.0f).first->second;
+        float maxPrev = childMaxScrollMap.try_emplace(id, 0.0f).first->second;
+        float scrollY = std::clamp(scrollRef, 0.0f, maxPrev);
+        scrollRef = scrollY;
 
         ChildState cs{};
         cs.id = id;
@@ -656,13 +734,13 @@ public:
         cs.savedRegionRight = regionRight;
         cs.savedCursorX = cursorX;
         cs.savedCursorY = cursorY;
-        cs.startContentY = y + S(8) - (int)std::round(scrollY);
+        cs.startContentY = y + S(8) - static_cast<int>(std::round(scrollY));
         childStack.push_back(cs);
 
         Color bgCol = style.childBg;
         Color bdrCol = border ? style.border : style.childBg;
         int rad = S(style.rounding);
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, rad, bgCol, bdrCol);
         });
 
@@ -676,10 +754,11 @@ public:
         int cx = x + 1, cy = y + 1;
         int cw = std::max(0, w - 2), ch = std::max(0, h - 2);
         PushClipLogical(cx, cy, cw, ch);
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             if (vg) {
                 nvgSave(vg);
-                nvgIntersectScissor(vg, (float)cx, (float)cy, (float)cw, (float)ch);
+                nvgIntersectScissor(vg, static_cast<float>(cx), static_cast<float>(cy),
+                                    static_cast<float>(cw), static_cast<float>(ch));
             }
         });
     }
@@ -690,15 +769,15 @@ public:
         childStack.pop_back();
 
         PopClipLogical();
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             if (vg) nvgRestore(vg);
         });
 
         int contentH = (cursorY - cs.startContentY) + S(8);
         int maxScroll = std::max(0, contentH - cs.h);
-		childMaxScrollMap[cs.id] = (float)maxScroll;
-        float& scrollY = childScrollMap[cs.id];
-        scrollY = std::clamp(scrollY, 0.0f, (float)maxScroll);
+        childMaxScrollMap.insert_or_assign(cs.id, static_cast<float>(maxScroll));
+        float& scrollY = childScrollMap.try_emplace(cs.id, 0.0f).first->second;
+        scrollY = std::clamp(scrollY, 0.0f, static_cast<float>(maxScroll));
 
         if (maxScroll > 0 && cs.h > S(24)) {
             int barW = S(4);
@@ -708,12 +787,12 @@ public:
             Color sbBg = style.scrollbarBg;
             Color sbGrab = style.scrollbarGrab;
 
-            float visibleRatio = std::clamp(float(cs.h) / float(contentH), 0.12f, 1.0f);
-            int grabH = std::max(S(22), (int)std::round(barH * visibleRatio));
-            float scrollRatio = scrollY / float(maxScroll);
-            int grabY = barY + (int)std::round((barH - grabH) * scrollRatio);
+            float visibleRatio = std::clamp(static_cast<float>(cs.h) / static_cast<float>(contentH), 0.12f, 1.0f);
+            int grabH = std::max(S(22), static_cast<int>(std::round(barH * visibleRatio)));
+            float scrollRatio = scrollY / static_cast<float>(maxScroll);
+            int grabY = barY + static_cast<int>(std::round((barH - grabH) * scrollRatio));
 
-            QueueOrDraw([=]() {
+            QueueOrDraw([=, this]() {
                 DrawRoundRect(barX, barY, barW, barH, barW / 2, sbBg, sbBg);
                 DrawRoundRect(barX, grabY, barW, grabH, barW / 2, sbGrab, sbGrab);
             });
@@ -750,7 +829,40 @@ public:
         return *this;
     }
 
-    Context& Badge(const std::string& textUtf8, Color accentColor = Color(89, 173, 250)) {
+    Context& TextWrapped(const std::string& textUtf8, Color color = Color(0, 0, 0, 0), bool bold = false) {
+        std::string disp = StripIdSuffix(textUtf8);
+        Color col = (color.a > 0) ? color : style.text;
+        if (IsDisabled()) col = style.disabledText;
+        else col = EnsureContrast(col);
+
+        int availW = GetAvailWidth();
+        int availLogicalW = (dpiScale > 0.0f) ? static_cast<int>(availW / dpiScale) : availW;
+        const auto& lines = WrapTextCached(disp, availLogicalW, bold);
+
+        int lineH = S(22);
+        int innerGap = S(2);
+        int startX = cursorX;
+        int startY = cursorY;
+
+        for (size_t i = 0; i < lines.size(); ++i) {
+            int ly = startY + static_cast<int>(i) * (lineH + innerGap);
+            std::string lineStr = lines.at(i);
+            QueueOrDraw([=, this]() {
+                if (!lineStr.empty()) {
+                    DrawTextInternal(startX, ly, availW, lineH, lineStr, col, bold, ALIGN_LEFT);
+                }
+            });
+        }
+
+        int totalH = lines.empty()
+            ? lineH
+            : static_cast<int>(lines.size()) * lineH + static_cast<int>(lines.size() - 1) * innerGap;
+        AdvanceCursor(availW, totalH);
+        return *this;
+    }
+
+    Context& Badge(const std::string& textUtf8, Color accentColor = Color(0, 0, 0, 0)) {
+        if (accentColor.a == 0) accentColor = style.accent;
         accentColor = EnsureContrast(accentColor);
         std::string disp = StripIdSuffix(textUtf8);
         int padX = S(10);
@@ -771,23 +883,40 @@ public:
     }
 
     Context& KeyValue(const std::string& keyUtf8, const std::string& valUtf8, Color valColor = Color(0, 0, 0, 0)) {
-        std::string dispKey = StripIdSuffix(keyUtf8);
+        std::string dispKey = StripIdSuffix(keyUtf8) + ": ";
         std::string dispVal = StripIdSuffix(valUtf8);
-        int h = S(22);
+        int lineH = S(22);
+        int innerGap = S(2);
         int x = cursorX, y = cursorY;
         int availW = GetAvailWidth();
-        int keyW = std::min(CalcTextWidth(dispKey + ": ", false), availW);
+        int keyW = std::min(CalcTextWidth(dispKey, false), availW);
         int valW = std::max(0, availW - keyW);
+
         Color kCol = IsDisabled() ? style.disabledText : style.textDim;
         Color vCol = IsDisabled() ? style.disabledText : ((valColor.a > 0) ? valColor : style.text);
+        if (!IsDisabled()) vCol = EnsureContrast(vCol);
+
+        int valLogicalW = (dpiScale > 0.0f) ? static_cast<int>(valW / dpiScale) : valW;
+        if (valLogicalW < 40) valLogicalW = (dpiScale > 0.0f) ? static_cast<int>(availW / dpiScale) : availW;
+
+        const auto& valLines = WrapTextCached(dispVal, valLogicalW, true);
+        bool putOnNextLine = (valW < S(40)) && !dispVal.empty();
 
         QueueOrDraw([=, this]() {
-            DrawTextInternal(x, y, keyW, h, dispKey + ": ", kCol, false, ALIGN_LEFT);
-            if (valW > 0) {
-                DrawTextInternal(x + keyW, y, valW, h, dispVal, vCol, true, ALIGN_LEFT);
+            DrawTextInternal(x, y, keyW, lineH, dispKey, kCol, false, ALIGN_LEFT);
+            for (size_t i = 0; i < valLines.size(); ++i) {
+                int vx = (i == 0 && !putOnNextLine) ? (x + keyW) : x;
+                int vw = (i == 0 && !putOnNextLine) ? valW : availW;
+                int vy = y + static_cast<int>(i + (putOnNextLine ? 1 : 0)) * (lineH + innerGap);
+                if (!valLines.at(i).empty() && vw > 0) {
+                    DrawTextInternal(vx, vy, vw, lineH, valLines.at(i), vCol, true, ALIGN_LEFT);
+                }
             }
         });
-        AdvanceCursor(availW, h);
+
+        int totalRows = std::max(1, static_cast<int>(valLines.size()) + (putOnNextLine ? 1 : 0));
+        int totalH = totalRows * lineH + (totalRows - 1) * innerGap;
+        AdvanceCursor(availW, totalH);
         return *this;
     }
 
@@ -807,8 +936,9 @@ public:
 
     bool InputText(const std::string& idStr, std::string& bufferUtf8, const std::string& placeholderUtf8 = "",
                    int customWidth = -1, bool isPassword = false) {
-        int id = HashString(idStr);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int id = HashString("inp_" + idStr);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(style.touchHeight);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -891,10 +1021,11 @@ public:
         return changed;
     }
 
-    // Editor de Texto Multilinha (ideal para Bloco de Notas, Editor de Texto e Presets FFmpeg)
-    bool InputTextMultiline(const std::string& idStr, std::string& bufferUtf8, int customWidth = -1, int customHeight = 180) {
-        int id = HashString(idStr);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+    bool InputTextMultiline(const std::string& idStr, std::string& bufferUtf8, int customWidth = -1,
+                            int customHeight = 180, bool readOnly = false) {
+        int id = HashString("ml_" + idStr);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int bottomSafe = std::max(S(style.windowPadding), safeAreaBottom);
         int h = (customHeight <= 0) ? std::max(S(100), clientH - cursorY - bottomSafe) : S(customHeight);
         int x = cursorX, y = cursorY;
@@ -905,7 +1036,7 @@ public:
             activeScrollChildId = id;
         }
 
-        if (touchReleased && !touchIsDraggingScroll && !disabled && !modalBlocking && openComboId == 0) {
+        if (touchReleased && !touchIsDraggingScroll && !disabled && !readOnly && !modalBlocking && openComboId == 0) {
             if (touched) {
                 focusedInputId = id;
                 cursorBlinkStart = NowMs();
@@ -916,7 +1047,7 @@ public:
             }
         }
 
-        bool focused = (focusedInputId == id) && !disabled;
+        bool focused = (focusedInputId == id) && !disabled && !readOnly;
         bool changed = false;
 
         if (focused) {
@@ -941,12 +1072,16 @@ public:
             }
         }
 
-        std::vector<std::string> lines = SplitLines(bufferUtf8);
-        int lineH = S(22);
         int pad = S(10);
-        int totalContentH = (int)lines.size() * lineH + pad * 2;
+        int scrollBarSpace = S(8);
+        int innerW = std::max(S(24), w - pad * 2 - scrollBarSpace);
+        int innerLogicalW = (dpiScale > 0.0f) ? static_cast<int>(innerW / dpiScale) : innerW;
+        const auto& lines = WrapTextCached(bufferUtf8, innerLogicalW, false);
+
+        int lineH = S(22);
+        int totalContentH = static_cast<int>(lines.size()) * lineH + pad * 2;
         int maxScroll = std::max(0, totalContentH - h);
-        float& scrollY = childScrollMap[id];
+        float& scrollY = childScrollMap.try_emplace(id, 0.0f).first->second;
         if (changed) scrollY = static_cast<float>(maxScroll);
         scrollY = std::clamp(scrollY, 0.0f, static_cast<float>(maxScroll));
 
@@ -957,14 +1092,13 @@ public:
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             PushClip(x + 2, y + 2, std::max(0, w - 4), std::max(0, h - 4));
 
-            int drawY = y + pad - (int)std::round(scrollY);
-            int innerW = std::max(0, w - pad * 2);
+            int drawY = y + pad - static_cast<int>(std::round(scrollY));
+            Color txtCol = disabled ? style.disabledText : style.text;
 
             for (size_t i = 0; i < lines.size(); ++i) {
-                int ly = drawY + (int)i * lineH;
-                if (ly + lineH >= y && ly <= y + h) {
-                    DrawTextInternal(x + pad, ly, innerW, lineH, lines.at(i),
-                                     disabled ? style.disabledText : style.text, false, ALIGN_LEFT);
+                int ly = drawY + static_cast<int>(i) * lineH;
+                if (ly + lineH >= y && ly <= y + h && !lines.at(i).empty()) {
+                    DrawTextInternal(x + pad, ly, innerW, lineH, lines.at(i), txtCol, false, ALIGN_LEFT);
                 }
             }
 
@@ -972,11 +1106,25 @@ public:
                 uint64_t elapsed = NowMs() - cursorBlinkStart;
                 if ((elapsed / 500) % 2 == 0) {
                     const std::string& lastLine = lines.empty() ? std::string() : lines.back();
-                    int lastLineY = drawY + std::max(0, (int)lines.size() - 1) * lineH;
+                    int lastLineY = drawY + std::max(0, static_cast<int>(lines.size()) - 1) * lineH;
                     int cx = x + pad + CalcTextWidth(lastLine, false);
                     DrawLine(cx, lastLineY + S(2), cx, lastLineY + lineH - S(2), style.text);
                 }
             }
+
+            if (maxScroll > 0 && h > S(24)) {
+                int barW = S(4);
+                int barX = x + w - barW - S(3);
+                int barY = y + S(6);
+                int barH = h - S(12);
+                float visibleRatio = std::clamp(static_cast<float>(h) / static_cast<float>(totalContentH), 0.12f, 1.0f);
+                int grabH = std::max(S(20), static_cast<int>(std::round(barH * visibleRatio)));
+                float scrollRatio = scrollY / static_cast<float>(maxScroll);
+                int grabY = barY + static_cast<int>(std::round((barH - grabH) * scrollRatio));
+                DrawRoundRect(barX, barY, barW, barH, barW / 2, style.scrollbarBg, style.scrollbarBg);
+                DrawRoundRect(barX, grabY, barW, grabH, barW / 2, style.scrollbarGrab, style.scrollbarGrab);
+            }
+
             PopClip();
         });
 
@@ -1050,11 +1198,11 @@ public:
             int pad = S(3);
             int knobSz = swH - pad * 2;
             int maxTravel = swW - knobSz - pad * 2;
-            int knobX = x + pad + (int)std::round(maxTravel * switchT);
+            int knobX = x + pad + static_cast<int>(std::round(maxTravel * switchT));
             int knobY = swY + pad;
             DrawRoundRect(knobX, knobY, knobSz, knobSz, knobSz / 2, knobCol, knobCol);
 
-            if (!labelUtf8.empty() && totalW > swW + S(10)) {
+            if (!disp.empty() && totalW > swW + S(10)) {
                 DrawTextInternal(x + swW + S(10), y, totalW - swW - S(10), h, disp, txtCol, false, ALIGN_LEFT);
             }
         });
@@ -1067,8 +1215,10 @@ public:
                 Color customBg = Color(0, 0, 0, 0), Color customHover = Color(0, 0, 0, 0)) {
         int id = MakeWidgetId("btn_" + labelUtf8);
         std::string disp = StripIdSuffix(labelUtf8);
-        int w = (customW > 0) ? S(customW) : (CalcTextWidth(disp, true) + S(style.framePaddingX * 2));
-        if (customW == -1) w = GetAvailWidth();
+        int availW = GetAvailWidth();
+        int w = (customW > 0) ? std::min(S(customW), availW)
+                              : std::min(CalcTextWidth(disp, true) + S(style.framePaddingX * 2), availW);
+        if (customW == -1) w = availW;
         int h = (customH > 0) ? S(customH) : S(style.touchHeight);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1083,7 +1233,7 @@ public:
         Color cHover  = (customHover.a > 0) ? customHover : style.buttonHover;
         Color activeCol = Color::Lerp(cNormal, cHover, pressT);
         Color bgCol   = disabled ? style.disabledBg : activeCol;
-		
+
         float luma    = 0.299f * bgCol.r + 0.587f * bgCol.g + 0.114f * bgCol.b;
         Color autoTxt = (luma < 145.0f) ? Color(246, 243, 244, 255) : Color(26, 32, 44, 255);
         Color txtCol  = disabled ? style.disabledText : autoTxt;
@@ -1095,7 +1245,10 @@ public:
             } else {
                 DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
             }
-            DrawTextInternal(x, y, w, h, disp, txtCol, true, ALIGN_CENTER);
+            int pad = S(4);
+            PushClip(x + pad, y, std::max(0, w - pad * 2), h);
+            DrawTextInternal(x + pad, y, std::max(0, w - pad * 2), h, disp, txtCol, true, ALIGN_CENTER);
+            PopClip();
         });
 
         AdvanceCursor(w, h);
@@ -1111,7 +1264,7 @@ public:
 
     bool IconButton(int customW, int customH, std::function<void(NVGcontext* vg, int x, int y, int w, int h)> onDrawIcon,
                     Color customBg = Color(0, 0, 0, 0), Color customHover = Color(0, 0, 0, 0)) {
-        int id = ++widgetCounter;
+        int id = MakeWidgetId("iconbtn");
         int w = S(customW);
         int h = S(customH);
         int x = cursorX, y = cursorY;
@@ -1137,9 +1290,31 @@ public:
         return clicked;
     }
 
+    int ButtonRow(const std::vector<std::string>& labels, int customHeight = 0) {
+        if (labels.empty()) return -1;
+        int count = static_cast<int>(labels.size());
+        int totalW = GetAvailWidth();
+        int spacing = S(style.itemSpacingX);
+        int btnW = std::max(S(32), (totalW - spacing * (count - 1)) / count);
+        int startX = cursorX;
+        int startY = cursorY;
+        int clickedIndex = -1;
+
+        for (int i = 0; i < count; ++i) {
+            cursorX = startX + i * (btnW + spacing);
+            cursorY = startY;
+            int curW = (i == count - 1) ? std::max(btnW, (startX + totalW) - cursorX) : btnW;
+            int logicalW = (dpiScale > 0.0f) ? static_cast<int>(std::round(curW / dpiScale)) : curW;
+            if (Button(labels.at(static_cast<size_t>(i)), logicalW, customHeight)) {
+                clickedIndex = i;
+            }
+        }
+        return clickedIndex;
+    }
+
     bool TabBar(int& currentTab, const std::vector<std::string>& labels, int customHeight = 38) {
         if (labels.empty()) return false;
-        int count = (int)labels.size();
+        int count = static_cast<int>(labels.size());
         int totalW = GetAvailWidth();
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
@@ -1150,7 +1325,7 @@ public:
 
         for (int i = 0; i < count; ++i) {
             int id = MakeWidgetId("tab_" + std::to_string(i));
-            std::string disp = StripIdSuffix(labels.at(i));
+            std::string disp = StripIdSuffix(labels.at(static_cast<size_t>(i)));
             int tx = x + i * (tabW + spacing);
             int curW = (i == count - 1) ? std::max(tabW, (x + totalW) - tx) : tabW;
             bool isSelected = (currentTab == i);
@@ -1176,7 +1351,10 @@ public:
                 } else {
                     DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
                 }
-                DrawTextInternal(tx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
+                int pad = S(4);
+                PushClip(tx + pad, y, std::max(0, curW - pad * 2), h);
+                DrawTextInternal(tx + pad, y, std::max(0, curW - pad * 2), h, disp, txtCol, isSelected, ALIGN_CENTER);
+                PopClip();
             });
         }
 
@@ -1186,8 +1364,9 @@ public:
 
     bool SegmentedControl(int& currentIndex, const std::vector<std::string>& options, int customWidth = -1, int customHeight = 36) {
         if (options.empty()) return false;
-        int count = (int)options.size();
-        int totalW = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int count = static_cast<int>(options.size());
+        int availW = GetAvailWidth();
+        int totalW = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
         int segW = std::max(S(28), totalW / count);
@@ -1200,7 +1379,7 @@ public:
 
         for (int i = 0; i < count; ++i) {
             int id = MakeWidgetId("seg_" + std::to_string(i));
-			std::string disp = StripIdSuffix(options.at(i));
+            std::string disp = StripIdSuffix(options.at(static_cast<size_t>(i)));
             int sx = x + i * segW;
             int curW = (i == count - 1) ? std::max(segW, (x + totalW) - sx) : segW;
             bool isSelected = (currentIndex == i);
@@ -1215,7 +1394,7 @@ public:
             float activeT = Animate(id * 2 + 1, isSelected ? 1.0f : 0.0f, 18.0f);
 
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, pressT);
-            Color pressBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, (uint8_t)(pressT * 180));
+            Color pressBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, static_cast<uint8_t>(pressT * 180));
             Color segCol   = disabled ? style.disabledBg : Color::Lerp(pressBg, activeBg, activeT);
             Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
             Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
@@ -1232,7 +1411,10 @@ public:
                         DrawRoundRect(rx, ry, rw, rh, rr, segCol, segCol);
                     }
                 }
-                DrawTextInternal(sx, y, curW, h, disp, txtCol, isSelected, ALIGN_CENTER);
+                int pad = S(4);
+                PushClip(sx + pad, y, std::max(0, curW - pad * 2), h);
+                DrawTextInternal(sx + pad, y, std::max(0, curW - pad * 2), h, disp, txtCol, isSelected, ALIGN_CENTER);
+                PopClip();
             });
         }
 
@@ -1276,8 +1458,9 @@ public:
     }
 
     bool Combo(const std::string& idStr, int& currentIndex, const std::vector<std::string>& items, int customWidth = -1) {
-        int id = HashString(idStr);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int id = HashString("cmb_" + idStr);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(style.touchHeight);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1300,14 +1483,17 @@ public:
         Color bgCol = disabled ? style.disabledBg : Color::Lerp(style.frameBg, style.frameHover, pressT);
         Color borderCol = isOpen ? style.borderFocus : style.border;
 
-        std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < (int)items.size())
-                              ? StripIdSuffix(items.at(currentIndex)) : "Select...";
+        std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < static_cast<int>(items.size()))
+                              ? StripIdSuffix(items.at(static_cast<size_t>(currentIndex))) : "Select...";
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             int arrowW = S(28);
-            DrawTextInternal(x + S(10), y, std::max(0, w - arrowW - S(10)), h, preview,
+            int textW = std::max(0, w - arrowW - S(10));
+            PushClip(x + S(10), y, textW, h);
+            DrawTextInternal(x + S(10), y, textW, h, preview,
                              disabled ? style.disabledText : style.text, false, ALIGN_LEFT);
+            PopClip();
             DrawComboArrowNVG(x + w - arrowW, y, arrowW, h, isOpen,
                               disabled ? style.disabledText : style.textDim);
         });
@@ -1315,7 +1501,7 @@ public:
         bool selectionChanged = false;
         if (isOpen && !items.empty()) {
             int itemH = S(36);
-            int dropH = (int)items.size() * itemH + S(8);
+            int dropH = static_cast<int>(items.size()) * itemH + S(8);
             int dropY = y + h + S(4);
             int bottomSafe = std::max(S(6), safeAreaBottom);
             int topSafe = std::max(S(6), safeAreaTop);
@@ -1326,7 +1512,7 @@ public:
             interactiveRects.push_back({ x, dropY, x + w, dropY + dropH });
 
             int touchedOption = -1;
-            for (int i = 0; i < (int)items.size(); ++i) {
+            for (int i = 0; i < static_cast<int>(items.size()); ++i) {
                 int optY = dropY + S(4) + i * itemH;
                 if (IsTouchInRect(x + S(4), optY, w - S(8), itemH)) {
                     touchedOption = i;
@@ -1348,14 +1534,14 @@ public:
             comboOverlayDraws.push_back([=, this]() {
                 DrawRoundRect(x + S(2), dropY + S(4), w, dropH, S(style.rounding), Color(10, 10, 14, 210), Color(10, 10, 14, 210));
                 DrawRoundRect(x, dropY, w, dropH, S(style.rounding), style.popupBg, style.borderFocus);
-                for (int i = 0; i < (int)items.size(); ++i) {
+                for (int i = 0; i < static_cast<int>(items.size()); ++i) {
                     int optY = dropY + S(4) + i * itemH;
                     if (i == touchedOption && touchDown) {
                         DrawRoundRect(x + S(4), optY, w - S(8), itemH, S(6), style.buttonHover, style.buttonHover);
                     } else if (i == currentIndex) {
                         DrawRoundRect(x + S(4), optY, w - S(8), itemH, S(6), style.frameHover, style.frameHover);
                     }
-                    DrawTextInternal(x + S(12), optY, std::max(0, w - S(24)), itemH, StripIdSuffix(items.at(i)), style.text, i == currentIndex, ALIGN_LEFT);
+                    DrawTextInternal(x + S(12), optY, std::max(0, w - S(24)), itemH, StripIdSuffix(items.at(static_cast<size_t>(i))), style.text, i == currentIndex, ALIGN_LEFT);
                 }
             });
         }
@@ -1366,8 +1552,9 @@ public:
 
     bool SliderFloat(float& value, float minVal, float maxVal, int customWidth = -1, int customHeight = 26,
                      const std::string& overlayUtf8 = "", bool* outIsDragging = nullptr) {
-        int id = ++widgetCounter;
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int id = MakeWidgetId("sldf");
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1387,7 +1574,7 @@ public:
 
         bool changed = false;
         if (dragging && w > 0 && maxVal > minVal) {
-            float t = std::clamp(float(touchPos.x - x) / float(w), 0.0f, 1.0f);
+            float t = std::clamp(static_cast<float>(touchPos.x - x) / static_cast<float>(w), 0.0f, 1.0f);
             float newVal = minVal + t * (maxVal - minVal);
             if (std::abs(newVal - value) > 0.0001f) {
                 value = newVal;
@@ -1406,7 +1593,7 @@ public:
             int trackY = y + (h - trackH) / 2;
             DrawRoundRect(x, trackY, w, trackH, trackH / 2, trackCol, style.border);
 
-            int fillW = (int)std::round(w * norm);
+            int fillW = static_cast<int>(std::round(w * norm));
             if (fillW > 0) {
                 DrawRoundRect(x, trackY, fillW, trackH, trackH / 2, fillCol, fillCol);
             }
@@ -1442,14 +1629,15 @@ public:
     Context& ProgressBar(float fraction, int customWidth = -1, int customHeight = 18,
                          Color fillCol = Color(0, 0, 0, 0), const std::string& overlayUtf8 = "") {
         fraction = std::clamp(fraction, 0.0f, 1.0f);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
         Color barCol = (fillCol.a > 0) ? fillCol : style.button;
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(4), style.frameBg, style.border);
-            int fillW = (int)std::round((w - 2) * fraction);
+            int fillW = static_cast<int>(std::round((w - 2) * fraction));
             if (fillW > 0) {
                 DrawRoundRect(x + 1, y + 1, fillW, h - 2, S(4), barCol, barCol);
             }
@@ -1466,7 +1654,7 @@ public:
         hasActiveAnimations = true;
         int sz = S(diameter);
         int x = cursorX, y = cursorY;
-        Color col = (color.a > 0) ? color : style.sliderGrab;
+        Color col = (color.a > 0) ? color : style.accent;
         float angle = (NowMs() % 1000) * 0.0062831853f;
 
         QueueOrDraw([=, this]() {
@@ -1476,11 +1664,11 @@ public:
             const int dots = 8;
             for (int i = 0; i < dots; ++i) {
                 float a = angle - i * 0.65f;
-                float alphaRatio = 1.0f - (float(i) / float(dots));
-                Color dotCol(col.r, col.g, col.b, (uint8_t)(col.a * alphaRatio));
+                float alphaRatio = 1.0f - (static_cast<float>(i) / static_cast<float>(dots));
+                Color dotCol(col.r, col.g, col.b, static_cast<uint8_t>(col.a * alphaRatio));
                 int dotR = std::max(2, sz / 9);
-                int dx = (int)std::round(cx + std::cos(a) * r) - dotR;
-                int dy = (int)std::round(cy + std::sin(a) * r) - dotR;
+                int dx = static_cast<int>(std::round(cx + std::cos(a) * r)) - dotR;
+                int dy = static_cast<int>(std::round(cy + std::sin(a) * r)) - dotR;
                 DrawRoundRect(dx, dy, dotR * 2, dotR * 2, dotR, dotCol, dotCol);
             }
         });
@@ -1489,10 +1677,10 @@ public:
         return *this;
     }
 
-    void Toast(const std::string& textUtf8, Color accentColor = Color(89, 173, 250), uint64_t durationMs = 2500) {
+    void Toast(const std::string& textUtf8, Color accentColor = Color(0, 0, 0, 0), uint64_t durationMs = 2500) {
         if (textUtf8.empty()) return;
         toastText = textUtf8;
-        toastColor = accentColor;
+        toastColor = (accentColor.a > 0) ? accentColor : style.accent;
         toastStartTime = NowMs();
         toastDurationMs = durationMs;
         hasActiveAnimations = true;
@@ -1507,10 +1695,9 @@ public:
     float GetLastItemTouchRatioX() const {
         int w = lastItemRight - lastItemLeft;
         if (w <= 0) return 0.0f;
-        return std::clamp(float(touchPos.x - lastItemLeft) / float(w), 0.0f, 1.0f);
+        return std::clamp(static_cast<float>(touchPos.x - lastItemLeft) / static_cast<float>(w), 0.0f, 1.0f);
     }
 
-    // No celular, segurar o dedo por ~450ms mostra a dica acima do dedo
     Context& SetTooltip(const std::string& textUtf8) {
         if (textUtf8.empty() || !touchDown || touchIsDraggingScroll || !IsLastItemTouched()) return *this;
         uint64_t heldMs = NowMs() - touchDownTimeMs;
@@ -1594,6 +1781,23 @@ private:
     std::unordered_map<std::string, int> textWidthCacheRegular;
     std::unordered_map<std::string, int> textWidthCacheBold;
 
+    struct WrapCacheKey {
+        std::string text;
+        int maxLogicalW;
+        bool bold;
+        bool operator==(const WrapCacheKey& o) const {
+            return maxLogicalW == o.maxLogicalW && bold == o.bold && text == o.text;
+        }
+    };
+    struct WrapCacheKeyHash {
+        size_t operator()(const WrapCacheKey& k) const {
+            size_t h = std::hash<std::string>{}(k.text);
+            h ^= (static_cast<size_t>(k.maxLogicalW) << 8) ^ static_cast<size_t>(k.bold);
+            return h;
+        }
+    };
+    std::unordered_map<WrapCacheKey, std::vector<std::string>, WrapCacheKeyHash> wrapTextCache;
+
     int clientW = 0, clientH = 0;
     PointI touchPos = { -1, -1 };
     PointI touchStartPos = { -1, -1 };
@@ -1627,7 +1831,7 @@ private:
     int colStartY = 0, colMaxY = 0;
 
     std::vector<bool> disabledStack;
-	std::vector<uint32_t> idStack;
+    std::vector<uint32_t> idStack;
 
     struct PanelState {
         int startY = 0, left = 0, right = 0;
@@ -1635,6 +1839,7 @@ private:
         std::string title;
         Color titleColor;
         std::vector<std::function<void()>> deferredDraws;
+        std::vector<std::string> titleLines;
     };
     std::vector<PanelState> panelStack;
 
@@ -1652,7 +1857,7 @@ private:
 
     std::vector<RectI> clipStack;
 
-    int focusedInputId = 0;    
+    int focusedInputId = 0;
     bool inputRenderedThisFrame = false;
     float windowScrollY = 0.0f;
     uint64_t cursorBlinkStart = 0;
@@ -1686,7 +1891,7 @@ private:
         return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
     }
 
-    int S(int v) const { return (int)std::round(v * dpiScale); }
+    int S(int v) const { return static_cast<int>(std::round(v * dpiScale)); }
     bool IsDisabled() const { return !disabledStack.empty() && disabledStack.back(); }
 
     Color EnsureContrast(Color col) const {
@@ -1701,6 +1906,78 @@ private:
     static std::string StripIdSuffix(const std::string& label) {
         size_t pos = label.find("##");
         return (pos == std::string::npos) ? label : label.substr(0, pos);
+    }
+
+    const std::vector<std::string>& WrapTextCached(const std::string& disp, int availLogicalW, bool bold) {
+        availLogicalW = std::max(24, availLogicalW);
+        WrapCacheKey key{ disp, availLogicalW, bold };
+        auto it = wrapTextCache.find(key);
+        if (it != wrapTextCache.end()) return it->second;
+        if (wrapTextCache.size() > 256) wrapTextCache.clear();
+
+        std::vector<std::string> outLines;
+        if (disp.empty()) {
+            outLines.emplace_back("");
+            return wrapTextCache.emplace(std::move(key), std::move(outLines)).first->second;
+        }
+
+        size_t pos = 0;
+        while (pos <= disp.size()) {
+            size_t nextNl = disp.find('\n', pos);
+            std::string paragraph = (nextNl == std::string::npos) ? disp.substr(pos) : disp.substr(pos, nextNl - pos);
+            if (!paragraph.empty() && paragraph.back() == '\r') paragraph.pop_back();
+
+            if (paragraph.empty()) {
+                outLines.emplace_back("");
+            } else {
+                std::string currentLine;
+                size_t wStart = 0;
+                while (wStart < paragraph.size()) {
+                    size_t wEnd = paragraph.find_first_of(" /\\", wStart);
+                    std::string token = (wEnd == std::string::npos)
+                        ? paragraph.substr(wStart)
+                        : paragraph.substr(wStart, wEnd - wStart + 1);
+
+                    std::string candidate = currentLine + token;
+                    if (!currentLine.empty() && GetTextWidth(candidate, bold) > availLogicalW) {
+                        while (!currentLine.empty() && currentLine.back() == ' ') currentLine.pop_back();
+                        outLines.push_back(currentLine);
+                        currentLine = token;
+                        while (!currentLine.empty() && currentLine.front() == ' ') currentLine.erase(0, 1);
+                    } else {
+                        currentLine = candidate;
+                    }
+
+                    while (GetTextWidth(currentLine, bold) > availLogicalW && currentLine.size() > 1) {
+                        size_t cut = currentLine.size() - 1;
+                        while (cut > 1 && (static_cast<unsigned char>(currentLine.at(cut)) & 0xC0) == 0x80) {
+                            --cut;
+                        }
+                        while (cut > 1 && GetTextWidth(currentLine.substr(0, cut), bold) > availLogicalW) {
+                            --cut;
+                            while (cut > 1 && (static_cast<unsigned char>(currentLine.at(cut)) & 0xC0) == 0x80) {
+                                --cut;
+                            }
+                        }
+                        if (cut == 0) cut = 1;
+                        outLines.push_back(currentLine.substr(0, cut));
+                        currentLine.erase(0, cut);
+                    }
+
+                    if (wEnd == std::string::npos) break;
+                    wStart = wEnd + 1;
+                }
+                if (!currentLine.empty()) {
+                    while (!currentLine.empty() && currentLine.back() == ' ') currentLine.pop_back();
+                    outLines.push_back(currentLine);
+                }
+            }
+
+            if (nextNl == std::string::npos) break;
+            pos = nextNl + 1;
+        }
+
+        return wrapTextCache.emplace(std::move(key), std::move(outLines)).first->second;
     }
 
     int HashString(const std::string& str) const {
@@ -1737,31 +2014,21 @@ private:
         }
     }
 
-    static std::vector<std::string> SplitLines(const std::string& s) {
-        std::vector<std::string> lines;
-        std::string cur;
-        for (char c : s) {
-            if (c == '\r') continue;
-            if (c == '\n') {
-                lines.push_back(cur);
-                cur.clear();
-            } else {
-                cur.push_back(c);
-            }
-        }
-        lines.push_back(cur);
-        return lines;
-    }
-
     float Animate(int id, float target, float speed = 16.0f) {
-        float& current = animValues[id];
+        auto it = animValues.find(id);
+        float current = (it != animValues.end()) ? it->second : 0.0f;
         float diff = target - current;
         if (std::abs(diff) < 0.005f) {
             current = target;
+            if (target == 0.0f && it != animValues.end()) {
+                animValues.erase(it);
+                return 0.0f;
+            }
         } else {
             current += diff * std::min(1.0f, deltaTime * speed);
             hasActiveAnimations = true;
         }
+        animValues.insert_or_assign(id, current);
         return current;
     }
 
@@ -1815,8 +2082,8 @@ private:
         pendingTooltipText.clear();
         clipStack.clear();
         childStack.clear();
-		panelStack.clear();
-		idStack.clear();
+        panelStack.clear();
+        idStack.clear();
         inputRenderedThisFrame = false;
 
         uint64_t now = NowMs();
@@ -1824,7 +2091,7 @@ private:
         lastFrameTimeMs = now;
         widgetCounter = 0;
         hasActiveAnimations = false;
-		hasBackdropAnimation = false;
+        hasBackdropAnimation = false;
 
         int pad = S(style.windowPadding);
         int topStart = std::max(pad, safeAreaTop + S(8));
@@ -1842,9 +2109,10 @@ private:
     }
 
     void EndFrameState() {
-		while (!childStack.empty()) EndChild();
+        while (!childStack.empty()) EndChild();
         while (!panelStack.empty()) EndPanel();
         while (!clipStack.empty()) PopClip();
+
         int bottomSafe = std::max(S(style.windowPadding), safeAreaBottom);
         int contentBottom = cursorY + static_cast<int>(std::round(windowScrollY)) + bottomSafe;
         int maxWinScroll = std::max(0, contentBottom - clientH);
@@ -1869,7 +2137,7 @@ private:
                 hasActiveAnimations = true;
                 float alpha = 1.0f;
                 if (elapsed > toastDurationMs - 400) {
-                    alpha = std::clamp(float(toastDurationMs - elapsed) / 400.0f, 0.0f, 1.0f);
+                    alpha = std::clamp(static_cast<float>(toastDurationMs - elapsed) / 400.0f, 0.0f, 1.0f);
                 }
                 DrawToastInternal(toastText, toastColor, alpha);
             } else {
@@ -1899,9 +2167,9 @@ private:
         int bx = (clientW - boxW) / 2;
         int by = std::max(S(14), safeAreaTop + S(8));
 
-        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, (uint8_t)(248 * alpha));
-        Color bdr(accent.r, accent.g, accent.b, (uint8_t)(235 * alpha));
-        Color txt(style.text.r, style.text.g, style.text.b, (uint8_t)(255 * alpha));
+        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, static_cast<uint8_t>(248 * alpha));
+        Color bdr(accent.r, accent.g, accent.b, static_cast<uint8_t>(235 * alpha));
+        Color txt(style.text.r, style.text.g, style.text.b, static_cast<uint8_t>(255 * alpha));
 
         DrawRoundRect(bx, by, boxW, boxH, boxH / 2, bg, bdr);
         DrawTextInternal(bx + padX, by, std::max(0, boxW - padX * 2), boxH, textUtf8, txt, true, ALIGN_CENTER);
@@ -1918,8 +2186,9 @@ private:
         if (x < S(6)) x = S(6);
         if (y < topSafe) y = touchPos.y + S(24);
 
+        Color tipTextCol = (currentTheme == Theme::LightClean) ? Color(246, 243, 244, 255) : style.text;
         DrawRoundRect(x, y, boxW, boxH, S(6), style.tooltipBg, style.border);
-        DrawTextInternal(x + padX, y, textW, boxH, textUtf8, style.text, false, ALIGN_LEFT);
+        DrawTextInternal(x + padX, y, textW, boxH, textUtf8, tipTextCol, false, ALIGN_LEFT);
     }
 
     int CalcTextWidth(const std::string& textUtf8, bool bold) {
@@ -1932,8 +2201,8 @@ private:
         nvgFontFaceId(vg, bold ? fontBoldId : fontRegularId);
         nvgFontSize(vg, 15.0f * dpiScale);
         float adv = nvgTextBounds(vg, 0.0f, 0.0f, textUtf8.c_str(), nullptr, nullptr);
-        int w = (int)std::ceil(adv);
-        cache[textUtf8] = w;
+        int w = static_cast<int>(std::ceil(adv));
+        cache.insert_or_assign(textUtf8, w);
         return w;
     }
 
@@ -1960,7 +2229,6 @@ private:
         hasBackdropAnimation = true;
         float t = cachedBackdropT;
 
-        // Ondas combinadas com amplitude maior para cruzar por trás dos painéis
         float ox1 = (std::sin(t * 0.73f) * 0.6f + std::cos(t * 0.31f) * 0.4f) * S(75);
         float oy1 = (std::cos(t * 0.61f) * 0.6f + std::sin(t * 0.27f) * 0.4f) * S(60);
 
@@ -1970,15 +2238,19 @@ private:
         float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
         float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
 
-        // Cores das luzes adaptadas ao tema atual (Padrão: NeonRed)
-        NVGcolor bgTop = nvgRGBA(14, 10, 14, 255);
-        NVGcolor bgBot = nvgRGBA(8, 8, 10, 255);
-        NVGcolor cOrb1 = nvgRGBA(245, 55, 95, 85);    // Brilho Vermelho Neon superior
-        NVGcolor cOrb2 = nvgRGBA(210, 40, 80, 70);    // Anel Carmesim inferior
-        NVGcolor cOrb3 = nvgRGBA(180, 60, 100, 45);   // Luz suave esquerda
-        NVGcolor cHole = nvgRGBA(12, 11, 14, 150);
+        NVGcolor bgTop = nvgRGBA(11, 14, 22, 255);
+        NVGcolor bgBot = nvgRGBA(8, 11, 17, 255);
+        NVGcolor cOrb1 = nvgRGBA(24, 198, 152, 70);
+        NVGcolor cOrb2 = nvgRGBA(12, 138, 156, 65);
+        NVGcolor cOrb3 = nvgRGBA(16, 165, 135, 45);
 
-        if (currentTheme == Theme::RoseGold) {
+        if (currentTheme == Theme::NeonRed) {
+            bgTop = nvgRGBA(14, 10, 14, 255);
+            bgBot = nvgRGBA(8, 8, 10, 255);
+            cOrb1 = nvgRGBA(245, 55, 95, 85);
+            cOrb2 = nvgRGBA(210, 40, 80, 70);
+            cOrb3 = nvgRGBA(180, 60, 100, 45);
+        } else if (currentTheme == Theme::RoseGold) {
             bgTop = nvgRGBA(14, 13, 16, 255);
             cOrb1 = nvgRGBA(235, 145, 120, 90);
             cOrb2 = nvgRGBA(205, 125, 110, 75);
@@ -1994,46 +2266,41 @@ private:
             cOrb1 = nvgRGBA(110, 160, 235, 80);
             cOrb2 = nvgRGBA(135, 180, 242, 70);
             cOrb3 = nvgRGBA(235, 242, 252, 95);
-            cHole = nvgRGBA(198, 210, 228, 140);
         }
 
-        // 1. Fundo base
-        NVGpaint bgGrad = nvgLinearGradient(vg, 0.0f, 0.0f, (float)w, (float)h, bgTop, bgBot);
+        NVGpaint bgGrad = nvgLinearGradient(vg, 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h), bgTop, bgBot);
         nvgBeginPath(vg);
-        nvgRect(vg, 0.0f, 0.0f, (float)w, (float)h);
+        nvgRect(vg, 0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
         nvgFillPaint(vg, bgGrad);
         nvgFill(vg);
 
-        float minDim = (float)std::min(w, h);
-        float maxDim = (float)std::max(w, h);
+        float minDim = static_cast<float>(std::min(w, h));
+        float maxDim = static_cast<float>(std::max(w, h));
 
-        // 2. Orbe 1 (superior direito) - desenha apenas o círculo do raio do orbe
         float x1 = w * 0.80f + ox1, y1 = h * 0.22f + oy1, r1 = minDim * 0.46f;
         NVGpaint orb1 = nvgRadialGradient(
             vg, x1, y1, minDim * 0.04f, r1,
-            cOrb1, nvgRGBA(cOrb1.r * 255, cOrb1.g * 255, cOrb1.b * 255, 0)
+            cOrb1, nvgRGBA(static_cast<unsigned char>(cOrb1.r * 255), static_cast<unsigned char>(cOrb1.g * 255), static_cast<unsigned char>(cOrb1.b * 255), 0)
         );
         nvgBeginPath(vg);
         nvgCircle(vg, x1, y1, r1);
         nvgFillPaint(vg, orb1);
         nvgFill(vg);
 
-        // 3. Orbe 2 (inferior direito)
         float x2 = w * 0.66f + ox2, y2 = h * 0.72f + oy2, r2 = minDim * 0.43f;
         NVGpaint orb2 = nvgRadialGradient(
             vg, x2, y2, minDim * 0.08f, r2,
-            cOrb2, nvgRGBA(cOrb2.r * 255, cOrb2.g * 255, cOrb2.b * 255, 0)
+            cOrb2, nvgRGBA(static_cast<unsigned char>(cOrb2.r * 255), static_cast<unsigned char>(cOrb2.g * 255), static_cast<unsigned char>(cOrb2.b * 255), 0)
         );
         nvgBeginPath(vg);
         nvgCircle(vg, x2, y2, r2);
         nvgFillPaint(vg, orb2);
         nvgFill(vg);
 
-        // 4. Luz secundária 3 (esquerda)
         float x3 = w * 0.14f + ox3, y3 = h * 0.54f + oy3, r3 = maxDim * 0.36f;
         NVGpaint orb3 = nvgRadialGradient(
             vg, x3, y3, minDim * 0.02f, r3,
-            cOrb3, nvgRGBA(cOrb3.r * 255, cOrb3.g * 255, cOrb3.b * 255, 0)
+            cOrb3, nvgRGBA(static_cast<unsigned char>(cOrb3.r * 255), static_cast<unsigned char>(cOrb3.g * 255), static_cast<unsigned char>(cOrb3.b * 255), 0)
         );
         nvgBeginPath(vg);
         nvgCircle(vg, x3, y3, r3);
@@ -2043,11 +2310,11 @@ private:
 
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         if (!vg || w <= 0 || h <= 0) return;
-        float r = std::min((float)radius, std::min(w, h) * 0.5f);
+        float r = std::min(static_cast<float>(radius), std::min(w, h) * 0.5f);
 
         if (fill.a > 0) {
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, (float)x, (float)y, (float)w, (float)h, r);
+            nvgRoundedRect(vg, static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h), r);
             nvgFillColor(vg, fill.ToNVG());
             nvgFill(vg);
         }
@@ -2060,25 +2327,23 @@ private:
         }
     }
 
-    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color borderCol) {
+    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color) {
         if (!vg || w <= 0 || h <= 0) return;
-        float r = std::min((float)radius, std::min(w, h) * 0.5f);
+        float r = std::min(static_cast<float>(radius), std::min(w, h) * 0.5f);
 
         if (c1.a > 0) {
-            // Degradê vertical sutil (de cima para baixo) simulando iluminação natural
             NVGpaint mesh = nvgLinearGradient(
-                vg, (float)x, (float)y, (float)x, (float)(y + h),
+                vg, static_cast<float>(x), static_cast<float>(y), static_cast<float>(x), static_cast<float>(y + h),
                 c1.ToNVG(), c2.ToNVG()
             );
             nvgBeginPath(vg);
-            nvgRoundedRect(vg, (float)x, (float)y, (float)w, (float)h, r);
+            nvgRoundedRect(vg, static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h), r);
             nvgFillPaint(vg, mesh);
             nvgFill(vg);
         }
 
-        // Brilho especular sutil na borda (mais claro no topo, mais suave embaixo)
         NVGpaint rimLight = nvgLinearGradient(
-            vg, (float)x, (float)y, (float)x, (float)(y + h),
+            vg, static_cast<float>(x), static_cast<float>(y), static_cast<float>(x), static_cast<float>(y + h),
             nvgRGBA(255, 255, 255, 75),
             nvgRGBA(255, 255, 255, 12)
         );
@@ -2092,8 +2357,8 @@ private:
     void DrawLine(int x1, int y1, int x2, int y2, Color col) {
         if (!vg || col.a == 0) return;
         nvgBeginPath(vg);
-        nvgMoveTo(vg, (float)x1, (float)y1);
-        nvgLineTo(vg, (float)x2, (float)y2);
+        nvgMoveTo(vg, static_cast<float>(x1), static_cast<float>(y1));
+        nvgLineTo(vg, static_cast<float>(x2), static_cast<float>(y2));
         nvgStrokeColor(vg, col.ToNVG());
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
@@ -2138,19 +2403,19 @@ private:
     void DrawTextInternal(int x, int y, int w, int h, const std::string& textUtf8, Color col, bool bold, int align) {
         if (!vg || textUtf8.empty() || w <= 0) return;
         nvgSave(vg);
-        nvgIntersectScissor(vg, (float)x, (float)y, (float)w, (float)h);
+        nvgIntersectScissor(vg, static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h));
 
         nvgFontFaceId(vg, bold ? fontBoldId : fontRegularId);
         nvgFontSize(vg, 15.0f * dpiScale);
         nvgFillColor(vg, col.ToNVG());
 
-        float drawX = (float)x;
+        float drawX = static_cast<float>(x);
         int nvgAlign = NVG_ALIGN_MIDDLE;
         if (align == ALIGN_CENTER) {
             drawX = x + w * 0.5f;
             nvgAlign |= NVG_ALIGN_CENTER;
         } else if (align == ALIGN_RIGHT) {
-            drawX = (float)(x + w);
+            drawX = static_cast<float>(x + w);
             nvgAlign |= NVG_ALIGN_RIGHT;
         } else {
             nvgAlign |= NVG_ALIGN_LEFT;
@@ -2186,9 +2451,9 @@ private:
         const RectI& r = clipStack.back();
         if (vg) {
             nvgSave(vg);
-            nvgIntersectScissor(vg, (float)r.left, (float)r.top,
-                                (float)std::max(0, r.right - r.left),
-                                (float)std::max(0, r.bottom - r.top));
+            nvgIntersectScissor(vg, static_cast<float>(r.left), static_cast<float>(r.top),
+                                static_cast<float>(std::max(0, r.right - r.left)),
+                                static_cast<float>(std::max(0, r.bottom - r.top)));
         }
     }
 

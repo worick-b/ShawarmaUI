@@ -555,7 +555,7 @@ public:
         int y = cursorY + S(3);
         int l = regionLeft, r = regionRight;
         Color c = style.border;
-        QueueOrDraw([=, this]() { DrawLine(l, y, r, y, c); });
+        QueueOrDraw([=]() { DrawLine(l, y, r, y, c); });
         cursorY += S(10);
         return *this;
     }
@@ -571,7 +571,7 @@ public:
         Color col = (labelCol.a > 0) ? labelCol : style.accent;
         Color lineCol = style.border;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             int line1End = l + S(12);
             if (line1End > l) DrawLine(l, midY, line1End, midY, lineCol);
             int textX = line1End + pad;
@@ -658,7 +658,7 @@ public:
         Color bg = style.panelBg;
         Color bdr = style.border;
 
-        auto drawSelf = [=, this]() {
+        auto drawSelf = [=]() {
             DrawRoundRect(ps.left, ps.startY, w, h, S(style.rounding), bg, Color(0, 0, 0, 0));
 
             if (vg && w > 0 && h > 0) {
@@ -740,7 +740,7 @@ public:
         Color bgCol = style.childBg;
         Color bdrCol = border ? style.border : style.childBg;
         int rad = S(style.rounding);
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, rad, bgCol, bdrCol);
         });
 
@@ -754,7 +754,7 @@ public:
         int cx = x + 1, cy = y + 1;
         int cw = std::max(0, w - 2), ch = std::max(0, h - 2);
         PushClipLogical(cx, cy, cw, ch);
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             if (vg) {
                 nvgSave(vg);
                 nvgIntersectScissor(vg, static_cast<float>(cx), static_cast<float>(cy),
@@ -769,7 +769,7 @@ public:
         childStack.pop_back();
 
         PopClipLogical();
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             if (vg) nvgRestore(vg);
         });
 
@@ -792,7 +792,7 @@ public:
             float scrollRatio = scrollY / static_cast<float>(maxScroll);
             int grabY = barY + static_cast<int>(std::round((barH - grabH) * scrollRatio));
 
-            QueueOrDraw([=, this]() {
+            QueueOrDraw([=]() {
                 DrawRoundRect(barX, barY, barW, barH, barW / 2, sbBg, sbBg);
                 DrawRoundRect(barX, grabY, barW, grabH, barW / 2, sbGrab, sbGrab);
             });
@@ -822,7 +822,7 @@ public:
         int drawW = std::min(w + S(4), GetAvailWidth());
         int x = cursorX, y = cursorY + offsetY;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawTextInternal(x, y, drawW, h, disp, color, bold, ALIGN_LEFT);
         });
         AdvanceCursor(drawW, h);
@@ -847,7 +847,7 @@ public:
         for (size_t i = 0; i < lines.size(); ++i) {
             int ly = startY + static_cast<int>(i) * (lineH + innerGap);
             std::string lineStr = lines.at(i);
-            QueueOrDraw([=, this]() {
+            QueueOrDraw([=]() {
                 if (!lineStr.empty()) {
                     DrawTextInternal(startX, ly, availW, lineH, lineStr, col, bold, ALIGN_LEFT);
                 }
@@ -874,7 +874,7 @@ public:
         Color bgCol = Color::Lerp(style.panelBg, accentColor, 0.20f);
         Color borderCol = Color::Lerp(style.panelBg, accentColor, 0.68f);
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, h / 2, bgCol, borderCol);
             DrawTextInternal(x + padX, y, std::max(0, w - padX * 2), h, disp, accentColor, true, ALIGN_CENTER);
         });
@@ -902,7 +902,7 @@ public:
         const auto& valLines = WrapTextCached(dispVal, valLogicalW, true);
         bool putOnNextLine = (valW < S(40)) && !dispVal.empty();
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawTextInternal(x, y, keyW, lineH, dispKey, kCol, false, ALIGN_LEFT);
             for (size_t i = 0; i < valLines.size(); ++i) {
                 int vx = (i == 0 && !putOnNextLine) ? (x + keyW) : x;
@@ -925,7 +925,7 @@ public:
         int h = S(style.touchHeight);
         int x = cursorX, y = cursorY;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), style.frameBg, style.border);
             DrawTextInternal(x + S(10), y, std::max(0, w - S(20)), h, textUtf8,
                              textUtf8.empty() ? style.textDim : style.text, false, ALIGN_LEFT);
@@ -991,7 +991,7 @@ public:
         Color bgCol = disabled ? style.disabledBg : Color::Lerp(style.frameBg, style.frameHover, focusT);
         Color borderCol = focused ? style.borderFocus : style.border;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             int padX = S(10);
             int innerW = std::max(0, w - padX * 2);
@@ -1088,7 +1088,7 @@ public:
         Color borderCol = focused ? style.borderFocus : style.border;
         Color bgCol = disabled ? style.disabledBg : style.frameBg;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             PushClip(x + 2, y + 2, std::max(0, w - 4), std::max(0, h - 4));
 
@@ -1154,7 +1154,7 @@ public:
         Color baseChk = disabled ? style.disabledText : style.checkMark;
         Color chkCol = Color::Lerp(bgCol, baseChk, checkT);
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             int boxY = y + (h - boxSz) / 2;
             DrawRoundRect(x, boxY, boxSz, boxSz, S(5), bgCol, style.border);
             if (checkT > 0.02f) {
@@ -1191,7 +1191,7 @@ public:
         Color knobCol  = disabled ? style.disabledText : Color::Lerp(style.textDim, style.text, switchT);
         Color txtCol   = disabled ? style.disabledText : style.text;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             int swY = y + (h - swH) / 2;
             DrawRoundRect(x, swY, swW, swH, swH / 2, trackCol, disabled ? style.border : trackCol);
 
@@ -1238,7 +1238,7 @@ public:
         Color autoTxt = (luma < 145.0f) ? Color(246, 243, 244, 255) : Color(26, 32, 44, 255);
         Color txtCol  = disabled ? style.disabledText : autoTxt;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             if (!disabled && customBg.a == 0) {
                 Color endCol = Color::Lerp(style.buttonGradEnd, style.buttonHover, pressT);
                 DrawMeshRect(x, y, w, h, S(style.rounding), bgCol, endCol, bgCol);
@@ -1281,7 +1281,7 @@ public:
         Color activeCol = Color::Lerp(cNormal, cHover, pressT);
         Color bgCol   = disabled ? style.disabledBg : activeCol;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
             if (onDrawIcon && vg) onDrawIcon(vg, x, y, w, h);
         });
@@ -1345,7 +1345,7 @@ public:
             Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
             Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
 
-            QueueOrDraw([=, this]() {
+            QueueOrDraw([=]() {
                 if (!disabled && isSelected) {
                     DrawMeshRect(tx, y, curW, h, S(style.rounding), bgCol, style.buttonGradEnd, style.borderFocus);
                 } else {
@@ -1373,7 +1373,7 @@ public:
         bool disabled = IsDisabled();
         bool changed = false;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, totalW, h, S(style.rounding), style.frameBg, style.border);
         });
 
@@ -1399,7 +1399,7 @@ public:
             Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
             Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, pressT));
 
-            QueueOrDraw([=, this]() {
+            QueueOrDraw([=]() {
                 if (activeT > 0.02f || pressT > 0.02f) {
                     int pad = S(3);
                     int rx = sx + pad, ry = y + pad;
@@ -1442,7 +1442,7 @@ public:
         Color bgCol   = disabled ? style.disabledBg : Color::Lerp(baseCol, selCol, selT * 0.45f);
         Color bdrCol  = selected ? style.borderFocus : style.border;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, bdrCol);
             int padX = S(12);
             int subW = dispSub.empty() ? 0 : (CalcTextWidth(dispSub, false) + S(12));
@@ -1486,7 +1486,7 @@ public:
         std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < static_cast<int>(items.size()))
                               ? StripIdSuffix(items.at(static_cast<size_t>(currentIndex))) : "Select...";
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             int arrowW = S(28);
             int textW = std::max(0, w - arrowW - S(10));
@@ -1531,7 +1531,7 @@ public:
                 openComboId = 0;
             }
 
-            comboOverlayDraws.push_back([=, this]() {
+            comboOverlayDraws.push_back([=]() {
                 DrawRoundRect(x + S(2), dropY + S(4), w, dropH, S(style.rounding), Color(10, 10, 14, 210), Color(10, 10, 14, 210));
                 DrawRoundRect(x, dropY, w, dropH, S(style.rounding), style.popupBg, style.borderFocus);
                 for (int i = 0; i < static_cast<int>(items.size()); ++i) {
@@ -1588,7 +1588,7 @@ public:
         Color trackCol = disabled ? style.disabledBg : Color::Lerp(style.frameBg, style.frameHover, dragT);
         Color fillCol  = disabled ? style.disabledText : style.sliderGrab;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             int trackH = std::max(S(8), h / 3);
             int trackY = y + (h - trackH) / 2;
             DrawRoundRect(x, trackY, w, trackH, trackH / 2, trackCol, style.border);
@@ -1635,7 +1635,7 @@ public:
         int x = cursorX, y = cursorY;
         Color barCol = (fillCol.a > 0) ? fillCol : style.button;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             DrawRoundRect(x, y, w, h, S(4), style.frameBg, style.border);
             int fillW = static_cast<int>(std::round((w - 2) * fraction));
             if (fillW > 0) {
@@ -1657,7 +1657,7 @@ public:
         Color col = (color.a > 0) ? color : style.accent;
         float angle = (NowMs() % 1000) * 0.0062831853f;
 
-        QueueOrDraw([=, this]() {
+        QueueOrDraw([=]() {
             float cx = x + sz * 0.5f;
             float cy = y + sz * 0.5f;
             float r = sz * 0.38f;
@@ -1746,7 +1746,7 @@ public:
         inModalRender = true;
 
         modalDraws.clear();
-        modalDraws.push_back([=, this]() {
+        modalDraws.push_back([=]() {
             DrawDimOverlay(style.modalDimBg);
             DrawRoundRect(mx + S(3), my + S(4), modalW, modalH, S(style.rounding), Color(10, 10, 14, 220), Color(10, 10, 14, 220));
             DrawRoundRect(mx, my, modalW, modalH, S(style.rounding), style.popupBg, style.checkMark);

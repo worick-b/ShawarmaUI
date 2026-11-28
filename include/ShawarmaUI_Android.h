@@ -921,7 +921,8 @@ public:
     }
 
     Context& InputTextReadOnly(const std::string& textUtf8, int customWidth = -1) {
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(style.touchHeight);
         int x = cursorX, y = cursorY;
 
@@ -2422,7 +2423,19 @@ private:
         }
 
         nvgTextAlign(vg, nvgAlign);
-        nvgText(vg, drawX, y + h * 0.5f, textUtf8.c_str(), nullptr);
+
+        if (nvgTextBounds(vg, 0.0f, 0.0f, textUtf8.c_str(), nullptr, nullptr) > static_cast<float>(w)) {
+            std::string trimmed = textUtf8;
+            while (!trimmed.empty() &&
+                   nvgTextBounds(vg, 0.0f, 0.0f, (trimmed + "...").c_str(), nullptr, nullptr) > static_cast<float>(w)) {
+                PopLastUtf8Char(trimmed);
+            }
+            std::string ell = trimmed.empty() ? "." : (trimmed + "...");
+            nvgText(vg, drawX, y + h * 0.5f, ell.c_str(), nullptr);
+        } else {
+            nvgText(vg, drawX, y + h * 0.5f, textUtf8.c_str(), nullptr);
+        }
+
         nvgRestore(vg);
     }
 

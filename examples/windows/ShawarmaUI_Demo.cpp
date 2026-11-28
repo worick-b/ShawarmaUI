@@ -1,4 +1,3 @@
-#define SHAWARMAUI_USE_D2D
 #include "ShawarmaUI.h"
 #include <string>
 #include <vector>
@@ -15,7 +14,8 @@ struct ShowcaseState {
     int currentTab = 0;
     int themeIndex = 0;
     const std::vector<std::string> themeNames = {
-        "Neon Red (Default)",
+        "Teal Gold (Default)",
+        "Neon Red",
         "Cyber Purple",
         "Rose Gold",
         "Light Clean"
@@ -34,13 +34,19 @@ struct ShowcaseState {
 
     // Tab 1: Dynamic Lists & Containers
     std::vector<TaskItem> tasks = {
-        { "Optimize gradients with std::array", "C++17", true },
-        { "Build persistent GDI pixel cache", "Win32", true },
-        { "Port PushID and panelStack to Android", "GLES3", true },
+        { "Hybrid Direct2D + GDI runtime fallback", "C++17", true },
+        { "Cached word-wrap & multiline text box", "Win32", true },
+        { "Dynamic 30 FPS UI / 15 FPS backdrop", "Perf", true },
         { "Test release build on GitHub Actions", "CI/CD", false }
     };
     int selectedTask = 0;
     std::string newTaskName = "";
+
+    // Tab 2: Multiline & Word-Wrap Showcase
+    std::string multilineNote =
+        "Digite ou cole textos longos aqui! Esta caixa possui quebra automatica de linha (WrapTextCached), "
+        "rolagem com a roda do mouse e atalhos Ctrl+C / Ctrl+V.\n\n"
+        "Caminhos longos tambem quebram naturalmente: C:\\Users\\Thunderstruck\\Documents\\Projetos\\ShawarmaUI\\include\\ShawarmaUI.h";
 } g_demo;
 
 ShawarmaUI::Context g_ui;
@@ -52,23 +58,25 @@ void OnFileDropDemo(const std::string& filePath) {
 
 void RenderShowcase(ShawarmaUI::Context& ctx) {
     g_demo.themeIndex = static_cast<int>(ctx.currentTheme);
+    bool isD2D = ctx.IsUsingD2D();
 
-    // Header: Theme Selector + Badge
+    // Header: Theme Selector + Backend Badge
     ctx.AlignText().Text("Theme:", true);
     ctx.SameLine();
-    if (ctx.Combo("theme_selector", g_demo.themeIndex, g_demo.themeNames, 200)) {
+    if (ctx.Combo("theme_selector", g_demo.themeIndex, g_demo.themeNames, 195)) {
         ctx.ApplyTheme(static_cast<ShawarmaUI::Theme>(g_demo.themeIndex));
-        ctx.Toast("Theme switched: " + g_demo.themeNames.at(g_demo.themeIndex));
+        ctx.Toast("Theme switched: " + g_demo.themeNames.at(static_cast<size_t>(g_demo.themeIndex)));
     }
-    ctx.SameLineRight(185);
-    ctx.Badge("C++17 • Zero C-Arrays", ShawarmaUI::Color(89, 173, 250));
+    ctx.SameLineWrap(180);
+    ctx.Badge(isD2D ? "C++17 • Direct2D Active" : "C++17 • GDI Fallback",
+              isD2D ? ctx.style.success : ctx.style.warning);
 
     ctx.Spacing();
-    ctx.TabBar(g_demo.currentTab, { "Controls & Inputs", "Lists & Containers", "About & Modal" });
+    ctx.TabBar(g_demo.currentTab, { "Controls", "Lists", "Wrap & D2D" });
     ctx.Spacing();
 
     // =================================================================
-    // TAB 1: CONTROLS, SLIDERS, INPUTS AND TOOLTIPS
+    // TAB 0: CONTROLS, SLIDERS, INPUTS AND TOOLTIPS
     // =================================================================
     if (g_demo.currentTab == 0) {
         if (auto p = ctx.Panel("General Settings")) {
@@ -124,7 +132,7 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
     }
 
     // =================================================================
-    // TAB 2: NESTED PANELS, CHILD SCROLL AND DYNAMIC LIST (PushID)
+    // TAB 1: NESTED PANELS, CHILD SCROLL AND DYNAMIC LIST (PushID)
     // =================================================================
     else if (g_demo.currentTab == 1) {
         if (auto p = ctx.Panel("Parent Panel (Nesting + Scroll)")) {
@@ -143,9 +151,9 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
             if (auto child = ctx.Child("task_list", -1, 230, true)) {
                 int indexToDelete = -1;
 
-                for (int i = 0; i < (int)g_demo.tasks.size(); ++i) {
+                for (int i = 0; i < static_cast<int>(g_demo.tasks.size()); ++i) {
                     auto scopeId = ctx.ID(i);
-                    TaskItem& item = g_demo.tasks.at(i);
+                    TaskItem& item = g_demo.tasks.at(static_cast<size_t>(i));
 
                     bool clicked = ctx.SelectableRow(
                         item.title,
@@ -169,8 +177,8 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
 
                 if (indexToDelete >= 0) {
                     g_demo.tasks.erase(g_demo.tasks.begin() + indexToDelete);
-                    if (g_demo.selectedTask >= (int)g_demo.tasks.size()) {
-                        g_demo.selectedTask = std::max(0, (int)g_demo.tasks.size() - 1);
+                    if (g_demo.selectedTask >= static_cast<int>(g_demo.tasks.size())) {
+                        g_demo.selectedTask = std::max(0, static_cast<int>(g_demo.tasks.size()) - 1);
                     }
                     ctx.Toast("Item safely removed.");
                 }
@@ -179,16 +187,27 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
     }
 
     // =================================================================
-    // TAB 3: LIBRARY INFO & BLOCKING MODAL POPUP
+    // TAB 2: HYBRID BACKEND, MULTILINE WRAP & MODAL POPUP
     // =================================================================
     else if (g_demo.currentTab == 2) {
-        if (auto p = ctx.Panel("Library Information")) {
-            ctx.KeyValue("Library", "ShawarmaUI (Single-Header)");
-            ctx.KeyValue("C++ Standard", "Modern C++17 (Zero C-Arrays)");
-            ctx.KeyValue("Active Backend", "Direct2D + DirectWrite (GPU)", ctx.style.success);
-            ctx.Spacing();
+        if (auto p = ctx.Panel("Hybrid Graphics & Multiline Text Box")) {
+            ctx.KeyValue("Active Backend",
+                         isD2D ? "Direct2D + DirectWrite (Hardware / WARP)" : "Win32 GDI Fallback (WinPE Ready)",
+                         isD2D ? ctx.style.success : ctx.style.warning);
 
-            if (ctx.Button("Open Modal Window", 200, 32)) {
+            ctx.TextWrapped("Este paragrafo usa ctx.TextWrapped() com cache automatico (WrapTextCached), "
+                            "ajustando-se perfeitamente a largura da janela sem vazar para a direita.",
+                            ctx.style.textDim);
+
+            ctx.Spacing(4);
+            ctx.InputTextMultiline("demo_multiline", g_demo.multilineNote, -1, 130);
+            ctx.Spacing(6);
+
+            int act = ctx.ButtonRow({ isD2D ? "Test GDI Fallback" : "Switch to Direct2D", "Open Modal Window" }, 30);
+            if (act == 0) {
+                ctx.SwitchBackend(!isD2D);
+                ctx.Toast(isD2D ? "Switched to GDI Fallback" : "Switched to Direct2D");
+            } else if (act == 1) {
                 ctx.OpenPopup("confirm_modal");
             }
         }
@@ -215,10 +234,10 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
 }
 
 int main() {
-    g_ui.ApplyTheme(ShawarmaUI::Theme::NeonRed);
-    g_ui.EnableThemePersistence(L"ShawarmaUIShowcaseD2D");
+    g_ui.ApplyTheme(ShawarmaUI::Theme::TealGold);
+    g_ui.EnableThemePersistence(L"ShawarmaUIShowcaseHybrid");
 
-    if (!g_ui.Create("ShawarmaUI - Direct2D Showcase (C++17)", 640, 560)) {
+    if (!g_ui.Create("ShawarmaUI - Hybrid Direct2D + GDI Showcase (C++17)", 640, 560)) {
         return 1;
     }
 

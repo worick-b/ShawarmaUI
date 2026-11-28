@@ -151,9 +151,9 @@ static void RenderDemoUI() {
             } else if (act == 1) {
                 g_ui.Toast("Settings saved!", g_ui.style.warning);
             } else if (act == 2) {
-                g_ui.showSpinner = !g_ui.showSpinner;
+                g_showSpinner = !g_showSpinner;
             }
-            if (g_ui.showSpinner) {
+            if (g_showSpinner) {
                 g_ui.Spacing(4);
                 g_ui.Spinner(28);
             }

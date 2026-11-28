@@ -31,7 +31,8 @@ static int g_height = 0;
 static int g_currentTab = 0;
 static int g_themeIndex = 0;
 static const std::vector<std::string> g_themeNames = {
-    "Neon Red (Default)",
+    "Teal Gold (Default)",
+    "Neon Red",
     "Cyber Purple",
     "Rose Gold",
     "Light Clean"
@@ -51,12 +52,15 @@ static bool g_showSpinner = false;
 static std::vector<TaskItem> g_tasks = {
     { "Frosted glass & 15 FPS cached backdrop", "GLES3", true },
     { "Load embedded TTF vector icon font", "Icons", true },
-    { "Touch scroll & virtual IME keyboard", "Android", true },
+    { "Cached word-wrap & multiline text box", "Android", true },
     { "Publish automated APK workflow", "CI/CD", false }
 };
 static int g_selectedTask = 0;
 static std::string g_newTaskName = "";
-static std::string g_noteText = "ShawarmaUI Android!\nTap here to edit multiline text...";
+static std::string g_noteText =
+    "ShawarmaUI Android!\n"
+    "Toque aqui para editar textos longos com quebra automatica de linha (WrapTextCached) e barra de rolagem.\n\n"
+    "Caminhos longos tambem quebram naturalmente: /storage/emulated/0/Download/ShawarmaUI/include/ShawarmaUI_Android.h";
 
 static void CallVoidMethodJNI(jmethodID mid) {
     if (!g_jvm || !g_activityObj || !mid) return;
@@ -91,15 +95,17 @@ static void OnShowKeyboardJNI(bool show) {
 }
 
 static void RenderDemoUI() {
-    // Header: Theme Combo + Badge
+    g_themeIndex = static_cast<int>(g_ui.currentTheme);
+
+    // Header: Theme Combo + Responsive Badge
     g_ui.AlignText().Text("Theme:", true);
     g_ui.SameLine();
     if (g_ui.Combo("theme_selector", g_themeIndex, g_themeNames, 175)) {
         g_ui.ApplyTheme(static_cast<ShawarmaUI::Theme>(g_themeIndex));
-        g_ui.Toast("Theme: " + g_themeNames.at(g_themeIndex));
+        g_ui.Toast("Theme: " + g_themeNames.at(static_cast<size_t>(g_themeIndex)));
     }
-    g_ui.SameLineRight(125);
-    g_ui.Badge("C++17 • GLES3", ShawarmaUI::Color(89, 173, 250));
+    g_ui.SameLineWrap(125);
+    g_ui.Badge("C++17 • GLES3", g_ui.style.accent);
 
     g_ui.Spacing(4);
     g_ui.TabBar(g_currentTab, { "Controls", "Lists & Notes", "About & Modal" });
@@ -138,22 +144,17 @@ static void RenderDemoUI() {
 
         if (auto p2 = g_ui.Panel("Vector Icons (ShawarmaIcons.h) & Feedback")) {
             std::string playLabel = std::string(ShawarmaIcons::Play) + "  Play";
-            if (g_ui.Button(playLabel, 105, 38)) {
-                g_ui.Toast("Playback started!", ShawarmaUI::Color(115, 224, 140));
-            }
-            g_ui.SameLine();
-
             std::string saveLabel = std::string(ShawarmaIcons::Save) + "  Save";
-            if (g_ui.Button(saveLabel, 105, 38, ShawarmaUI::Color(43, 50, 64), ShawarmaUI::Color(58, 68, 86))) {
-                g_ui.Toast("Settings saved!", ShawarmaUI::Color(255, 190, 65));
+            int act = g_ui.ButtonRow({ playLabel, saveLabel, "Spinner" }, 38);
+            if (act == 0) {
+                g_ui.Toast("Playback started!", g_ui.style.success);
+            } else if (act == 1) {
+                g_ui.Toast("Settings saved!", g_ui.style.warning);
+            } else if (act == 2) {
+                g_ui.showSpinner = !g_ui.showSpinner;
             }
-            g_ui.SameLine();
-
-            if (g_ui.ToggleButton("Spinner", g_showSpinner, 95, 38)) {
-                g_showSpinner = !g_showSpinner;
-            }
-            if (g_showSpinner) {
-                g_ui.SameLine();
+            if (g_ui.showSpinner) {
+                g_ui.Spacing(4);
                 g_ui.Spinner(28);
             }
         }
@@ -169,7 +170,7 @@ static void RenderDemoUI() {
             if (g_ui.Button(addLabel, -1, 38) && !g_newTaskName.empty()) {
                 g_tasks.push_back({ g_newTaskName, "New", false });
                 g_newTaskName.clear();
-                g_ui.Toast("Task added!", ShawarmaUI::Color(115, 224, 140));
+                g_ui.Toast("Task added!", g_ui.style.success);
             }
 
             g_ui.SeparatorText("Scrollable Child Container");
@@ -177,9 +178,9 @@ static void RenderDemoUI() {
             if (auto child = g_ui.Child("task_list", -1, 220, true)) {
                 int indexToDelete = -1;
 
-                for (int i = 0; i < (int)g_tasks.size(); ++i) {
+                for (int i = 0; i < static_cast<int>(g_tasks.size()); ++i) {
                     auto scopeId = g_ui.ID(i);
-                    TaskItem& item = g_tasks.at(i);
+                    TaskItem& item = g_tasks.at(static_cast<size_t>(i));
 
                     if (g_ui.SelectableRow(item.title, item.done ? "[Done]" : "[" + item.tag + "]", g_selectedTask == i, 44)) {
                         g_selectedTask = i;
@@ -199,19 +200,19 @@ static void RenderDemoUI() {
 
                 if (indexToDelete >= 0) {
                     g_tasks.erase(g_tasks.begin() + indexToDelete);
-                    if (g_selectedTask >= (int)g_tasks.size()) {
-                        g_selectedTask = std::max(0, (int)g_tasks.size() - 1);
+                    if (g_selectedTask >= static_cast<int>(g_tasks.size())) {
+                        g_selectedTask = std::max(0, static_cast<int>(g_tasks.size()) - 1);
                     }
                     g_ui.Toast("Task removed.");
                 }
             }
         }
 
-        if (auto pNotes = g_ui.Panel("Multiline Text Editor")) {
+        if (auto pNotes = g_ui.Panel("Multiline Text Editor (Auto Word-Wrap)")) {
             g_ui.InputTextMultiline("editor_notes", g_noteText, -1, 140);
             g_ui.Spacing(4);
             std::string clearLabel = std::string(ShawarmaIcons::XSquare) + "  Clear Notes";
-            if (g_ui.Button(clearLabel, -1, 36, ShawarmaUI::Color(43, 50, 64), ShawarmaUI::Color(58, 68, 86))) {
+            if (g_ui.Button(clearLabel, -1, 36, g_ui.style.secondaryBtn, g_ui.style.secondaryBtnHover)) {
                 g_noteText.clear();
                 g_ui.Toast("Notes cleared!");
             }
@@ -226,7 +227,14 @@ static void RenderDemoUI() {
             g_ui.KeyValue("Backend", "OpenGL ES 3.0 + NanoVG");
             g_ui.KeyValue("Render Mode", "RENDERMODE_WHEN_DIRTY (0% Idle CPU)");
             g_ui.KeyValue("C++ Standard", "Modern C++17 (Zero C-Arrays)");
-            g_ui.Badge("Header-Only • Touch Ready", ShawarmaUI::Color(115, 224, 140));
+
+            g_ui.Spacing(4);
+            g_ui.TextWrapped("Biblioteca C++17 header-only com quebra automatica em cache (WrapTextCached), "
+                             "controles responsivos ao toque e renderizacao OpenGL ES 3.0 + NanoVG.",
+                             g_ui.style.textDim);
+
+            g_ui.Spacing(6);
+            g_ui.Badge("Header-Only • Touch Ready", g_ui.style.success);
 
             g_ui.Spacing(8);
             if (g_ui.Button("Open Modal Dialog", -1, 40)) {
@@ -238,18 +246,17 @@ static void RenderDemoUI() {
     // =================================================================
     // MODAL POPUP (Rendered on top of the entire UI)
     // =================================================================
-    if (auto m = g_ui.Modal("confirm_modal", 330, 165)) {
+    if (auto m = g_ui.Modal("confirm_modal", 330, 175)) {
         g_ui.Text("Confirm Action", true);
         g_ui.Spacing(4);
-        g_ui.TextColored(g_ui.style.textDim, "This modal blocks touch events behind it.");
+        g_ui.TextWrapped("This modal blocks touch events behind it.", g_ui.style.textDim);
         g_ui.Spacing(8);
 
-        if (g_ui.Button("Confirm", 130, 38)) {
-            g_ui.Toast("Confirmed!", ShawarmaUI::Color(115, 224, 140));
+        int mAct = g_ui.ButtonRow({ "Confirm", "Cancel" }, 38);
+        if (mAct == 0) {
+            g_ui.Toast("Confirmed!", g_ui.style.success);
             g_ui.CloseCurrentPopup();
-        }
-        g_ui.SameLine();
-        if (g_ui.Button("Cancel", 130, 38, ShawarmaUI::Color(43, 50, 64), ShawarmaUI::Color(58, 68, 86))) {
+        } else if (mAct == 1) {
             g_ui.CloseCurrentPopup();
         }
     }
@@ -274,7 +281,7 @@ Java_com_shawarmaui_demo_MainActivity_nativeInit(JNIEnv* env, jobject thiz, jflo
     g_vg = nvgCreateGLES3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
     g_ui.InitGLES3(g_vg, density);
     g_ui.LoadIconFontFromMemory(ShawarmaUI::kIconFontTTF.data(), static_cast<int>(ShawarmaUI::kIconFontTTF.size()));
-    g_ui.ApplyTheme(ShawarmaUI::Theme::NeonRed);
+    g_ui.ApplyTheme(ShawarmaUI::Theme::TealGold);
 
     g_ui.onRequestRedraw = OnRequestRedrawJNI;
     g_ui.onShowKeyboard  = OnShowKeyboardJNI;
@@ -298,9 +305,9 @@ Java_com_shawarmaui_demo_MainActivity_nativeRender(JNIEnv*, jobject) {
 
 JNIEXPORT void JNICALL
 Java_com_shawarmaui_demo_MainActivity_nativeTouch(JNIEnv*, jobject, jint action, jint x, jint y) {
-    if (action == 0) g_ui.OnTouchDown(x, y);      // ACTION_DOWN
-    else if (action == 1) g_ui.OnTouchUp(x, y);   // ACTION_UP
-    else if (action == 2) g_ui.OnTouchMove(x, y); // ACTION_MOVE
+    if (action == 0) g_ui.OnTouchDown(x, y);
+    else if (action == 1) g_ui.OnTouchUp(x, y);
+    else if (action == 2) g_ui.OnTouchMove(x, y);
 }
 
 JNIEXPORT void JNICALL

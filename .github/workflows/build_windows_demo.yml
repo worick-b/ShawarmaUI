@@ -21,17 +21,14 @@ jobs:
             "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
 
-      - name: Build GDI & Direct2D
+      - name: Build Hybrid Direct2D & GDI
         shell: cmd
         run: |
-          g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-GDI.cpp -o ShawarmaUI_GDI.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
-          g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/Demo-D2D.cpp -o ShawarmaUI_D2D.exe -Wl,--gc-sections -ld2d1 -ldwrite -luuid -ldwmapi -lshell32 -ladvapi32 -mwindows -static
-
+          g++ -Os -pipe -fno-math-errno -fno-trapping-math -fno-rtti -ffunction-sections -fdata-sections -Wall -Wextra -Wno-unused-function -Wno-attributes -Wno-cast-function-type -Wno-ignored-qualifiers -s -std=c++17 -Iinclude examples/windows/ShawarmaUI_Demo.cpp -o ShawarmaUI_Demo.exe -Wl,--gc-sections -lgdi32 -lmsimg32 -ldwmapi -lshell32 -ladvapi32 -mwindows -static
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: Demos (Windows & Android)
           files: |
-            ShawarmaUI_GDI.exe
-            ShawarmaUI_D2D.exe
+            ShawarmaUI_Demo.exe

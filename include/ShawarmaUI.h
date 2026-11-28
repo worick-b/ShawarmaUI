@@ -1033,7 +1033,8 @@ public:
     }
 
     Context& InputTextReadOnly(const std::string& textUtf8, int customWidth = -1) {
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(28);
         int x = cursorX, y = cursorY;
 
@@ -1050,7 +1051,8 @@ public:
     bool InputText(const std::string& idStr, std::string& bufferUtf8, const std::string& placeholderUtf8 = "",
                    int customWidth = -1, bool isPassword = false) {
         int id = HashString("inp_" + idStr);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(28);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1185,7 +1187,8 @@ public:
 	bool InputTextMultiline(const std::string& idStr, std::string& bufferUtf8, int customWidth = -1,
                         int customHeight = 140, bool readOnly = false) {
     int id = HashString("ml_" + idStr);
-    int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+    int availW = GetAvailWidth();
+    int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
     int h = (customHeight <= 0) ? std::max(S(80), clientH - cursorY - S(style.windowPadding)) : S(customHeight);
     int x = cursorX, y = cursorY;
     bool disabled = IsDisabled();
@@ -2578,10 +2581,20 @@ private:
             if (dwriteRegular) {
                 dwriteRegular->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
                 dwriteRegular->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+                Microsoft::WRL::ComPtr<IDWriteInlineObject> ellipsis;
+                if (SUCCEEDED(dwriteFactory->CreateEllipsisTrimmingSign(dwriteRegular.Get(), &ellipsis))) {
+                    DWRITE_TRIMMING trim{ DWRITE_TRIMMING_GRANULARITY_CHARACTER, 0, 0 };
+                    dwriteRegular->SetTrimming(&trim, ellipsis.Get());
+                }
             }
             if (dwriteBold) {
                 dwriteBold->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
                 dwriteBold->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+                Microsoft::WRL::ComPtr<IDWriteInlineObject> ellipsis;
+                if (SUCCEEDED(dwriteFactory->CreateEllipsisTrimmingSign(dwriteBold.Get(), &ellipsis))) {
+                    DWRITE_TRIMMING trim{ DWRITE_TRIMMING_GRANULARITY_CHARACTER, 0, 0 };
+                    dwriteBold->SetTrimming(&trim, ellipsis.Get());
+                }
             }
         }
     }

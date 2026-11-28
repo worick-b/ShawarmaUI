@@ -138,7 +138,7 @@ void RenderShowcase(ShawarmaUI::Context& ctx) {
         if (auto p = ctx.Panel("Parent Panel (Nesting + Scroll)")) {
             if (auto sub = ctx.Panel("Add New Task (Nested Panel)", ctx.style.warning)) {
                 ctx.InputText("inp_new_task", g_demo.newTaskName, "Task description...", 360);
-                ctx.SameLine();
+                ctx.SameLineWrap(60);
                 if (ctx.Button("Add##add_task", -1, 28) && !g_demo.newTaskName.empty()) {
                     g_demo.tasks.push_back({ g_demo.newTaskName, "New", false });
                     g_demo.newTaskName.clear();

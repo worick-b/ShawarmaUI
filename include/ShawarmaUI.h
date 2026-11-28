@@ -4,6 +4,13 @@
 #include <dwmapi.h>
 #include <shellapi.h>
 #include <winreg.h>
+#ifdef DrawText
+#undef DrawText
+#endif
+#include <d2d1_1.h>
+#include <dwrite.h>
+#include <dxgi1_2.h>
+#include <wrl/client.h>
 #include <string>
 #include <vector>
 #include <array>
@@ -13,16 +20,6 @@
 #include <cmath>
 #include <cstdint>
 
-#ifdef SHAWARMAUI_USE_D2D
-#ifdef DrawText
-#undef DrawText
-#endif
-#include <d2d1_1.h>
-#include <dwrite.h>
-#include <dxgi1_2.h>
-#include <wrl/client.h>
-#endif
-
 namespace ShawarmaUI {
 
 struct Color {
@@ -31,61 +28,61 @@ struct Color {
     COLORREF ToWin32() const { return RGB(r, g, b); }
     uint32_t Pack() const { return (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b); }
 
-#ifdef SHAWARMAUI_USE_D2D
     D2D1_COLOR_F ToD2D() const {
         return D2D1::ColorF(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
     }
-#endif
 
     static Color Lerp(Color a, Color b, float t) {
         t = std::clamp(t, 0.0f, 1.0f);
         return Color(
-            (uint8_t)std::round(a.r + (b.r - a.r) * t),
-            (uint8_t)std::round(a.g + (b.g - a.g) * t),
-            (uint8_t)std::round(a.b + (b.b - a.b) * t),
-            (uint8_t)std::round(a.a + (b.a - a.a) * t)
+            static_cast<uint8_t>(std::round(a.r + (b.r - a.r) * t)),
+            static_cast<uint8_t>(std::round(a.g + (b.g - a.g) * t)),
+            static_cast<uint8_t>(std::round(a.b + (b.b - a.b) * t)),
+            static_cast<uint8_t>(std::round(a.a + (b.a - a.a) * t))
         );
     }
 };
 
 enum class Theme {
-    NeonRed = 0,
+    TealGold = 0,
+    NeonRed,
     CyberPurple,
     RoseGold,
     LightClean
 };
 
 struct Style {
-    Color windowBg          = Color(12, 12, 16, 255);
-    Color panelBg           = Color(24, 16, 22, 145);
-    Color childBg           = Color(20, 14, 18, 135);
-    Color popupBg           = Color(24, 20, 28, 240);
-    Color tooltipBg         = Color(20, 18, 24, 245);
-    Color modalDimBg        = Color(8, 6, 10, 185);
-    Color border            = Color(230, 25, 65, 110);
-    Color borderFocus       = Color(255, 50, 90, 255);
+    Color windowBg          = Color(11, 14, 22, 255);
+    Color panelBg           = Color(16, 22, 32, 175);
+    Color childBg           = Color(13, 18, 26, 165);
+    Color popupBg           = Color(16, 22, 32, 245);
+    Color tooltipBg         = Color(14, 19, 28, 245);
+    Color modalDimBg        = Color(6, 8, 14, 195);
+    Color border            = Color(248, 212, 108, 165);
+    Color borderFocus       = Color(24, 218, 156, 255);
     Color text              = Color(246, 243, 244, 255);
     Color textDim           = Color(168, 156, 160, 255);
-    Color frameBg           = Color(36, 18, 24, 155);
-    Color frameHover        = Color(62, 20, 34, 195);
-    Color checkMark         = Color(235, 35, 75, 255);
-    Color sliderGrab        = Color(255, 40, 85, 255);
-    Color button            = Color(225, 32, 68, 235);
-    Color buttonGradEnd     = Color(165, 16, 42, 245);
-    Color buttonHover       = Color(245, 45, 82, 250);
-    Color buttonActive      = Color(185, 20, 50, 255);
-    Color toggleActive      = Color(225, 32, 68, 240);
-    Color toggleHover       = Color(250, 48, 88, 255);
+    Color frameBg           = Color(20, 28, 40, 175);
+    Color frameHover        = Color(26, 38, 52, 210);
+    Color checkMark         = Color(24, 218, 156, 255);
+    Color sliderGrab        = Color(18, 152, 118, 255);
+    Color button            = Color(18, 198, 148, 235);
+    Color buttonGradEnd     = Color(10, 122, 142, 245);
+    Color buttonHover       = Color(22, 162, 128, 255);
+    Color buttonActive      = Color(12, 145, 128, 255);
+    Color toggleActive      = Color(16, 184, 144, 240);
+    Color toggleHover       = Color(22, 162, 128, 255);
     Color separator         = Color(255, 255, 255, 28);
     Color disabledBg        = Color(30, 24, 26, 150);
     Color disabledText      = Color(115, 104, 108, 255);
-    Color scrollbarBg       = Color(28, 22, 25, 160);
-    Color scrollbarGrab     = Color(98, 76, 84, 225);
-    Color secondaryBtn      = Color(43, 50, 64, 240);
-    Color secondaryBtnHover = Color(58, 68, 86, 250);
+    Color scrollbarBg       = Color(14, 20, 30, 170);
+    Color scrollbarGrab     = Color(248, 212, 108, 140);
+    Color secondaryBtn      = Color(22, 32, 46, 240);
+    Color secondaryBtnHover = Color(30, 44, 62, 250);
     Color success           = Color(129, 199, 132, 255);
     Color warning           = Color(255, 213, 79, 255);
     Color danger            = Color(229, 115, 115, 255);
+    Color accent            = Color(248, 212, 108, 255);
 
     int windowPadding   = 16;
     int framePaddingX   = 10;
@@ -94,21 +91,24 @@ struct Style {
     int itemSpacingY    = 8;
     int rounding        = 8;
     int animFps         = 30;
+    int backdropFps     = 15;
 };
 
 class Context {
 public:
     Style style;
-    Theme currentTheme = Theme::NeonRed;
+    Theme currentTheme = Theme::TealGold;
+    bool preferD2D = true;
     float backdropSeed = 0.0f;
     HWND hwnd = nullptr;
     float dpiScale = 1.0f;
-	int minW = 280;
+    int minW = 280;
     int minH = 180;
     std::function<void(const std::string&)> onFileDrop;
     std::function<void()> onTimer;
 
-    // --- ESCOPOS RAII OPCIONAIS ---
+    bool IsUsingD2D() const { return activeD2D; }
+
     struct PanelScope {
         Context& ctx;
         bool active;
@@ -157,7 +157,7 @@ public:
         explicit operator bool() const { return true; }
     };
 
-    PanelScope Panel(const std::string& titleUtf8 = "", Color titleColor = Color(115, 191, 250), int customWidth = -1) {
+    PanelScope Panel(const std::string& titleUtf8 = "", Color titleColor = Color(0, 0, 0, 0), int customWidth = -1) {
         return PanelScope(*this, titleUtf8, titleColor, customWidth);
     }
     ChildScope Child(const std::string& idStr, int customW = -1, int customH = 200, bool border = true) {
@@ -184,12 +184,38 @@ public:
 
     ~Context() {
         CleanupResources();
+        if (hModD2D1) FreeLibrary(hModD2D1);
+        if (hModDWrite) FreeLibrary(hModDWrite);
     }
 
     void ApplyTheme(Theme theme) {
         currentTheme = theme;
         style = Style{};
-        if (theme == Theme::CyberPurple) {
+        if (theme == Theme::NeonRed) {
+            style.windowBg          = Color(12, 12, 16, 255);
+            style.panelBg           = Color(24, 16, 22, 145);
+            style.childBg           = Color(20, 14, 18, 135);
+            style.popupBg           = Color(24, 20, 28, 240);
+            style.tooltipBg         = Color(20, 18, 24, 245);
+            style.modalDimBg        = Color(8, 6, 10, 185);
+            style.border            = Color(230, 25, 65, 110);
+            style.borderFocus       = Color(255, 50, 90, 255);
+            style.frameBg           = Color(36, 18, 24, 155);
+            style.frameHover        = Color(62, 20, 34, 195);
+            style.checkMark         = Color(235, 35, 75, 255);
+            style.sliderGrab        = Color(255, 40, 85, 255);
+            style.button            = Color(225, 32, 68, 235);
+            style.buttonGradEnd     = Color(165, 16, 42, 245);
+            style.buttonHover       = Color(245, 45, 82, 250);
+            style.buttonActive      = Color(185, 20, 50, 255);
+            style.toggleActive      = Color(225, 32, 68, 240);
+            style.toggleHover       = Color(250, 48, 88, 255);
+            style.scrollbarBg       = Color(28, 22, 25, 160);
+            style.scrollbarGrab     = Color(98, 76, 84, 225);
+            style.secondaryBtn      = Color(43, 50, 64, 240);
+            style.secondaryBtnHover = Color(58, 68, 86, 250);
+            style.accent            = Color(255, 105, 130, 255);
+        } else if (theme == Theme::CyberPurple) {
             style.windowBg      = Color(13, 15, 20, 255);
             style.panelBg       = Color(24, 27, 36, 145);
             style.childBg       = Color(20, 23, 30, 135);
@@ -206,6 +232,7 @@ public:
             style.buttonActive  = Color(74, 20, 140, 255);
             style.toggleActive  = Color(123, 31, 162, 240);
             style.toggleHover   = Color(156, 39, 176, 255);
+            style.accent        = Color(206, 147, 216, 255);
         } else if (theme == Theme::RoseGold) {
             style.windowBg      = Color(12, 12, 15, 255);
             style.panelBg       = Color(26, 25, 30, 145);
@@ -223,37 +250,39 @@ public:
             style.buttonActive  = Color(178, 68, 76, 255);
             style.toggleActive  = Color(214, 98, 96, 245);
             style.toggleHover   = Color(235, 118, 116, 255);
+            style.accent        = Color(242, 168, 148, 255);
         } else if (theme == Theme::LightClean) {
-            style.windowBg      = Color(210, 220, 234, 255);
-            style.panelBg       = Color(234, 240, 248, 205);
-            style.childBg       = Color(226, 234, 244, 190);
-            style.popupBg       = Color(238, 243, 250, 245);
-            style.tooltipBg     = Color(28, 34, 46, 240);
-            style.border        = Color(155, 172, 196, 165);
-            style.borderFocus   = Color(38, 106, 210, 255);
-            style.text          = Color(26, 32, 44, 255);
-            style.textDim       = Color(88, 98, 116, 255);
-            style.frameBg       = Color(204, 215, 230, 200);
-            style.frameHover    = Color(190, 204, 222, 225);
-            style.checkMark     = Color(38, 106, 210, 255);
-            style.sliderGrab    = Color(38, 106, 210, 255);
-            style.button        = Color(188, 202, 222, 235);
-            style.buttonGradEnd = Color(24, 86, 192, 245);
-            style.buttonHover   = Color(172, 188, 212, 250);
-            style.buttonActive  = Color(156, 174, 202, 255);
-            style.toggleActive  = Color(48, 122, 235, 245);
-            style.toggleHover   = Color(62, 134, 242, 255);
-            style.disabledBg    = Color(206, 216, 228, 180);
-            style.disabledText  = Color(135, 146, 164, 255);
-            style.scrollbarBg   = Color(204, 215, 230, 175);
-            style.scrollbarGrab = Color(148, 162, 184, 225);
-			style.secondaryBtn      = Color(186, 198, 216, 240);
+            style.windowBg          = Color(210, 220, 234, 255);
+            style.panelBg           = Color(234, 240, 248, 205);
+            style.childBg           = Color(226, 234, 244, 190);
+            style.popupBg           = Color(238, 243, 250, 245);
+            style.tooltipBg         = Color(28, 34, 46, 240);
+            style.border            = Color(155, 172, 196, 165);
+            style.borderFocus       = Color(38, 106, 210, 255);
+            style.text              = Color(26, 32, 44, 255);
+            style.textDim           = Color(88, 98, 116, 255);
+            style.frameBg           = Color(204, 215, 230, 200);
+            style.frameHover        = Color(190, 204, 222, 225);
+            style.checkMark         = Color(38, 106, 210, 255);
+            style.sliderGrab        = Color(38, 106, 210, 255);
+            style.button            = Color(188, 202, 222, 235);
+            style.buttonGradEnd     = Color(24, 86, 192, 245);
+            style.buttonHover       = Color(172, 188, 212, 250);
+            style.buttonActive      = Color(156, 174, 202, 255);
+            style.toggleActive      = Color(48, 122, 235, 245);
+            style.toggleHover       = Color(62, 134, 242, 255);
+            style.disabledBg        = Color(206, 216, 228, 180);
+            style.disabledText      = Color(135, 146, 164, 255);
+            style.scrollbarBg       = Color(204, 215, 230, 175);
+            style.scrollbarGrab     = Color(148, 162, 184, 225);
+            style.secondaryBtn      = Color(186, 198, 216, 240);
             style.secondaryBtnHover = Color(168, 184, 206, 250);
             style.success           = Color(32, 132, 52, 255);
             style.warning           = Color(180, 108, 0, 255);
             style.danger            = Color(195, 42, 42, 255);
+            style.accent            = Color(28, 92, 196, 255);
         }
-		if (!themeRegSubKey.empty()) {
+        if (!themeRegSubKey.empty()) {
             HKEY hKey = nullptr;
             if (RegCreateKeyExW(HKEY_CURRENT_USER, themeRegSubKey.c_str(), 0, nullptr,
                                 REG_OPTION_NON_VOLATILE, KEY_WRITE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
@@ -268,14 +297,14 @@ public:
             DwmSetWindowAttribute(hwnd, 19, &useDark, sizeof(useDark));
         }
     }
-	
-	void EnableThemePersistence(const std::wstring& appName) {
+
+    void EnableThemePersistence(const std::wstring& appName) {
         themeRegSubKey = L"Software\\ShawarmaUI\\" + appName;
         HKEY hKey = nullptr;
         DWORD val = 0;
         DWORD size = sizeof(val);
         if (RegOpenKeyExW(HKEY_CURRENT_USER, themeRegSubKey.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-            if (RegQueryValueExW(hKey, L"Theme", nullptr, nullptr, reinterpret_cast<BYTE*>(&val), &size) == ERROR_SUCCESS && val <= 3) {
+            if (RegQueryValueExW(hKey, L"Theme", nullptr, nullptr, reinterpret_cast<BYTE*>(&val), &size) == ERROR_SUCCESS && val <= 4) {
                 ApplyTheme(static_cast<Theme>(val));
             }
             RegCloseKey(hKey);
@@ -283,16 +312,17 @@ public:
     }
 
     void CycleTheme() {
-        int next = (static_cast<int>(currentTheme) + 1) % 4;
+        int next = (static_cast<int>(currentTheme) + 1) % 5;
         ApplyTheme(static_cast<Theme>(next));
     }
 
     const char* GetCurrentThemeName() const {
         switch (currentTheme) {
+            case Theme::NeonRed:     return "Neon Red";
             case Theme::CyberPurple: return "Cyber Purple";
             case Theme::RoseGold:    return "Rose Gold";
             case Theme::LightClean:  return "Light Clean";
-            default:                 return "Neon Red";
+            default:                 return "Teal Gold";
         }
     }
 
@@ -300,13 +330,12 @@ public:
         std::string label = std::string("Tema: ") + GetCurrentThemeName();
         if (Button(label, customW, customH)) {
             CycleTheme();
-            RequestRedraw();
+            RequestRedraw(true);
             return true;
         }
         return false;
     }
 
-    // Modo 1: Cria janela gerenciada pela ShawarmaUI
     bool Create(const std::string& titleUtf8, int baseW, int baseH, HICON customIcon = nullptr) {
         EnableDPIAwareness();
         dpiScale = GetSystemDpiScale();
@@ -321,8 +350,8 @@ public:
         int screenW = workArea.right - workArea.left;
         int screenH = workArea.bottom - workArea.top;
 
-        int winW = std::min((int)(baseW * dpiScale), screenW - 40);
-        int winH = std::min((int)(baseH * dpiScale), screenH - 40);
+        int winW = std::min(static_cast<int>(baseW * dpiScale), screenW - 40);
+        int winH = std::min(static_cast<int>(baseH * dpiScale), screenH - 40);
         int posX = workArea.left + (screenW - winW) / 2;
         int posY = workArea.top + (screenH - winH) / 2;
 
@@ -344,9 +373,15 @@ public:
         return true;
     }
 
+    void SwitchBackend(bool wantD2D) {
+        pendingWantD2D = wantD2D;
+        pendingBackendSwitch = true;
+        RequestRedraw(true);
+    }
+
     void Run(std::function<void(Context&)> onRender) {
         renderCallback = std::move(onRender);
-        RequestRedraw();
+        RequestRedraw(true);
         MSG msg;
         while (GetMessageW(&msg, nullptr, 0, 0)) {
             TranslateMessage(&msg);
@@ -354,16 +389,35 @@ public:
         }
     }
 
-    void RequestRedraw() {
-        if (hwnd) InvalidateRect(hwnd, nullptr, FALSE);
+    void RequestRedraw(bool force = true) {
+        if (!hwnd) return;
+        DWORD now = GetTickCount();
+        DWORD intervalMs = (style.animFps > 0) ? (1000u / static_cast<UINT>(style.animFps)) : 33u;
+        if (force || (now - lastRedrawRequestMs >= intervalMs)) {
+            lastRedrawRequestMs = now;
+            InvalidateRect(hwnd, nullptr, FALSE);
+        }
     }
 
-#ifdef SHAWARMAUI_USE_D2D
+    bool HasActiveAnimations() const { return hasActiveAnimations || hasBackdropAnimation; }
+
+    UINT GetNextFrameDelayMs() const {
+        if (hasActiveAnimations) return (style.animFps > 0) ? std::max(10u, 1000u / static_cast<UINT>(style.animFps)) : 33u;
+        if (hasBackdropAnimation) return (style.backdropFps > 0) ? std::max(16u, 1000u / static_cast<UINT>(style.backdropFps)) : 66u;
+        return 0u;
+    }
+
+    // --- HOOKS PARA SWAPCHAIN / D2D EXTERNO ---
+
     bool AttachDXGISwapChain(HWND targetHwnd, IDXGISwapChain1* swapChain) {
         hwnd = targetHwnd;
         dpiScale = GetSystemDpiScale();
         externalSwapChain = swapChain;
-        return InitD2DFromSwapChain(swapChain);
+        if (InitD2DFromSwapChain(swapChain)) {
+            activeD2D = true;
+            return true;
+        }
+        return false;
     }
 
     void ReleaseDXGISwapChain() {
@@ -386,11 +440,13 @@ public:
         dpiScale = GetSystemDpiScale();
         d2dHwndTarget = externalRT;
         if (!d2dFactory || !dwriteFactory) {
-            InitGraphicsBackend();
+            TryLoadD2DRuntime();
+            RebuildDWriteFormats();
         }
         if (d2dHwndTarget && !d2dBrush) {
             d2dHwndTarget->CreateSolidColorBrush(D2D1::ColorF(1, 1, 1), &d2dBrush);
         }
+        activeD2D = (d2dHwndTarget != nullptr);
     }
 
     void ReleaseD2DHwndTarget() {
@@ -401,6 +457,7 @@ public:
         textLayoutCache.clear();
         d2dBrush.Reset();
         d2dHwndTarget.Reset();
+        activeD2D = false;
     }
 
     void BeginExternalFrame(int width, int height) {
@@ -434,14 +491,14 @@ public:
     bool HandleExternalMessage(UINT msg, WPARAM wParam, LPARAM lParam) {
         switch (msg) {
             case WM_MOUSEMOVE:
-                mousePos = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
+                mousePos = { static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)) };
                 return IsAnyItemHovered() || activeDragId != 0 || openComboId != 0;
             case WM_MOUSELEAVE:
                 mousePos = { -1, -1 };
                 return false;
             case WM_MOUSEWHEEL:
                 if (hoveredChildId != 0 || openComboId != 0) {
-                    pendingWheelDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
+                    pendingWheelDelta += static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / static_cast<float>(WHEEL_DELTA);
                     return true;
                 }
                 return false;
@@ -471,8 +528,8 @@ public:
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
                 if (wParam < keyDown.size()) {
-                    if (!keyDown[wParam]) keyPressed[wParam] = true;
-                    keyDown[wParam] = true;
+                    if (!keyDown.at(wParam)) keyPressed.at(wParam) = true;
+                    keyDown.at(wParam) = true;
                 }
                 if (focusedInputId != 0) {
                     pendingKeys.push_back(static_cast<UINT>(wParam));
@@ -486,7 +543,7 @@ public:
             case WM_KEYUP:
             case WM_SYSKEYUP:
                 if (wParam < keyDown.size()) {
-                    keyDown[wParam] = false;
+                    keyDown.at(wParam) = false;
                 }
                 return false;
             case WM_KILLFOCUS:
@@ -505,9 +562,6 @@ public:
     bool IsAnyItemHovered() const {
         return GetHoveredRectIndex(mousePos) != -1 || hoveredChildId != 0;
     }
-#endif
-
-    // --- SISTEMA DE IDs E CONSULTAS DE INPUT ---
 
     void PushID(int intId) {
         uint32_t seed = idStack.empty() ? 2166136261u : idStack.back();
@@ -540,10 +594,10 @@ public:
         return IsLastItemHovered() && mouseDoubleClicked;
     }
     bool IsKeyPressed(int vkCode) const {
-        return (vkCode >= 0 && vkCode < (int)keyPressed.size()) ? keyPressed[(size_t)vkCode] : false;
+        return (vkCode >= 0 && vkCode < static_cast<int>(keyPressed.size())) ? keyPressed.at(static_cast<size_t>(vkCode)) : false;
     }
     bool IsKeyDown(int vkCode) const {
-        return (vkCode >= 0 && vkCode < (int)keyDown.size()) ? keyDown[(size_t)vkCode] : false;
+        return (vkCode >= 0 && vkCode < static_cast<int>(keyDown.size())) ? keyDown.at(static_cast<size_t>(vkCode)) : false;
     }
 
     // --- LAYOUT E CONTROLE FLUENTE ---
@@ -565,8 +619,8 @@ public:
     int GetCursorY() const { return cursorY; }
     int GetClientWidth() const { return clientW; }
     int GetClientHeight() const { return clientH; }
-	int GetLogicalWidth() const { return (dpiScale > 0.0f) ? (int)(clientW / dpiScale) : clientW; }
-    int GetLogicalHeight() const { return (dpiScale > 0.0f) ? (int)(clientH / dpiScale) : clientH; }
+    int GetLogicalWidth() const { return (dpiScale > 0.0f) ? static_cast<int>(clientW / dpiScale) : clientW; }
+    int GetLogicalHeight() const { return (dpiScale > 0.0f) ? static_cast<int>(clientH / dpiScale) : clientH; }
 
     Context& SameLineWrap(int nextItemWidth) {
         int nextX = lastItemRight + S(style.itemSpacingX);
@@ -623,7 +677,7 @@ public:
         int midY = y + h / 2;
         int textW = CalcTextWidth(disp, true);
         int pad = S(8);
-        Color col = (labelCol.a > 0) ? labelCol : style.textDim;
+        Color col = (labelCol.a > 0) ? labelCol : style.accent;
         Color lineCol = style.border;
 
         QueueOrDraw([=, this]() {
@@ -672,9 +726,9 @@ public:
     void BeginDisabled(bool disabled = true) { disabledStack.push_back(disabled); }
     void EndDisabled() { if (!disabledStack.empty()) disabledStack.pop_back(); }
 
-    // --- CONTAINERS (PAINÉIS ANINHADOS E ÁREA COM SCROLL) ---
+    // --- CONTAINERS ---
 
-    void BeginPanel(const std::string& titleUtf8 = "", Color titleColor = Color(115, 191, 250), int customWidth = -1) {
+    void BeginPanel(const std::string& titleUtf8 = "", Color titleColor = Color(0, 0, 0, 0), int customWidth = -1) {
         PanelState ps{};
         ps.startY = cursorY;
         ps.left = cursorX;
@@ -682,7 +736,7 @@ public:
         ps.savedRegionLeft = regionLeft;
         ps.savedRegionRight = regionRight;
         ps.title = StripIdSuffix(titleUtf8);
-        ps.titleColor = titleColor;
+        ps.titleColor = (titleColor.a > 0) ? titleColor : style.accent;
         panelStack.push_back(std::move(ps));
 
         int pad = S(10);
@@ -690,8 +744,15 @@ public:
         regionRight = panelStack.back().right - pad;
         cursorX = regionLeft;
         cursorY += pad;
-        if (!panelStack.back().title.empty()) cursorY += S(24);
-    }
+
+        if (!panelStack.back().title.empty()) {
+            int availTitleW = std::max(S(24), regionRight - regionLeft);
+            int logicalTitleW = (dpiScale > 0.0f) ? static_cast<int>(availTitleW / dpiScale) : availTitleW;
+            panelStack.back().titleLines = WrapTextCached(panelStack.back().title, logicalTitleW, true);
+            int rows = std::max(1, static_cast<int>(panelStack.back().titleLines.size()));
+            cursorY += rows * S(20) + (rows - 1) * S(2) + S(4);
+        }
+	}
 
     void EndPanel() {
         if (panelStack.empty()) return;
@@ -708,11 +769,17 @@ public:
 
         auto drawSelf = [=, this]() {
             DrawGlassPanelRect(ps.left, ps.startY, w, h, radius, bg, bdr);
-            if (!ps.title.empty()) {
+            if (!ps.titleLines.empty()) {
+                int lineH = S(20);
+                int innerGap = S(2);
                 int titleY = ps.startY + S(8);
-                DrawTextInternal(ps.left + pad, titleY, w - pad * 2, S(20),
-                                 ps.title, ps.titleColor, true, DT_LEFT);
-                int sepY = titleY + S(22);
+                for (size_t i = 0; i < ps.titleLines.size(); ++i) {
+                    int ly = titleY + static_cast<int>(i) * (lineH + innerGap);
+                    DrawTextInternal(ps.left + pad, ly, std::max(0, w - pad * 2), lineH,
+                                     ps.titleLines.at(i), ps.titleColor, true, DT_LEFT);
+                }
+                int rows = static_cast<int>(ps.titleLines.size());
+                int sepY = titleY + rows * lineH + (rows - 1) * innerGap + S(2);
                 DrawLine(ps.left + pad, sepY, ps.right - pad, sepY, bdr);
             }
             for (auto& fn : ps.deferredDraws) fn();
@@ -738,17 +805,19 @@ public:
         int h = (customH <= 0) ? std::max(S(60), clientH - cursorY - S(style.windowPadding)) : S(customH);
         int x = cursorX, y = cursorY;
 
+        float& scrollRef = childScrollMap.try_emplace(id, 0.0f).first->second;
+        float maxPrev = childMaxScrollMap.try_emplace(id, 0.0f).first->second;
+
         bool hovered = !modalBlocking && (openComboId == 0) && IsMouseInRect(x, y, w, h);
         if (hovered) {
             hoveredChildId = id;
             if (std::abs(pendingWheelDelta) > 0.001f) {
-                childScrollMap[id] -= pendingWheelDelta * S(36);
+                scrollRef -= pendingWheelDelta * S(36);
             }
         }
 
-        float maxPrev = childMaxScrollMap[id];
-        float scrollY = std::clamp(childScrollMap[id], 0.0f, maxPrev);
-        childScrollMap[id] = scrollY;
+        float scrollY = std::clamp(scrollRef, 0.0f, maxPrev);
+        scrollRef = scrollY;
 
         ChildState cs{};
         cs.id = id;
@@ -761,13 +830,13 @@ public:
         cs.savedRegionRight = regionRight;
         cs.savedCursorX = cursorX;
         cs.savedCursorY = cursorY;
-        cs.startContentY = y + S(6) - (int)std::round(scrollY);
+        cs.startContentY = y + S(6) - static_cast<int>(std::round(scrollY));
         childStack.push_back(cs);
 
         Color bgCol = style.childBg;
         Color bdrCol = border ? style.border : style.childBg;
         int rad = S(style.rounding);
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, rad, bgCol, bdrCol);
         });
 
@@ -781,7 +850,7 @@ public:
         int cx = x + 1, cy = y + 1;
         int cw = std::max(0, w - 2), ch = std::max(0, h - 2);
         PushClipLogical(cx, cy, cw, ch);
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             ApplyClipRect({ cx, cy, cx + cw, cy + ch });
         });
     }
@@ -792,15 +861,15 @@ public:
         childStack.pop_back();
 
         PopClipLogical();
-        QueueOrDraw([=]() {
+        QueueOrDraw([=, this]() {
             RemoveClipRect();
         });
 
         int contentH = (cursorY - cs.startContentY) + S(6);
         int maxScroll = std::max(0, contentH - cs.h);
-        childMaxScrollMap[cs.id] = (float)maxScroll;
-        float& scrollY = childScrollMap[cs.id];
-        scrollY = std::clamp(scrollY, 0.0f, (float)maxScroll);
+        childMaxScrollMap.insert_or_assign(cs.id, static_cast<float>(maxScroll));
+        float& scrollY = childScrollMap.try_emplace(cs.id, 0.0f).first->second;
+        scrollY = std::clamp(scrollY, 0.0f, static_cast<float>(maxScroll));
 
         if (maxScroll > 0 && cs.h > S(20)) {
             int barW = S(6);
@@ -808,30 +877,30 @@ public:
             int barY = cs.y + S(4);
             int barH = cs.h - S(8);
 
-            float visibleRatio = std::clamp(float(cs.h) / float(contentH), 0.12f, 1.0f);
-            int grabH = std::max(S(18), (int)std::round(barH * visibleRatio));
-            float scrollRatio = scrollY / float(maxScroll);
-            int grabY = barY + (int)std::round((barH - grabH) * scrollRatio);
+            float visibleRatio = std::clamp(static_cast<float>(cs.h) / static_cast<float>(contentH), 0.12f, 1.0f);
+            int grabH = std::max(S(18), static_cast<int>(std::round(barH * visibleRatio)));
+            float scrollRatio = scrollY / static_cast<float>(maxScroll);
+            int grabY = barY + static_cast<int>(std::round((barH - grabH) * scrollRatio));
 
             int sbId = HashString("sb_" + std::to_string(cs.id));
             bool sbHovered = RegisterInteractive(barX - S(3), barY, barW + S(6), barH, false);
             if (sbHovered && mouseClicked) {
                 activeDragId = sbId;
-                childDragOffsetY = float(mousePos.y - grabY);
+                childDragOffsetY = static_cast<float>(mousePos.y - grabY);
             }
             if (!mouseDown && activeDragId == sbId) {
                 activeDragId = 0;
             }
             if (activeDragId == sbId && barH > grabH) {
-                int newGrabY = std::clamp((int)mousePos.y - (int)std::round(childDragOffsetY), barY, barY + barH - grabH);
-                float newRatio = float(newGrabY - barY) / float(barH - grabH);
-                scrollY = newRatio * float(maxScroll);
+                int newGrabY = std::clamp(static_cast<int>(mousePos.y) - static_cast<int>(std::round(childDragOffsetY)), barY, barY + barH - grabH);
+                float newRatio = static_cast<float>(newGrabY - barY) / static_cast<float>(barH - grabH);
+                scrollY = newRatio * static_cast<float>(maxScroll);
                 grabY = newGrabY;
             }
 
             Color grabCol = (activeDragId == sbId || sbHovered) ? style.borderFocus : style.scrollbarGrab;
             Color sbBg = style.scrollbarBg;
-            QueueOrDraw([=]() {
+            QueueOrDraw([=, this]() {
                 DrawRoundRect(barX, barY, barW, barH, barW / 2, sbBg, sbBg);
                 DrawRoundRect(barX, grabY, barW, grabH, barW / 2, grabCol, grabCol);
             });
@@ -869,7 +938,41 @@ public:
         return *this;
     }
 
-    Context& Badge(const std::string& textUtf8, Color accentColor = Color(89, 173, 250)) {
+    Context& TextWrapped(const std::string& textUtf8, Color color = Color(0, 0, 0, 0), bool bold = false) {
+    std::string disp = StripIdSuffix(textUtf8);
+    Color col = (color.a > 0) ? color : style.text;
+    if (IsDisabled()) col = style.disabledText;
+    else col = EnsureContrast(col);
+
+    int availW = GetAvailWidth();
+    int availLogicalW = (dpiScale > 0.0f) ? static_cast<int>(availW / dpiScale) : availW;
+    const auto& lines = WrapTextCached(disp, availLogicalW, bold);
+
+    int lineH = S(20);
+    int innerGap = S(2);
+    int startX = cursorX;
+    int startY = cursorY;
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        int ly = startY + static_cast<int>(i) * (lineH + innerGap);
+        std::string lineStr = lines.at(i);
+        QueueOrDraw([=, this]() {
+            if (!lineStr.empty()) {
+                DrawTextInternal(startX, ly, availW, lineH, lineStr, col, bold, DT_LEFT);
+            }
+        });
+    }
+
+    int totalH = lines.empty()
+        ? lineH
+        : static_cast<int>(lines.size()) * lineH + static_cast<int>(lines.size() - 1) * innerGap;
+    lastItemActive = false;
+    AdvanceCursor(availW, totalH);
+    return *this;
+    }
+
+    Context& Badge(const std::string& textUtf8, Color accentColor = Color(0, 0, 0, 0)) {
+        if (accentColor.a == 0) accentColor = style.accent;
         accentColor = EnsureContrast(accentColor);
         std::string disp = StripIdSuffix(textUtf8);
         int padX = S(8);
@@ -891,24 +994,41 @@ public:
     }
 
     Context& KeyValue(const std::string& keyUtf8, const std::string& valUtf8, Color valColor = Color(0, 0, 0, 0)) {
-        std::string dispKey = StripIdSuffix(keyUtf8);
+        std::string dispKey = StripIdSuffix(keyUtf8) + ": ";
         std::string dispVal = StripIdSuffix(valUtf8);
-        int h = S(20);
+        int lineH = S(20);
+        int innerGap = S(2);
         int x = cursorX, y = cursorY;
         int availW = GetAvailWidth();
-        int keyW = std::min(CalcTextWidth(dispKey + ": ", false), availW);
+        int keyW = std::min(CalcTextWidth(dispKey, false), availW);
         int valW = std::max(0, availW - keyW);
+
         Color kCol = IsDisabled() ? style.disabledText : style.textDim;
         Color vCol = IsDisabled() ? style.disabledText : ((valColor.a > 0) ? valColor : style.text);
+        if (!IsDisabled()) vCol = EnsureContrast(vCol);
+
+        int valLogicalW = (dpiScale > 0.0f) ? static_cast<int>(valW / dpiScale) : valW;
+        if (valLogicalW < 40) valLogicalW = (dpiScale > 0.0f) ? static_cast<int>(availW / dpiScale) : availW;
+
+        const auto& valLines = WrapTextCached(dispVal, valLogicalW, true);
+        bool putOnNextLine = (valW < S(40)) && !dispVal.empty();
 
         QueueOrDraw([=, this]() {
-            DrawTextInternal(x, y, keyW, h, dispKey + ": ", kCol, false, DT_LEFT);
-            if (valW > 0) {
-                DrawTextInternal(x + keyW, y, valW, h, dispVal, vCol, true, DT_LEFT);
+            DrawTextInternal(x, y, keyW, lineH, dispKey, kCol, false, DT_LEFT);
+            for (size_t i = 0; i < valLines.size(); ++i) {
+                int vx = (i == 0 && !putOnNextLine) ? (x + keyW) : x;
+                int vw = (i == 0 && !putOnNextLine) ? valW : availW;
+                int vy = y + static_cast<int>(i + (putOnNextLine ? 1 : 0)) * (lineH + innerGap);
+                if (!valLines.at(i).empty() && vw > 0) {
+                    DrawTextInternal(vx, vy, vw, lineH, valLines.at(i), vCol, true, DT_LEFT);
+                }
             }
         });
+
+        int totalRows = std::max(1, static_cast<int>(valLines.size()) + (putOnNextLine ? 1 : 0));
+        int totalH = totalRows * lineH + (totalRows - 1) * innerGap;
         lastItemActive = false;
-        AdvanceCursor(availW, h);
+        AdvanceCursor(availW, totalH);
         return *this;
     }
 
@@ -952,6 +1072,7 @@ public:
         bool changed = false;
 
         if (focused) {
+            inputRenderedThisFrame = true;
             hasActiveAnimations = true;
             std::wstring wStr = Utf8ToWide(bufferUtf8);
             textCursorPos = std::min(textCursorPos, wStr.size());
@@ -1060,6 +1181,142 @@ public:
         AdvanceCursor(w, h);
         return changed;
     }
+	
+	bool InputTextMultiline(const std::string& idStr, std::string& bufferUtf8, int customWidth = -1,
+                        int customHeight = 140, bool readOnly = false) {
+    int id = HashString("ml_" + idStr);
+    int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+    int h = (customHeight <= 0) ? std::max(S(80), clientH - cursorY - S(style.windowPadding)) : S(customHeight);
+    int x = cursorX, y = cursorY;
+    bool disabled = IsDisabled();
+
+    float& scrollY = childScrollMap.try_emplace(id, 0.0f).first->second;
+    bool hovered = RegisterInteractive(x, y, w, h, disabled);
+    if (hovered) {
+        hoveredChildId = id;
+        if (std::abs(pendingWheelDelta) > 0.001f) {
+            scrollY -= pendingWheelDelta * S(32);
+        }
+    }
+
+    if (mouseClicked && !disabled && !readOnly && !modalBlocking && openComboId == 0) {
+        if (hovered) {
+            focusedInputId = id;
+            cursorBlinkStart = GetTickCount();
+        } else if (focusedInputId == id) {
+            focusedInputId = 0;
+        }
+    }
+
+    bool focused = (focusedInputId == id) && !disabled && !readOnly;
+    bool changed = false;
+
+    if (focused) {
+        inputRenderedThisFrame = true;
+        hasActiveAnimations = true;
+        std::wstring wStr = Utf8ToWide(bufferUtf8);
+        bool ctrlDown = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
+        for (UINT vk : pendingKeys) {
+            cursorBlinkStart = GetTickCount();
+            if (vk == VK_ESCAPE) {
+                focusedInputId = 0;
+                focused = false;
+            } else if (vk == VK_RETURN) {
+                wStr.push_back(L'\n');
+                changed = true;
+            } else if (ctrlDown && vk == 'V') {
+                std::wstring clip = GetClipboardTextW();
+                if (!clip.empty()) {
+                    clip.erase(std::remove(clip.begin(), clip.end(), L'\r'), clip.end());
+                    wStr += clip;
+                    changed = true;
+                }
+            } else if (ctrlDown && vk == 'C') {
+                SetClipboardTextW(wStr);
+            }
+        }
+        pendingKeys.clear();
+
+        for (wchar_t ch : pendingChars) {
+            cursorBlinkStart = GetTickCount();
+            if (ch == L'\b') {
+                if (!wStr.empty()) {
+                    wStr.pop_back();
+                    changed = true;
+                }
+            } else if (ch >= 32) {
+                wStr.push_back(ch);
+                changed = true;
+            }
+        }
+        pendingChars.clear();
+
+        if (changed) {
+            bufferUtf8 = WideToUtf8(wStr);
+        }
+    }
+
+    int pad = S(8);
+    int scrollBarSpace = S(10);
+    int innerW = std::max(S(24), w - pad * 2 - scrollBarSpace);
+    int innerLogicalW = (dpiScale > 0.0f) ? static_cast<int>(innerW / dpiScale) : innerW;
+    const auto& lines = WrapTextCached(bufferUtf8, innerLogicalW, false);
+
+    int lineH = S(20);
+    int totalContentH = static_cast<int>(lines.size()) * lineH + pad * 2;
+    int maxScroll = std::max(0, totalContentH - h);
+    if (changed) scrollY = static_cast<float>(maxScroll);
+    scrollY = std::clamp(scrollY, 0.0f, static_cast<float>(maxScroll));
+
+    float hoverT = Animate(id * 2, (hovered || focused) ? 1.0f : 0.0f, 16.0f);
+    Color bgCol = disabled ? style.disabledBg : Color::Lerp(style.frameBg, style.frameHover, hoverT);
+    Color borderCol = focused ? style.borderFocus : style.border;
+
+    QueueOrDraw([=, this]() {
+        DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
+        PushClip(x + 2, y + 2, std::max(0, w - 4), std::max(0, h - 4));
+
+        int drawY = y + pad - static_cast<int>(std::round(scrollY));
+        Color txtCol = disabled ? style.disabledText : style.text;
+
+        for (size_t i = 0; i < lines.size(); ++i) {
+            int ly = drawY + static_cast<int>(i) * lineH;
+            if (ly + lineH >= y && ly <= y + h && !lines.at(i).empty()) {
+                DrawTextInternal(x + pad, ly, innerW, lineH, lines.at(i), txtCol, false, DT_LEFT);
+            }
+        }
+
+        if (focused) {
+            DWORD elapsed = GetTickCount() - cursorBlinkStart;
+            if ((elapsed / 500) % 2 == 0) {
+                const std::string& lastLine = lines.empty() ? std::string() : lines.back();
+                int lastLineY = drawY + std::max(0, static_cast<int>(lines.size()) - 1) * lineH;
+                int cx = x + pad + CalcTextWidth(lastLine, false);
+                DrawLine(cx, lastLineY + S(2), cx, lastLineY + lineH - S(2), style.text);
+            }
+        }
+
+        if (maxScroll > 0 && h > S(20)) {
+            int barW = S(5);
+            int barX = x + w - barW - S(3);
+            int barY = y + S(4);
+            int barH = h - S(8);
+            float visibleRatio = std::clamp(static_cast<float>(h) / static_cast<float>(totalContentH), 0.12f, 1.0f);
+            int grabH = std::max(S(16), static_cast<int>(std::round(barH * visibleRatio)));
+            float scrollRatio = scrollY / static_cast<float>(maxScroll);
+            int grabY = barY + static_cast<int>(std::round((barH - grabH) * scrollRatio));
+            DrawRoundRect(barX, barY, barW, barH, barW / 2, style.scrollbarBg, style.scrollbarBg);
+            DrawRoundRect(barX, grabY, barW, grabH, barW / 2, style.scrollbarGrab, style.scrollbarGrab);
+        }
+
+        PopClip();
+    });
+
+    lastItemActive = focused;
+    AdvanceCursor(w, h);
+    return changed;
+    }
 
     bool Checkbox(const std::string& labelUtf8, bool& value) {
         int id = MakeWidgetId("chk_" + labelUtf8);
@@ -1128,7 +1385,7 @@ public:
             int pad = S(3);
             int knobSz = swH - pad * 2;
             int maxTravel = swW - knobSz - pad * 2;
-            int knobX = x + pad + (int)std::round(maxTravel * switchT);
+            int knobX = x + pad + static_cast<int>(std::round(maxTravel * switchT));
             int knobY = swY + pad;
             DrawRoundRect(knobX, knobY, knobSz, knobSz, knobSz / 2, knobCol, knobCol);
 
@@ -1143,11 +1400,13 @@ public:
     }
 
     bool Button(const std::string& labelUtf8, int customW = 0, int customH = 0,
-                Color customBg = Color(0, 0, 0, 0), Color customHover = Color(0, 0, 0, 0)) {
+            Color customBg = Color(0, 0, 0, 0), Color customHover = Color(0, 0, 0, 0)) {
         int id = MakeWidgetId("btn_" + labelUtf8);
         std::string disp = StripIdSuffix(labelUtf8);
-        int w = (customW > 0) ? S(customW) : (CalcTextWidth(disp, true) + S(style.framePaddingX * 2));
-        if (customW == -1) w = GetAvailWidth();
+        int availW = GetAvailWidth();
+        int w = (customW > 0) ? std::min(S(customW), availW)
+                              : std::min(CalcTextWidth(disp, true) + S(style.framePaddingX * 2), availW);
+        if (customW == -1) w = availW;
         int h = (customH > 0) ? S(customH) : S(28);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1163,7 +1422,7 @@ public:
         Color cHover  = (customHover.a > 0) ? customHover : style.buttonHover;
         Color activeCol = Color::Lerp(Color::Lerp(cNormal, cHover, hoverT), style.buttonActive, pressT);
         Color bgCol   = disabled ? style.disabledBg : activeCol;
-		
+
         float luma = 0.299f * bgCol.r + 0.587f * bgCol.g + 0.114f * bgCol.b;
         Color autoTxt = (luma < 145.0f) ? Color(246, 243, 244, 255) : Color(26, 32, 44, 255);
         Color txtCol  = disabled ? style.disabledText : autoTxt;
@@ -1175,7 +1434,10 @@ public:
             } else {
                 DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, disabled ? style.border : bgCol);
             }
-            DrawTextInternal(x, y, w, h, disp, txtCol, true, DT_CENTER);
+            int pad = S(4);
+            PushClip(x + pad, y, std::max(0, w - pad * 2), h);
+            DrawTextInternal(x + pad, y, std::max(0, w - pad * 2), h, disp, txtCol, true, DT_CENTER);
+            PopClip();
         });
 
         lastItemActive = pressed;
@@ -1226,10 +1488,32 @@ public:
         AdvanceCursor(w, h);
         return clicked;
     }
+	
+	int ButtonRow(const std::vector<std::string>& labels, int customHeight = 28) {
+    if (labels.empty()) return -1;
+    int count = static_cast<int>(labels.size());
+    int totalW = GetAvailWidth();
+    int spacing = S(style.itemSpacingX);
+    int btnW = std::max(S(28), (totalW - spacing * (count - 1)) / count);
+    int startX = cursorX;
+    int startY = cursorY;
+    int clickedIndex = -1;
+
+    for (int i = 0; i < count; ++i) {
+        cursorX = startX + i * (btnW + spacing);
+        cursorY = startY;
+        int curW = (i == count - 1) ? std::max(btnW, (startX + totalW) - cursorX) : btnW;
+        int logicalW = (dpiScale > 0.0f) ? static_cast<int>(std::round(curW / dpiScale)) : curW;
+        if (Button(labels.at(static_cast<size_t>(i)), logicalW, customHeight)) {
+            clickedIndex = i;
+        }
+    }
+    return clickedIndex;
+    }
 
     bool TabBar(int& currentTab, const std::vector<std::string>& labels, int customHeight = 30) {
         if (labels.empty()) return false;
-        int count = (int)labels.size();
+        int count = static_cast<int>(labels.size());
         int totalW = GetAvailWidth();
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
@@ -1240,7 +1524,7 @@ public:
 
         for (int i = 0; i < count; ++i) {
             int id = MakeWidgetId("tab_" + std::to_string(i));
-            std::string disp = StripIdSuffix(labels.at(i));
+            std::string disp = StripIdSuffix(labels.at(static_cast<size_t>(i)));
             int tx = x + i * (tabW + spacing);
             int curW = (i == count - 1) ? std::max(tabW, (x + totalW) - tx) : tabW;
             bool isSelected = (currentTab == i);
@@ -1266,7 +1550,10 @@ public:
                 } else {
                     DrawRoundRect(tx, y, curW, h, S(style.rounding), bgCol, style.border);
                 }
-                DrawTextInternal(tx, y, curW, h, disp, txtCol, isSelected, DT_CENTER);
+                int pad = S(4);
+                    PushClip(tx + pad, y, std::max(0, curW - pad * 2), h);
+                    DrawTextInternal(tx + pad, y, std::max(0, curW - pad * 2), h, disp, txtCol, isSelected, DT_CENTER);
+                    PopClip();
             });
         }
 
@@ -1277,7 +1564,7 @@ public:
 
     bool SegmentedControl(int& currentIndex, const std::vector<std::string>& options, int customWidth = -1, int customHeight = 28) {
         if (options.empty()) return false;
-        int count = (int)options.size();
+        int count = static_cast<int>(options.size());
         int totalW = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
         int h = S(customHeight);
         int x = cursorX, y = cursorY;
@@ -1291,7 +1578,7 @@ public:
 
         for (int i = 0; i < count; ++i) {
             int id = MakeWidgetId("seg_" + std::to_string(i));
-            std::string disp = StripIdSuffix(options.at(i));
+            std::string disp = StripIdSuffix(options.at(static_cast<size_t>(i)));
             int sx = x + i * segW;
             int curW = (i == count - 1) ? std::max(segW, (x + totalW) - sx) : segW;
             bool isSelected = (currentIndex == i);
@@ -1306,7 +1593,7 @@ public:
             float activeT = Animate(id * 2 + 1, isSelected ? 1.0f : 0.0f, 18.0f);
 
             Color activeBg = Color::Lerp(style.toggleActive, style.toggleHover, hoverT);
-            Color hoverBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, (uint8_t)(hoverT * 180));
+            Color hoverBg  = Color(style.frameHover.r, style.frameHover.g, style.frameHover.b, static_cast<uint8_t>(hoverT * 180));
             Color segCol   = disabled ? style.disabledBg : Color::Lerp(hoverBg, activeBg, activeT);
             Color selectedTxt = (currentTheme == Theme::LightClean) ? Color(255, 255, 255, 255) : style.text;
             Color txtCol = disabled ? style.disabledText : (isSelected ? selectedTxt : Color::Lerp(style.textDim, style.text, hoverT));
@@ -1370,7 +1657,8 @@ public:
 
     bool Combo(const std::string& idStr, int& currentIndex, const std::vector<std::string>& items, int customWidth = -1) {
         int id = HashString("cmb_" + idStr);
-        int w = (customWidth < 0) ? GetAvailWidth() : S(customWidth);
+        int availW = GetAvailWidth();
+        int w = (customWidth < 0) ? availW : std::min(S(customWidth), availW);
         int h = S(28);
         int x = cursorX, y = cursorY;
         bool disabled = IsDisabled();
@@ -1393,14 +1681,17 @@ public:
         Color bgCol = disabled ? style.disabledBg : Color::Lerp(style.frameBg, style.frameHover, hoverT);
         Color borderCol = isOpen ? style.borderFocus : style.border;
 
-        std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < (int)items.size())
-                              ? StripIdSuffix(items.at(currentIndex)) : "Selecionar...";
+        std::string preview = (!items.empty() && currentIndex >= 0 && currentIndex < static_cast<int>(items.size()))
+                              ? StripIdSuffix(items.at(static_cast<size_t>(currentIndex))) : "Selecionar...";
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(style.rounding), bgCol, borderCol);
             int arrowW = S(22);
-            DrawTextInternal(x + S(8), y, std::max(0, w - arrowW - S(8)), h, preview,
+            int textW = std::max(0, w - arrowW - S(8));
+            PushClip(x + S(8), y, textW, h);
+            DrawTextInternal(x + S(8), y, textW, h, preview,
                              disabled ? style.disabledText : style.text, false, DT_LEFT);
+            PopClip();
             DrawTextInternal(x + w - arrowW, y, arrowW, h, isOpen ? "▲" : "▼",
                              disabled ? style.disabledText : style.textDim, false, DT_CENTER);
         });
@@ -1408,7 +1699,7 @@ public:
         bool selectionChanged = false;
         if (isOpen && !items.empty()) {
             int itemH = S(26);
-            int dropH = (int)items.size() * itemH + S(6);
+            int dropH = static_cast<int>(items.size()) * itemH + S(6);
             int dropY = y + h + S(2);
             if (dropY + dropH > clientH - S(4) && y - dropH - S(2) >= S(4)) {
                 dropY = y - dropH - S(2);
@@ -1417,7 +1708,7 @@ public:
             interactiveRects.push_back({ x, dropY, x + w, dropY + dropH });
 
             int hoveredOption = -1;
-            for (int i = 0; i < (int)items.size(); ++i) {
+            for (int i = 0; i < static_cast<int>(items.size()); ++i) {
                 int optY = dropY + S(3) + i * itemH;
                 if (IsMouseInRect(x + S(3), optY, w - S(6), itemH)) {
                     hoveredOption = i;
@@ -1439,14 +1730,14 @@ public:
             comboOverlayDraws.push_back([=, this]() {
                 DrawRoundRect(x + S(2), dropY + S(3), w, dropH, S(style.rounding), Color(10, 10, 14, 210), Color(10, 10, 14, 210));
                 DrawRoundRect(x, dropY, w, dropH, S(style.rounding), style.popupBg, style.borderFocus);
-                for (int i = 0; i < (int)items.size(); ++i) {
+                for (int i = 0; i < static_cast<int>(items.size()); ++i) {
                     int optY = dropY + S(3) + i * itemH;
                     if (i == hoveredOption) {
                         DrawRoundRect(x + S(3), optY, w - S(6), itemH, S(4), style.buttonHover, style.buttonHover);
                     } else if (i == currentIndex) {
                         DrawRoundRect(x + S(3), optY, w - S(6), itemH, S(4), style.frameHover, style.frameHover);
                     }
-                    DrawTextInternal(x + S(10), optY, std::max(0, w - S(20)), itemH, StripIdSuffix(items.at(i)), style.text, i == currentIndex, DT_LEFT);
+                    DrawTextInternal(x + S(10), optY, std::max(0, w - S(20)), itemH, StripIdSuffix(items.at(static_cast<size_t>(i))), style.text, i == currentIndex, DT_LEFT);
                 }
             });
         }
@@ -1477,7 +1768,7 @@ public:
 
         bool changed = false;
         if (dragging && w > 0 && maxVal > minVal) {
-            float t = std::clamp(float(mousePos.x - x) / float(w), 0.0f, 1.0f);
+            float t = std::clamp(static_cast<float>(mousePos.x - x) / static_cast<float>(w), 0.0f, 1.0f);
             float newVal = minVal + t * (maxVal - minVal);
             if (std::abs(newVal - value) > 0.0001f) {
                 value = newVal;
@@ -1496,7 +1787,7 @@ public:
             int trackY = y + (h - trackH) / 2;
             DrawRoundRect(x, trackY, w, trackH, trackH / 2, trackCol, style.border);
 
-            int fillW = (int)std::round(w * norm);
+            int fillW = static_cast<int>(std::round(w * norm));
             if (fillW > 0) {
                 DrawRoundRect(x, trackY, fillW, trackH, trackH / 2, fillCol, fillCol);
             }
@@ -1535,7 +1826,7 @@ public:
 
         QueueOrDraw([=, this]() {
             DrawRoundRect(x, y, w, h, S(3), style.frameBg, style.border);
-            int fillW = (int)std::round((w - 2) * fraction);
+            int fillW = static_cast<int>(std::round((w - 2) * fraction));
             if (fillW > 0) {
                 DrawRoundRect(x + 1, y + 1, fillW, h - 2, S(3), barCol, barCol);
             }
@@ -1553,7 +1844,7 @@ public:
         hasActiveAnimations = true;
         int sz = S(diameter);
         int x = cursorX, y = cursorY;
-        Color col = (color.a > 0) ? color : style.sliderGrab;
+        Color col = (color.a > 0) ? color : style.accent;
         float angle = (GetTickCount() % 1000) * 0.0062831853f;
 
         QueueOrDraw([=, this]() {
@@ -1563,11 +1854,11 @@ public:
             const int dots = 8;
             for (int i = 0; i < dots; ++i) {
                 float a = angle - i * 0.65f;
-                float alphaRatio = 1.0f - (float(i) / float(dots));
-                Color dotCol(col.r, col.g, col.b, (uint8_t)(col.a * alphaRatio));
+                float alphaRatio = 1.0f - (static_cast<float>(i) / static_cast<float>(dots));
+                Color dotCol(col.r, col.g, col.b, static_cast<uint8_t>(col.a * alphaRatio));
                 int dotR = std::max(2, sz / 9);
-                int dx = (int)std::round(cx + std::cos(a) * r) - dotR;
-                int dy = (int)std::round(cy + std::sin(a) * r) - dotR;
+                int dx = static_cast<int>(std::round(cx + std::cos(a) * r)) - dotR;
+                int dy = static_cast<int>(std::round(cy + std::sin(a) * r)) - dotR;
                 DrawRoundRect(dx, dy, dotR * 2, dotR * 2, dotR, dotCol, dotCol);
             }
         });
@@ -1577,14 +1868,14 @@ public:
         return *this;
     }
 
-    void Toast(const std::string& textUtf8, Color accentColor = Color(89, 173, 250), DWORD durationMs = 2500) {
+    void Toast(const std::string& textUtf8, Color accentColor = Color(0, 0, 0, 0), DWORD durationMs = 2500) {
         if (textUtf8.empty()) return;
         toastText = textUtf8;
-        toastColor = accentColor;
+        toastColor = (accentColor.a > 0) ? accentColor : style.accent;
         toastStartTime = GetTickCount();
         toastDurationMs = durationMs;
         hasActiveAnimations = true;
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     bool IsLastItemHovered() const {
@@ -1594,7 +1885,7 @@ public:
     float GetLastItemHoverRatioX() const {
         int w = lastItemRight - lastItemLeft;
         if (w <= 0) return 0.0f;
-        return std::clamp(float(mousePos.x - lastItemLeft) / float(w), 0.0f, 1.0f);
+        return std::clamp(static_cast<float>(mousePos.x - lastItemLeft) / static_cast<float>(w), 0.0f, 1.0f);
     }
 
     Context& SetTooltip(const std::string& textUtf8) {
@@ -1608,21 +1899,19 @@ public:
         return SetTooltip(textUtf8);
     }
 
-    // --- POPUP MODAL ---
-
     void OpenPopup(const std::string& id) {
         activePopupId = id;
         lastHoveredIndex = -1;
         openComboId = 0;
         focusedInputId = 0;
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     void CloseCurrentPopup() {
         activePopupId.clear();
         lastHoveredIndex = -1;
         focusedInputId = 0;
-        RequestRedraw();
+        RequestRedraw(true);
     }
 
     bool BeginPopupModal(const std::string& id, int customW = 420, int customH = 115) {
@@ -1663,8 +1952,6 @@ public:
         modalBlocking = savedModalState.modalBlocking;
     }
 
-    // --- AUTO-AJUSTE DA JANELA ---
-
     void AutoResizeWindowHeight() {
         if (!hwnd || !activePopupId.empty() || IsZoomed(hwnd)) return;
         int neededClientH = cursorY + S(style.windowPadding);
@@ -1679,11 +1966,9 @@ public:
             int winW = rcWindow.right - rcWindow.left;
             int winH = neededClientH + borderH;
             SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-            RequestRedraw();
+            RequestRedraw(true);
         }
     }
-
-    // --- HELPERS DE CONVERSÃO UTF-8 <-> UTF-16 ---
 
     static std::wstring Utf8ToWide(const std::string& utf8) {
         if (utf8.empty()) return L"";
@@ -1706,18 +1991,25 @@ public:
 private:
     std::wstring themeRegSubKey;
 
-#ifdef SHAWARMAUI_USE_D2D
+    // --- ESTADO DOS BACKENDS (D2D DINÂMICO + FALLBACK GDI) ---
+    HMODULE hModD2D1 = nullptr;
+    HMODULE hModDWrite = nullptr;
+    bool activeD2D = false;
+    bool pendingBackendSwitch = false;
+    bool pendingWantD2D = true;
+
+    // Recursos Direct2D / DirectWrite
     Microsoft::WRL::ComPtr<ID2D1Factory1> d2dFactory;
     Microsoft::WRL::ComPtr<ID2D1Device> d2dDevice;
     Microsoft::WRL::ComPtr<ID2D1DeviceContext> d2dContext;
     Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dTargetBitmap;
     Microsoft::WRL::ComPtr<ID2D1HwndRenderTarget> d2dHwndTarget;
     Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> d2dBrush;
-	Microsoft::WRL::ComPtr<ID2D1BitmapRenderTarget> d2dBgTarget;
+    Microsoft::WRL::ComPtr<ID2D1BitmapRenderTarget> d2dBgTarget;
     Microsoft::WRL::ComPtr<ID2D1Bitmap> d2dBgBitmap;
     int d2dBgW = 0, d2dBgH = 0;
     DWORD lastD2dBgTime = 0;
-    Theme lastD2dBgTheme = Theme::NeonRed;
+    Theme lastD2dBgTheme = Theme::TealGold;
     Microsoft::WRL::ComPtr<IDWriteFactory> dwriteFactory;
     Microsoft::WRL::ComPtr<IDWriteTextFormat> dwriteRegular;
     Microsoft::WRL::ComPtr<IDWriteTextFormat> dwriteBold;
@@ -1741,36 +2033,53 @@ private:
         }
     };
     std::unordered_map<TextLayoutKey, Microsoft::WRL::ComPtr<IDWriteTextLayout>, TextLayoutKeyHash> textLayoutCache;
-#else
+
+    // Recursos GDI
     HDC hdc = nullptr;
     HDC backDC = nullptr;
     HBITMAP backBM = nullptr;
     HGDIOBJ oldBackBM = nullptr;
     int backW = 0, backH = 0;
-	
-	HDC bgDC = nullptr;
+
+    HDC bgDC = nullptr;
     HBITMAP bgBM = nullptr;
     HGDIOBJ oldBgBM = nullptr;
     int bgW = 0, bgH = 0;
     DWORD lastBgDrawTime = 0;
-    Theme lastBgTheme = Theme::NeonRed;
-	
+    Theme lastBgTheme = Theme::TealGold;
 
     HDC checkDC = nullptr;
     HBITMAP checkBM = nullptr;
     HGDIOBJ oldCheckBM = nullptr;
     int cachedCheckBigSz = 0;
-	HDC pixelDC = nullptr;
-	HBITMAP pixelBM = nullptr;
-	HGDIOBJ oldPixelBM = nullptr;
+    HDC pixelDC = nullptr;
+    HBITMAP pixelBM = nullptr;
+    HGDIOBJ oldPixelBM = nullptr;
 
     HFONT fontRegular = nullptr, fontBold = nullptr;
     std::unordered_map<uint32_t, HBRUSH> brushCache;
     std::unordered_map<uint64_t, HPEN> penCache;
-#endif
 
+    // Estado Compartilhado da UI
     std::unordered_map<std::string, int> textWidthCacheRegular;
     std::unordered_map<std::string, int> textWidthCacheBold;
+	
+	struct WrapCacheKey {
+    std::string text;
+    int maxLogicalW;
+    bool bold;
+    bool operator==(const WrapCacheKey& o) const {
+        return maxLogicalW == o.maxLogicalW && bold == o.bold && text == o.text;
+    }
+    };
+    struct WrapCacheKeyHash {
+    size_t operator()(const WrapCacheKey& k) const {
+        size_t h = std::hash<std::string>{}(k.text);
+        h ^= (static_cast<size_t>(k.maxLogicalW) << 8) ^ static_cast<size_t>(k.bold);
+        return h;
+    }
+    };
+    std::unordered_map<WrapCacheKey, std::vector<std::string>, WrapCacheKeyHash> wrapTextCache;
 
     std::function<void(Context&)> renderCallback;
 
@@ -1793,7 +2102,10 @@ private:
     int activeDragId = 0;
     std::unordered_map<int, float> animValues;
     bool hasActiveAnimations = false;
+    bool hasBackdropAnimation = false;
     bool animTimerRunning = false;
+    UINT currentTimerIntervalMs = 0;
+    DWORD lastRedrawRequestMs = 0;
     DWORD lastFrameTime = 0;
     float deltaTime = 0.033f;
 
@@ -1815,6 +2127,7 @@ private:
         std::string title;
         Color titleColor;
         std::vector<std::function<void()>> deferredDraws;
+		std::vector<std::string> titleLines;
     };
     std::vector<PanelState> panelStack;
 
@@ -1828,7 +2141,7 @@ private:
     };
     std::vector<ChildState> childStack;
     std::unordered_map<int, float> childScrollMap;
-	std::unordered_map<int, float> childMaxScrollMap;
+    std::unordered_map<int, float> childMaxScrollMap;
     int hoveredChildId = 0;
     float pendingWheelDelta = 0.0f;
     float childDragOffsetY = 0.0f;
@@ -1836,6 +2149,7 @@ private:
     std::vector<RECT> clipStack;
 
     int focusedInputId = 0;
+    bool inputRenderedThisFrame = false;
     size_t textCursorPos = 0;
     DWORD cursorBlinkStart = 0;
     std::vector<wchar_t> pendingChars;
@@ -1862,7 +2176,7 @@ private:
     DWORD toastStartTime = 0;
     DWORD toastDurationMs = 2500;
 
-    int S(int v) const { return (int)std::round(v * dpiScale); }
+    int S(int v) const { return static_cast<int>(std::round(v * dpiScale)); }
     bool IsDisabled() const { return !disabledStack.empty() && disabledStack.back(); }
 
     Color EnsureContrast(Color col) const {
@@ -1877,6 +2191,78 @@ private:
     static std::string StripIdSuffix(const std::string& label) {
         size_t pos = label.find("##");
         return (pos == std::string::npos) ? label : label.substr(0, pos);
+    }
+	
+	const std::vector<std::string>& WrapTextCached(const std::string& disp, int availLogicalW, bool bold) {
+    availLogicalW = std::max(24, availLogicalW);
+    WrapCacheKey key{ disp, availLogicalW, bold };
+    auto it = wrapTextCache.find(key);
+    if (it != wrapTextCache.end()) return it->second;
+    if (wrapTextCache.size() > 256) wrapTextCache.clear();
+
+    std::vector<std::string> outLines;
+    if (disp.empty()) {
+        outLines.emplace_back("");
+        return wrapTextCache.emplace(std::move(key), std::move(outLines)).first->second;
+    }
+
+    size_t pos = 0;
+    while (pos <= disp.size()) {
+        size_t nextNl = disp.find('\n', pos);
+        std::string paragraph = (nextNl == std::string::npos) ? disp.substr(pos) : disp.substr(pos, nextNl - pos);
+        if (!paragraph.empty() && paragraph.back() == '\r') paragraph.pop_back();
+
+        if (paragraph.empty()) {
+            outLines.emplace_back("");
+        } else {
+            std::string currentLine;
+            size_t wStart = 0;
+            while (wStart < paragraph.size()) {
+                size_t wEnd = paragraph.find_first_of(" /\\", wStart);
+                std::string token = (wEnd == std::string::npos)
+                    ? paragraph.substr(wStart)
+                    : paragraph.substr(wStart, wEnd - wStart + 1);
+
+                std::string candidate = currentLine + token;
+                if (!currentLine.empty() && GetTextWidth(candidate, bold) > availLogicalW) {
+                    while (!currentLine.empty() && currentLine.back() == ' ') currentLine.pop_back();
+                    outLines.push_back(currentLine);
+                    currentLine = token;
+                    while (!currentLine.empty() && currentLine.front() == ' ') currentLine.erase(0, 1);
+                } else {
+                    currentLine = candidate;
+                }
+
+                while (GetTextWidth(currentLine, bold) > availLogicalW && currentLine.size() > 1) {
+                    size_t cut = currentLine.size() - 1;
+                    while (cut > 1 && (static_cast<unsigned char>(currentLine.at(cut)) & 0xC0) == 0x80) {
+                        --cut;
+                    }
+                    while (cut > 1 && GetTextWidth(currentLine.substr(0, cut), bold) > availLogicalW) {
+                        --cut;
+                        while (cut > 1 && (static_cast<unsigned char>(currentLine.at(cut)) & 0xC0) == 0x80) {
+                            --cut;
+                        }
+                    }
+                    if (cut == 0) cut = 1;
+                    outLines.push_back(currentLine.substr(0, cut));
+                    currentLine.erase(0, cut);
+                }
+
+                if (wEnd == std::string::npos) break;
+                wStart = wEnd + 1;
+            }
+            if (!currentLine.empty()) {
+                while (!currentLine.empty() && currentLine.back() == ' ') currentLine.pop_back();
+                outLines.push_back(currentLine);
+            }
+        }
+
+        if (nextNl == std::string::npos) break;
+        pos = nextNl + 1;
+    }
+
+    return wrapTextCache.emplace(std::move(key), std::move(outLines)).first->second;
     }
 
     int HashString(const std::string& str) const {
@@ -1898,14 +2284,20 @@ private:
     }
 
     float Animate(int id, float target, float speed = 15.0f) {
-        float& current = animValues[id];
+        auto it = animValues.find(id);
+        float current = (it != animValues.end()) ? it->second : 0.0f;
         float diff = target - current;
         if (std::abs(diff) < 0.005f) {
             current = target;
+            if (target == 0.0f && it != animValues.end()) {
+                animValues.erase(it);
+                return 0.0f;
+            }
         } else {
             current += diff * std::min(1.0f, deltaTime * speed);
             hasActiveAnimations = true;
         }
+        animValues.insert_or_assign(id, current);
         return current;
     }
 
@@ -1928,8 +2320,8 @@ private:
     }
 
     int GetHoveredRectIndex(POINT pt) const {
-        for (int i = 0; i < (int)interactiveRects.size(); ++i) {
-            const RECT& r = interactiveRects.at(i);
+        for (int i = 0; i < static_cast<int>(interactiveRects.size()); ++i) {
+            const RECT& r = interactiveRects.at(static_cast<size_t>(i));
             if (pt.x >= r.left && pt.x <= r.right && pt.y >= r.top && pt.y <= r.bottom) {
                 return i;
             }
@@ -1973,12 +2365,14 @@ private:
         idStack.clear();
         hoveredChildId = 0;
         lastItemActive = false;
+        inputRenderedThisFrame = false;
 
         DWORD now = GetTickCount();
         deltaTime = (lastFrameTime == 0) ? 0.033f : std::min(0.06f, (now - lastFrameTime) / 1000.0f);
         lastFrameTime = now;
         widgetCounter = 0;
         hasActiveAnimations = false;
+        hasBackdropAnimation = false;
 
         int pad = S(style.windowPadding);
         regionLeft = pad;
@@ -1997,6 +2391,10 @@ private:
         while (!panelStack.empty()) EndPanel();
         while (!clipStack.empty()) PopClip();
 
+        if (focusedInputId != 0 && !inputRenderedThisFrame) {
+            focusedInputId = 0;
+        }
+
         if (!comboOverlayDraws.empty()) {
             for (auto& fn : comboOverlayDraws) fn();
             comboOverlayDraws.clear();
@@ -2011,7 +2409,7 @@ private:
                 hasActiveAnimations = true;
                 float alpha = 1.0f;
                 if (elapsed > toastDurationMs - 400) {
-                    alpha = std::clamp(float(toastDurationMs - elapsed) / 400.0f, 0.0f, 1.0f);
+                    alpha = std::clamp(static_cast<float>(toastDurationMs - elapsed) / 400.0f, 0.0f, 1.0f);
                 }
                 DrawToastInternal(toastText, toastColor, alpha);
             } else {
@@ -2040,9 +2438,9 @@ private:
         int bx = clientW - boxW - S(14);
         int by = clientH - boxH - S(14);
 
-        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, (uint8_t)(245 * alpha));
-        Color bdr(accent.r, accent.g, accent.b, (uint8_t)(230 * alpha));
-        Color txt(style.text.r, style.text.g, style.text.b, (uint8_t)(255 * alpha));
+        Color bg(style.popupBg.r, style.popupBg.g, style.popupBg.b, static_cast<uint8_t>(245 * alpha));
+        Color bdr(accent.r, accent.g, accent.b, static_cast<uint8_t>(230 * alpha));
+        Color txt(style.text.r, style.text.g, style.text.b, static_cast<uint8_t>(255 * alpha));
 
         DrawRoundRect(bx, by, boxW, boxH, S(style.rounding), bg, bdr);
         DrawTextInternal(bx + padX, by, std::max(0, boxW - padX * 2), boxH, textUtf8, txt, true, DT_CENTER);
@@ -2097,34 +2495,67 @@ private:
         CloseClipboard();
     }
 
-#ifdef SHAWARMAUI_USE_D2D
+    // --- INICIALIZAÇÃO HÍBRIDA (D2D DINÂMICO + FALLBACK GDI) ---
+
     ID2D1RenderTarget* ActiveD2DTarget() const {
         if (d2dContext) return d2dContext.Get();
         return d2dHwndTarget.Get();
     }
 
+    bool TryLoadD2DRuntime() {
+        if (!hModD2D1) hModD2D1 = LoadLibraryW(L"d2d1.dll");
+        if (!hModDWrite) hModDWrite = LoadLibraryW(L"dwrite.dll");
+        if (!hModD2D1 || !hModDWrite) return false;
+
+        using D2D1CreateFactoryFn = HRESULT(WINAPI*)(D2D1_FACTORY_TYPE, REFIID, const D2D1_FACTORY_OPTIONS*, void**);
+        using DWriteCreateFactoryFn = HRESULT(WINAPI*)(DWRITE_FACTORY_TYPE, REFIID, IUnknown**);
+
+        auto pD2D1Create = reinterpret_cast<D2D1CreateFactoryFn>(
+            reinterpret_cast<void*>(GetProcAddress(hModD2D1, "D2D1CreateFactory")));
+        auto pDWriteCreate = reinterpret_cast<DWriteCreateFactoryFn>(
+            reinterpret_cast<void*>(GetProcAddress(hModDWrite, "DWriteCreateFactory")));
+
+        if (!pD2D1Create || !pDWriteCreate) return false;
+
+        if (!d2dFactory && FAILED(pD2D1Create(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory1), nullptr,
+                                              reinterpret_cast<void**>(d2dFactory.GetAddressOf())))) {
+            return false;
+        }
+        if (!dwriteFactory && FAILED(pDWriteCreate(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                                                  reinterpret_cast<IUnknown**>(dwriteFactory.GetAddressOf())))) {
+            return false;
+        }
+        return true;
+    }
+
     void InitGraphicsBackend() {
-        if (!d2dFactory) {
-            D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2dFactory.GetAddressOf());
-        }
-        if (!dwriteFactory) {
-            DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
-                                reinterpret_cast<IUnknown**>(dwriteFactory.GetAddressOf()));
-        }
+        activeD2D = false;
+        textWidthCacheRegular.clear();
+        textWidthCacheBold.clear();
 
-        RebuildDWriteFormats();
-
-        if (hwnd && d2dFactory && !externalSwapChain && !d2dHwndTarget) {
-            RECT rc;
-            GetClientRect(hwnd, &rc);
-            D2D1_SIZE_U sz = D2D1::SizeU(rc.right - rc.left, rc.bottom - rc.top);
-            d2dFactory->CreateHwndRenderTarget(D2D1::RenderTargetProperties(),
-                                               D2D1::HwndRenderTargetProperties(hwnd, sz),
-                                               &d2dHwndTarget);
-            if (d2dHwndTarget) {
-                d2dHwndTarget->SetDpi(96.0f, 96.0f);
-                d2dHwndTarget->CreateSolidColorBrush(D2D1::ColorF(1, 1, 1), &d2dBrush);
+        if (preferD2D && TryLoadD2DRuntime()) {
+            RebuildDWriteFormats();
+            if (hwnd && d2dFactory && !externalSwapChain && !d2dHwndTarget) {
+                RECT rc{};
+                GetClientRect(hwnd, &rc);
+                D2D1_SIZE_U sz = D2D1::SizeU(std::max<LONG>(1, rc.right - rc.left), std::max<LONG>(1, rc.bottom - rc.top));
+                if (SUCCEEDED(d2dFactory->CreateHwndRenderTarget(
+                        D2D1::RenderTargetProperties(),
+                        D2D1::HwndRenderTargetProperties(hwnd, sz),
+                        &d2dHwndTarget)) && d2dHwndTarget) {
+                    d2dHwndTarget->SetDpi(96.0f, 96.0f);
+                    if (SUCCEEDED(d2dHwndTarget->CreateSolidColorBrush(D2D1::ColorF(1, 1, 1), &d2dBrush))) {
+                        activeD2D = true;
+                    }
+                }
+            } else if (ActiveD2DTarget() != nullptr) {
+                activeD2D = true;
             }
+        }
+
+        if (!activeD2D) {
+            CleanupD2DResources();
+            RebuildGdiFonts();
         }
     }
 
@@ -2134,6 +2565,7 @@ private:
         textLayoutCache.clear();
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
+		wrapTextCache.clear();
 
         float fontSize = 14.0f * dpiScale;
         if (dwriteFactory) {
@@ -2155,7 +2587,8 @@ private:
     }
 
     bool InitD2DFromSwapChain(IDXGISwapChain1* swapChain) {
-        InitGraphicsBackend();
+        if (!TryLoadD2DRuntime()) return false;
+        RebuildDWriteFormats();
         Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
         if (FAILED(swapChain->GetDevice(IID_PPV_ARGS(&dxgiDevice)))) return false;
         if (FAILED(d2dFactory->CreateDevice(dxgiDevice.Get(), &d2dDevice))) return false;
@@ -2178,8 +2611,8 @@ private:
         return true;
     }
 
-    void CleanupResources() {
-		d2dBgBitmap.Reset();
+    void CleanupD2DResources() {
+        d2dBgBitmap.Reset();
         d2dBgTarget.Reset();
         d2dBgW = 0;
         d2dBgH = 0;
@@ -2195,7 +2628,49 @@ private:
         d2dFactory.Reset();
     }
 
-    int CalcTextWidth(const std::string& textUtf8, bool bold) {
+    void CleanupGdiResources() {
+        for (auto& kv : brushCache) DeleteObject(kv.second);
+        for (auto& kv : penCache) DeleteObject(kv.second);
+        brushCache.clear();
+        penCache.clear();
+        if (fontRegular) { DeleteObject(fontRegular); fontRegular = nullptr; }
+        if (fontBold) { DeleteObject(fontBold); fontBold = nullptr; }
+        if (checkDC) {
+            SelectObject(checkDC, oldCheckBM);
+            DeleteObject(checkBM);
+            DeleteDC(checkDC);
+            checkDC = nullptr;
+        }
+        if (backDC) {
+            SelectObject(backDC, oldBackBM);
+            DeleteObject(backBM);
+            DeleteDC(backDC);
+            backDC = nullptr;
+            backW = backH = 0;
+        }
+        if (bgDC) {
+            SelectObject(bgDC, oldBgBM);
+            DeleteObject(bgBM);
+            DeleteDC(bgDC);
+            bgDC = nullptr;
+            bgW = bgH = 0;
+        }
+        if (pixelDC) {
+            SelectObject(pixelDC, oldPixelBM);
+            DeleteObject(pixelBM);
+            DeleteDC(pixelDC);
+            pixelDC = nullptr;
+        }
+    }
+
+    void CleanupResources() {
+        CleanupD2DResources();
+        CleanupGdiResources();
+    }
+
+    // --- PRIMITIVAS DIRECT2D ---
+
+    int CalcTextWidthD2D(const std::string& textUtf8, bool bold) {
         if (textUtf8.empty() || !dwriteFactory) return 0;
         auto& cache = bold ? textWidthCacheBold : textWidthCacheRegular;
         auto it = cache.find(textUtf8);
@@ -2205,30 +2680,31 @@ private:
         std::wstring w = Utf8ToWide(textUtf8);
         IDWriteTextFormat* fmt = bold ? dwriteBold.Get() : dwriteRegular.Get();
         Microsoft::WRL::ComPtr<IDWriteTextLayout> layout;
-        if (SUCCEEDED(dwriteFactory->CreateTextLayout(w.c_str(), (UINT32)w.size(), fmt, 4096.0f, 100.0f, &layout))) {
+        if (SUCCEEDED(dwriteFactory->CreateTextLayout(w.c_str(), static_cast<UINT32>(w.size()), fmt, 4096.0f, 100.0f, &layout))) {
             DWRITE_TEXT_METRICS metrics = {};
             layout->GetMetrics(&metrics);
-            int width = (int)std::ceil(metrics.widthIncludingTrailingWhitespace);
-            cache[textUtf8] = width;
+            int width = static_cast<int>(std::ceil(metrics.widthIncludingTrailingWhitespace));
+            cache.insert_or_assign(textUtf8, width);
             return width;
         }
         return 0;
     }
 
-    void DrawGlassBackdrop(int w, int h) {
+    void DrawGlassBackdropD2D(int w, int h) {
         ID2D1RenderTarget* mainRt = ActiveD2DTarget();
         if (!mainRt || w <= 0 || h <= 0) return;
 
-        hasActiveAnimations = true;
+        hasBackdropAnimation = true;
         DWORD now = GetTickCount();
+        DWORD backdropIntervalMs = (style.backdropFps > 0) ? (1000u / static_cast<UINT>(style.backdropFps)) : 66u;
         bool sizeChanged = (!d2dBgTarget || d2dBgW != w || d2dBgH != h);
         bool themeChanged = (lastD2dBgTheme != currentTheme);
-        bool timeElapsed = (now - lastD2dBgTime >= 100); // 10 FPS no fundo
+        bool timeElapsed = (now - lastD2dBgTime >= backdropIntervalMs);
 
         if (sizeChanged) {
             d2dBgBitmap.Reset();
             d2dBgTarget.Reset();
-            D2D1_SIZE_F sz = D2D1::SizeF((float)w, (float)h);
+            D2D1_SIZE_F sz = D2D1::SizeF(static_cast<float>(w), static_cast<float>(h));
             if (SUCCEEDED(mainRt->CreateCompatibleRenderTarget(sz, &d2dBgTarget))) {
                 d2dBgTarget->GetBitmap(&d2dBgBitmap);
                 d2dBgW = w;
@@ -2261,14 +2737,19 @@ private:
             float ox3 = std::sin(t * 0.41f + 2.1f) * S(65);
             float oy3 = std::cos(t * 0.37f + 1.1f) * S(55);
 
-            Color bgTop(14, 10, 14, 255);
-            Color bgBot(8, 8, 10, 255);
-            Color cOrb1(245, 55, 95, 85);
-            Color cOrb2(210, 40, 80, 70);
-            Color cOrb3(180, 60, 100, 45);
-            Color cHole(12, 11, 14, 150);
+            Color bgTop(11, 14, 22, 255);
+            Color bgBot(8, 11, 17, 255);
+            Color cOrb1(24, 198, 152, 70);
+            Color cOrb2(12, 138, 156, 65);
+            Color cOrb3(16, 165, 135, 45);
 
-            if (currentTheme == Theme::RoseGold) {
+            if (currentTheme == Theme::NeonRed) {
+                bgTop = Color(14, 10, 14, 255);
+                bgBot = Color(8, 8, 10, 255);
+                cOrb1 = Color(245, 55, 95, 85);
+                cOrb2 = Color(210, 40, 80, 70);
+                cOrb3 = Color(180, 60, 100, 45);
+            } else if (currentTheme == Theme::RoseGold) {
                 bgTop = Color(14, 13, 16, 255);
                 cOrb1 = Color(235, 145, 120, 90);
                 cOrb2 = Color(205, 125, 110, 75);
@@ -2284,10 +2765,9 @@ private:
                 cOrb1 = Color(110, 160, 235, 80);
                 cOrb2 = Color(135, 180, 242, 70);
                 cOrb3 = Color(235, 242, 252, 95);
-                cHole = Color(198, 210, 228, 140);
             }
 
-            D2D1_RECT_F fullRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
+            D2D1_RECT_F fullRect = D2D1::RectF(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
 
             {
                 std::array<D2D1_GRADIENT_STOP, 2> stops = {{
@@ -2295,54 +2775,53 @@ private:
                     { 1.0f, bgBot.ToD2D() }
                 }};
                 Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
-                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), static_cast<UINT32>(stops.size()), &stopCol))) {
                     Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
                     if (SUCCEEDED(rt->CreateLinearGradientBrush(
-                        D2D1::LinearGradientBrushProperties(D2D1::Point2F(0.0f, 0.0f), D2D1::Point2F((float)w, (float)h)),
+                        D2D1::LinearGradientBrushProperties(D2D1::Point2F(0.0f, 0.0f), D2D1::Point2F(static_cast<float>(w), static_cast<float>(h))),
                         stopCol.Get(), &gradBrush))) {
                         rt->FillRectangle(fullRect, gradBrush.Get());
                     }
                 }
             }
 
-            float minDim = (float)std::min(w, h);
-            float maxDim = (float)std::max(w, h);
+            float minDim = static_cast<float>(std::min(w, h));
+            float maxDim = static_cast<float>(std::max(w, h));
 
-            auto drawRadialOrb = [&](float cx, float cy, float rx, float ry, Color col) {
+            auto drawRadialOrb = [&](float cx, float cy, float r, Color col) {
                 Color edgeCol(col.r, col.g, col.b, 0);
                 std::array<D2D1_GRADIENT_STOP, 2> stops = {{
                     { 0.0f, col.ToD2D() },
                     { 1.0f, edgeCol.ToD2D() }
                 }};
                 Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
-                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+                if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), static_cast<UINT32>(stops.size()), &stopCol))) {
                     Microsoft::WRL::ComPtr<ID2D1RadialGradientBrush> radBrush;
                     if (SUCCEEDED(rt->CreateRadialGradientBrush(
-                        D2D1::RadialGradientBrushProperties(D2D1::Point2F(cx, cy), D2D1::Point2F(0.0f, 0.0f), rx, ry),
+                        D2D1::RadialGradientBrushProperties(D2D1::Point2F(cx, cy), D2D1::Point2F(0.0f, 0.0f), r, r),
                         stopCol.Get(), &radBrush))) {
-                        rt->FillRectangle(fullRect, radBrush.Get());
+                        rt->FillEllipse(D2D1::Ellipse(D2D1::Point2F(cx, cy), r, r), radBrush.Get());
                     }
                 }
             };
 
-            drawRadialOrb(w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.46f, minDim * 0.46f, cOrb1);
-            drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.43f, minDim * 0.43f, cOrb2);
-            drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.16f, minDim * 0.16f, cHole);
-            drawRadialOrb(w * 0.14f + ox3, h * 0.54f + oy3, maxDim * 0.36f, maxDim * 0.36f, cOrb3);
+            drawRadialOrb(w * 0.80f + ox1, h * 0.22f + oy1, minDim * 0.46f, cOrb1);
+            drawRadialOrb(w * 0.66f + ox2, h * 0.72f + oy2, minDim * 0.43f, cOrb2);
+            drawRadialOrb(w * 0.14f + ox3, h * 0.54f + oy3, maxDim * 0.36f, cOrb3);
 
             d2dBgTarget->EndDraw();
         }
 
         if (d2dBgBitmap) {
-            D2D1_RECT_F destRect = D2D1::RectF(0.0f, 0.0f, (float)w, (float)h);
+            D2D1_RECT_F destRect = D2D1::RectF(0.0f, 0.0f, static_cast<float>(w), static_cast<float>(h));
             mainRt->DrawBitmap(d2dBgBitmap.Get(), destRect);
         }
     }
 
-    void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
+    void DrawRoundRectD2D(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || !d2dBrush) return;
-        D2D1_ROUNDED_RECT rr = { D2D1::RectF((float)x, (float)y, (float)(x + w), (float)(y + h)), (float)radius, (float)radius };
+        D2D1_ROUNDED_RECT rr = { D2D1::RectF(static_cast<float>(x), static_cast<float>(y), static_cast<float>(x + w), static_cast<float>(y + h)), static_cast<float>(radius), static_cast<float>(radius) };
         if (fill.a > 0) {
             d2dBrush->SetColor(fill.ToD2D());
             rt->FillRoundedRectangle(&rr, d2dBrush.Get());
@@ -2353,21 +2832,21 @@ private:
         }
     }
 
-    void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color) {
+    void DrawMeshRectD2D(int x, int y, int w, int h, int radius, Color c1, Color c2) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || w <= 0 || h <= 0) return;
-        D2D1_ROUNDED_RECT rr = { D2D1::RectF((float)x, (float)y, (float)(x + w), (float)(y + h)), (float)radius, (float)radius };
+        D2D1_ROUNDED_RECT rr = { D2D1::RectF(static_cast<float>(x), static_cast<float>(y), static_cast<float>(x + w), static_cast<float>(y + h)), static_cast<float>(radius), static_cast<float>(radius) };
 
         if (c1.a > 0) {
-		std::array<D2D1_GRADIENT_STOP, 2> stops = {{
+            std::array<D2D1_GRADIENT_STOP, 2> stops = {{
                 { 0.0f, c1.ToD2D() },
                 { 1.0f, c2.ToD2D() }
-		}};
+            }};
             Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> stopCol;
-            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), (UINT32)stops.size(), &stopCol))) {
+            if (SUCCEEDED(rt->CreateGradientStopCollection(stops.data(), static_cast<UINT32>(stops.size()), &stopCol))) {
                 Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> gradBrush;
                 if (SUCCEEDED(rt->CreateLinearGradientBrush(
-                    D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                    D2D1::LinearGradientBrushProperties(D2D1::Point2F(static_cast<float>(x), static_cast<float>(y)), D2D1::Point2F(static_cast<float>(x), static_cast<float>(y + h))),
                     stopCol.Get(), &gradBrush))) {
                     rt->FillRoundedRectangle(&rr, gradBrush.Get());
                 }
@@ -2379,53 +2858,56 @@ private:
             { 1.0f, Color(255, 255, 255, 12).ToD2D() }
         }};
         Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> rimCol;
-        if (SUCCEEDED(rt->CreateGradientStopCollection(rimStops.data(), (UINT32)rimStops.size(), &rimCol))) {
+        if (SUCCEEDED(rt->CreateGradientStopCollection(rimStops.data(), static_cast<UINT32>(rimStops.size()), &rimCol))) {
             Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> rimBrush;
             if (SUCCEEDED(rt->CreateLinearGradientBrush(
-                D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                D2D1::LinearGradientBrushProperties(D2D1::Point2F(static_cast<float>(x), static_cast<float>(y)), D2D1::Point2F(static_cast<float>(x), static_cast<float>(y + h))),
                 rimCol.Get(), &rimBrush))) {
                 D2D1_ROUNDED_RECT borderRR = {
-                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, (float)(x + w) - 0.5f), std::max(0.0f, (float)(y + h) - 0.5f)),
-                    (float)radius, (float)radius
+                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, static_cast<float>(x + w) - 0.5f), std::max(0.0f, static_cast<float>(y + h) - 0.5f)),
+                    static_cast<float>(radius), static_cast<float>(radius)
                 };
                 rt->DrawRoundedRectangle(&borderRR, rimBrush.Get(), 1.0f);
             }
         }
     }
 
-    void DrawGlassPanelRect(int x, int y, int w, int h, int radius, Color fill, Color) {
+    void DrawGlassPanelRectD2D(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || w <= 0 || h <= 0) return;
 
-        DrawRoundRect(x, y, w, h, radius, fill, Color(0, 0, 0, 0));
+        DrawRoundRectD2D(x, y, w, h, radius, fill, Color(0, 0, 0, 0));
+
+        Color topRim = (borderCol.a > 0) ? borderCol : Color(255, 255, 255, 75);
+        Color botRim(topRim.r, topRim.g, topRim.b, static_cast<uint8_t>(topRim.a * 0.35f));
 
         std::array<D2D1_GRADIENT_STOP, 2> glassStops = {{
-            { 0.0f, Color(255, 255, 255, 75).ToD2D() },
-            { 1.0f, Color(255, 255, 255, 18).ToD2D() }
+            { 0.0f, topRim.ToD2D() },
+            { 1.0f, botRim.ToD2D() }
         }};
         Microsoft::WRL::ComPtr<ID2D1GradientStopCollection> glassCol;
-        if (SUCCEEDED(rt->CreateGradientStopCollection(glassStops.data(), (UINT32)glassStops.size(), &glassCol))) {
+        if (SUCCEEDED(rt->CreateGradientStopCollection(glassStops.data(), static_cast<UINT32>(glassStops.size()), &glassCol))) {
             Microsoft::WRL::ComPtr<ID2D1LinearGradientBrush> glassBrush;
             if (SUCCEEDED(rt->CreateLinearGradientBrush(
-                D2D1::LinearGradientBrushProperties(D2D1::Point2F((float)x, (float)y), D2D1::Point2F((float)x, (float)(y + h))),
+                D2D1::LinearGradientBrushProperties(D2D1::Point2F(static_cast<float>(x), static_cast<float>(y)), D2D1::Point2F(static_cast<float>(x), static_cast<float>(y + h))),
                 glassCol.Get(), &glassBrush))) {
                 D2D1_ROUNDED_RECT borderRR = {
-                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, (float)(x + w) - 0.5f), std::max(0.0f, (float)(y + h) - 0.5f)),
-                    (float)radius, (float)radius
+                    D2D1::RectF(x + 0.5f, y + 0.5f, std::max(0.0f, static_cast<float>(x + w) - 0.5f), std::max(0.0f, static_cast<float>(y + h) - 0.5f)),
+                    static_cast<float>(radius), static_cast<float>(radius)
                 };
                 rt->DrawRoundedRectangle(&borderRR, glassBrush.Get(), 1.0f);
             }
         }
     }
 
-    void DrawLine(int x1, int y1, int x2, int y2, Color col) {
+    void DrawLineD2D(int x1, int y1, int x2, int y2, Color col) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || !d2dBrush) return;
         d2dBrush->SetColor(col.ToD2D());
-        rt->DrawLine(D2D1::Point2F((float)x1, (float)y1), D2D1::Point2F((float)x2, (float)y2), d2dBrush.Get(), 1.0f);
+        rt->DrawLine(D2D1::Point2F(static_cast<float>(x1), static_cast<float>(y1)), D2D1::Point2F(static_cast<float>(x2), static_cast<float>(y2)), d2dBrush.Get(), 1.0f);
     }
 
-    void DrawCheckmarkCached(int x, int y, int boxSz, Color, Color chkCol) {
+    void DrawCheckmarkD2D(int x, int y, int boxSz, Color chkCol) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         if (!rt || !d2dBrush) return;
         d2dBrush->SetColor(chkCol.ToD2D());
@@ -2437,7 +2919,7 @@ private:
         rt->DrawLine(p2, p3, d2dBrush.Get(), stroke);
     }
 
-    void DrawTextInternal(int x, int y, int w, int h, const std::string& textUtf8, Color col, bool bold, UINT align) {
+    void DrawTextD2D(int x, int y, int w, int h, const std::string& textUtf8, Color col, bool bold, UINT align) {
         ID2D1RenderTarget* rt = ActiveD2DTarget();
         IDWriteTextFormat* fmt = bold ? dwriteBold.Get() : dwriteRegular.Get();
         if (!rt || !d2dBrush || !dwriteFactory || !fmt || textUtf8.empty() || w <= 0) return;
@@ -2452,7 +2934,7 @@ private:
             if (textLayoutCache.size() > 256) textLayoutCache.clear();
             std::wstring textW = Utf8ToWide(textUtf8);
             Microsoft::WRL::ComPtr<IDWriteTextLayout> newLayout;
-            if (SUCCEEDED(dwriteFactory->CreateTextLayout(textW.c_str(), (UINT32)textW.size(), fmt, (float)w, (float)h, &newLayout))) {
+            if (SUCCEEDED(dwriteFactory->CreateTextLayout(textW.c_str(), static_cast<UINT32>(textW.size()), fmt, static_cast<float>(w), static_cast<float>(h), &newLayout))) {
                 if (align & DT_CENTER) newLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
                 else if (align & DT_RIGHT) newLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_TRAILING);
                 else newLayout->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -2464,39 +2946,23 @@ private:
 
         if (layoutPtr) {
             d2dBrush->SetColor(col.ToD2D());
-            rt->DrawTextLayout(D2D1::Point2F((float)x, (float)y), layoutPtr, d2dBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_NONE);
+            rt->DrawTextLayout(D2D1::Point2F(static_cast<float>(x), static_cast<float>(y)), layoutPtr, d2dBrush.Get(), D2D1_DRAW_TEXT_OPTIONS_NONE);
         }
     }
 
-    void DrawDimOverlay(Color dimCol) {
-        DrawRoundRect(0, 0, clientW, clientH, 0, dimCol, dimCol);
-    }
-
-    void ApplyClipRect(const RECT& r) {
-        ID2D1RenderTarget* rt = ActiveD2DTarget();
-        if (rt) rt->PushAxisAlignedClip(D2D1::RectF((float)r.left, (float)r.top, (float)r.right, (float)r.bottom), D2D1_ANTIALIAS_MODE_ALIASED);
-    }
-
-    void RemoveClipRect() {
-        ID2D1RenderTarget* rt = ActiveD2DTarget();
-        if (rt) rt->PopAxisAlignedClip();
-    }
-
-#else
-    void InitGraphicsBackend() {
-        RebuildGdiFonts();
-    }
+    // --- HELPERS E PRIMITIVAS GDI (FALLBACK) ---
 
     void RebuildGdiFonts() {
         if (fontRegular) { DeleteObject(fontRegular); fontRegular = nullptr; }
         if (fontBold) { DeleteObject(fontBold); fontBold = nullptr; }
         textWidthCacheRegular.clear();
         textWidthCacheBold.clear();
+		wrapTextCache.clear();
 
-        fontRegular = CreateFontW((int)(16 * dpiScale), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        fontRegular = CreateFontW(static_cast<int>(16 * dpiScale), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                   CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-        fontBold = CreateFontW((int)(16 * dpiScale), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+        fontBold = CreateFontW(static_cast<int>(16 * dpiScale), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
     }
@@ -2527,15 +2993,15 @@ private:
         oldCheckBM = SelectObject(checkDC, checkBM);
         cachedCheckBigSz = bigSz;
     }
-	
-	HDC GetSolidPixelDC(Color col) {
-    if (!pixelDC) {
-        pixelDC = CreateCompatibleDC(hdc);
-        pixelBM = CreateCompatibleBitmap(hdc, 1, 1);
-        oldPixelBM = SelectObject(pixelDC, pixelBM);
-    }
-    SetPixel(pixelDC, 0, 0, col.ToWin32());
-    return pixelDC;
+
+    HDC GetSolidPixelDC(Color col) {
+        if (!pixelDC) {
+            pixelDC = CreateCompatibleDC(hdc);
+            pixelBM = CreateCompatibleBitmap(hdc, 1, 1);
+            oldPixelBM = SelectObject(pixelDC, pixelBM);
+        }
+        SetPixel(pixelDC, 0, 0, col.ToWin32());
+        return pixelDC;
     }
 
     HBRUSH GetBrush(Color c) {
@@ -2543,53 +3009,20 @@ private:
         auto it = brushCache.find(key);
         if (it != brushCache.end()) return it->second;
         HBRUSH b = CreateSolidBrush(c.ToWin32());
-        brushCache[key] = b;
+        brushCache.insert_or_assign(key, b);
         return b;
     }
 
     HPEN GetPen(Color c, int width = 1) {
-        uint64_t key = (uint64_t(width) << 32) | c.Pack();
+        uint64_t key = (static_cast<uint64_t>(width) << 32) | c.Pack();
         auto it = penCache.find(key);
         if (it != penCache.end()) return it->second;
         HPEN p = CreatePen(PS_SOLID, width, c.ToWin32());
-        penCache[key] = p;
+        penCache.insert_or_assign(key, p);
         return p;
     }
 
-    void CleanupResources() {
-        for (auto& kv : brushCache) DeleteObject(kv.second);
-        for (auto& kv : penCache) DeleteObject(kv.second);
-        brushCache.clear();
-        penCache.clear();
-        if (fontRegular) { DeleteObject(fontRegular); fontRegular = nullptr; }
-        if (fontBold) { DeleteObject(fontBold); fontBold = nullptr; }
-        if (checkDC) {
-            SelectObject(checkDC, oldCheckBM);
-            DeleteObject(checkBM);
-            DeleteDC(checkDC);
-            checkDC = nullptr;
-        }
-        if (backDC) {
-            SelectObject(backDC, oldBackBM);
-            DeleteObject(backBM);
-            DeleteDC(backDC);
-            backDC = nullptr;
-        }
-		if (bgDC) {
-            SelectObject(bgDC, oldBgBM);
-            DeleteObject(bgBM);
-            DeleteDC(bgDC);
-            bgDC = nullptr;
-        }
-		if (pixelDC) {
-            SelectObject(pixelDC, oldPixelBM);
-            DeleteObject(pixelBM);
-            DeleteDC(pixelDC);
-            pixelDC = nullptr;
-        }
-    }
-
-    int CalcTextWidth(const std::string& textUtf8, bool bold) {
+    int CalcTextWidthGDI(const std::string& textUtf8, bool bold) {
         if (!hdc || textUtf8.empty()) return 0;
         auto& cache = bold ? textWidthCacheBold : textWidthCacheRegular;
         auto it = cache.find(textUtf8);
@@ -2599,19 +3032,20 @@ private:
         std::wstring w = Utf8ToWide(textUtf8);
         SelectObject(hdc, bold ? fontBold : fontRegular);
         SIZE sz = {};
-        GetTextExtentPoint32W(hdc, w.c_str(), (int)w.size(), &sz);
-        cache[textUtf8] = sz.cx;
+        GetTextExtentPoint32W(hdc, w.c_str(), static_cast<int>(w.size()), &sz);
+        cache.insert_or_assign(textUtf8, sz.cx);
         return sz.cx;
     }
 
-    void DrawGlassBackdrop(int w, int h) {
+    void DrawGlassBackdropGDI(int w, int h) {
         if (!hdc || w <= 0 || h <= 0) return;
-        hasActiveAnimations = true;
+        hasBackdropAnimation = true;
 
         DWORD now = GetTickCount();
+        DWORD backdropIntervalMs = (style.backdropFps > 0) ? (1000u / static_cast<UINT>(style.backdropFps)) : 66u;
         bool sizeChanged = (!bgDC || bgW != w || bgH != h);
         bool themeChanged = (lastBgTheme != currentTheme);
-        bool timeElapsed = (now - lastBgDrawTime >= 66); // 15 FPS no fundo
+        bool timeElapsed = (now - lastBgDrawTime >= backdropIntervalMs);
 
         if (sizeChanged) {
             if (bgDC) {
@@ -2646,12 +3080,17 @@ private:
             float ox2 = (std::cos(t * 0.53f + 1.4f) * 0.6f + std::sin(t * 0.23f) * 0.4f) * S(85);
             float oy2 = (std::sin(t * 0.67f + 0.8f) * 0.6f + std::cos(t * 0.29f) * 0.4f) * S(65);
 
-            Color bgTop(14, 10, 14, 255);
-            Color bgBot(8, 8, 10, 255);
-            Color cOrb1(245, 55, 95, 65);
-            Color cOrb2(210, 40, 80, 55);
+            Color bgTop(11, 14, 22, 255);
+            Color bgBot(8, 11, 17, 255);
+            Color cOrb1(24, 198, 152, 40);
+            Color cOrb2(12, 138, 156, 36);
 
-            if (currentTheme == Theme::RoseGold) {
+            if (currentTheme == Theme::NeonRed) {
+                bgTop = Color(14, 10, 14, 255);
+                bgBot = Color(8, 8, 10, 255);
+                cOrb1 = Color(245, 55, 95, 65);
+                cOrb2 = Color(210, 40, 80, 55);
+            } else if (currentTheme == Theme::RoseGold) {
                 bgTop = Color(14, 13, 16, 255);
                 cOrb1 = Color(235, 145, 120, 65);
                 cOrb2 = Color(205, 125, 110, 55);
@@ -2667,25 +3106,25 @@ private:
             }
 
             std::array<TRIVERTEX, 2> verts = {{
-                { 0, 0, (COLOR16)(bgTop.r << 8), (COLOR16)(bgTop.g << 8), (COLOR16)(bgTop.b << 8), 0xFF00 },
-                { w, h, (COLOR16)(bgBot.r << 8), (COLOR16)(bgBot.g << 8), (COLOR16)(bgBot.b << 8), 0xFF00 }
+                { 0, 0, static_cast<COLOR16>(bgTop.r << 8), static_cast<COLOR16>(bgTop.g << 8), static_cast<COLOR16>(bgTop.b << 8), 0xFF00 },
+                { w, h, static_cast<COLOR16>(bgBot.r << 8), static_cast<COLOR16>(bgBot.g << 8), static_cast<COLOR16>(bgBot.b << 8), 0xFF00 }
             }};
             GRADIENT_RECT gRect = { 0, 1 };
-            GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+            GradientFill(hdc, verts.data(), static_cast<ULONG>(verts.size()), &gRect, 1, GRADIENT_FILL_RECT_V);
 
             auto drawSoftOrb = [&](int cx, int cy, int r, Color col) {
                 HDC orbDC = GetSolidPixelDC(col);
                 for (int step = 4; step >= 1; --step) {
                     int curR = (r * step) / 4;
-                    BYTE alpha = (BYTE)(col.a / 4);
+                    BYTE alpha = static_cast<BYTE>(col.a / 4);
                     BLENDFUNCTION bf = { AC_SRC_OVER, 0, alpha, 0 };
                     AlphaBlend(hdc, cx - curR, cy - curR, curR * 2, curR * 2, orbDC, 0, 0, 1, 1, bf);
                 }
             };
 
             int minDim = std::min(w, h);
-            drawSoftOrb((int)(w * 0.80f + ox1), (int)(h * 0.22f + oy1), (int)(minDim * 0.35f), cOrb1);
-            drawSoftOrb((int)(w * 0.66f + ox2), (int)(h * 0.72f + oy2), (int)(minDim * 0.32f), cOrb2);
+            drawSoftOrb(static_cast<int>(w * 0.80f + ox1), static_cast<int>(h * 0.22f + oy1), static_cast<int>(minDim * 0.35f), cOrb1);
+            drawSoftOrb(static_cast<int>(w * 0.66f + ox2), static_cast<int>(h * 0.72f + oy2), static_cast<int>(minDim * 0.32f), cOrb2);
 
             hdc = prevHdc;
         }
@@ -2693,7 +3132,26 @@ private:
         BitBlt(hdc, 0, 0, w, h, bgDC, 0, 0, SRCCOPY);
     }
 
+    // --- DISPATCH HÍBRIDO DAS PRIMITIVAS (D2D -> FALLBACK GDI) ---
+
+    int CalcTextWidth(const std::string& textUtf8, bool bold) {
+        if (activeD2D) return CalcTextWidthD2D(textUtf8, bold);
+        return CalcTextWidthGDI(textUtf8, bold);
+    }
+
+    void DrawGlassBackdrop(int w, int h) {
+        if (activeD2D) {
+            DrawGlassBackdropD2D(w, h);
+            return;
+        }
+        DrawGlassBackdropGDI(w, h);
+    }
+
     void DrawRoundRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
+        if (activeD2D) {
+            DrawRoundRectD2D(x, y, w, h, radius, fill, borderCol);
+            return;
+        }
         if (!hdc || w <= 0 || h <= 0) return;
         HGDIOBJ oldB = SelectObject(hdc, GetBrush(fill));
         HGDIOBJ oldP = SelectObject(hdc, GetPen(borderCol, 1));
@@ -2704,6 +3162,10 @@ private:
     }
 
     void DrawMeshRect(int x, int y, int w, int h, int radius, Color c1, Color c2, Color) {
+        if (activeD2D) {
+            DrawMeshRectD2D(x, y, w, h, radius, c1, c2);
+            return;
+        }
         if (!hdc || w <= 0 || h <= 0) return;
 
         int saved = SaveDC(hdc);
@@ -2711,11 +3173,11 @@ private:
         SelectClipRgn(hdc, rgn);
 
         std::array<TRIVERTEX, 2> verts = {{
-            { x, y, (COLOR16)(c1.r << 8), (COLOR16)(c1.g << 8), (COLOR16)(c1.b << 8), 0xFF00 },
-            { x + w, y + h, (COLOR16)(c2.r << 8), (COLOR16)(c2.g << 8), (COLOR16)(c2.b << 8), 0xFF00 }
+            { x, y, static_cast<COLOR16>(c1.r << 8), static_cast<COLOR16>(c1.g << 8), static_cast<COLOR16>(c1.b << 8), 0xFF00 },
+            { x + w, y + h, static_cast<COLOR16>(c2.r << 8), static_cast<COLOR16>(c2.g << 8), static_cast<COLOR16>(c2.b << 8), 0xFF00 }
         }};
         GRADIENT_RECT gRect = { 0, 1 };
-        GradientFill(hdc, verts.data(), (ULONG)verts.size(), &gRect, 1, GRADIENT_FILL_RECT_V);
+        GradientFill(hdc, verts.data(), static_cast<ULONG>(verts.size()), &gRect, 1, GRADIENT_FILL_RECT_V);
 
         RestoreDC(hdc, saved);
         DeleteObject(rgn);
@@ -2729,12 +3191,20 @@ private:
     }
 
     void DrawGlassPanelRect(int x, int y, int w, int h, int radius, Color fill, Color borderCol) {
+        if (activeD2D) {
+            DrawGlassPanelRectD2D(x, y, w, h, radius, fill, borderCol);
+            return;
+        }
         if (!hdc || w <= 0 || h <= 0) return;
         Color glassRim = Color::Lerp(borderCol, Color(255, 255, 255, 255), 0.18f);
         DrawRoundRect(x, y, w, h, radius, fill, glassRim);
     }
 
     void DrawLine(int x1, int y1, int x2, int y2, Color col) {
+        if (activeD2D) {
+            DrawLineD2D(x1, y1, x2, y2, col);
+            return;
+        }
         HGDIOBJ oldP = SelectObject(hdc, GetPen(col, 1));
         MoveToEx(hdc, x1, y1, nullptr);
         LineTo(hdc, x2, y2);
@@ -2742,6 +3212,10 @@ private:
     }
 
     void DrawCheckmarkCached(int x, int y, int boxSz, Color bgCol, Color chkCol) {
+        if (activeD2D) {
+            DrawCheckmarkD2D(x, y, boxSz, chkCol);
+            return;
+        }
         const int scale = 3;
         int bigSz = boxSz * scale;
         EnsureCheckBuffer(bigSz);
@@ -2751,12 +3225,12 @@ private:
 
         LOGBRUSH lb = { BS_SOLID, chkCol.ToWin32(), 0 };
         HPEN pen = ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_ROUND | PS_JOIN_ROUND,
-                                std::max(3, (int)(bigSz * 0.13f)), &lb, 0, nullptr);
+                                std::max(3, static_cast<int>(bigSz * 0.13f)), &lb, 0, nullptr);
         HGDIOBJ oldP = SelectObject(checkDC, pen);
 
-        MoveToEx(checkDC, (int)(bigSz * 0.24f), (int)(bigSz * 0.52f), nullptr);
-        LineTo(checkDC, (int)(bigSz * 0.43f), (int)(bigSz * 0.72f));
-        LineTo(checkDC, (int)(bigSz * 0.76f), (int)(bigSz * 0.30f));
+        MoveToEx(checkDC, static_cast<int>(bigSz * 0.24f), static_cast<int>(bigSz * 0.52f), nullptr);
+        LineTo(checkDC, static_cast<int>(bigSz * 0.43f), static_cast<int>(bigSz * 0.72f));
+        LineTo(checkDC, static_cast<int>(bigSz * 0.76f), static_cast<int>(bigSz * 0.30f));
 
         SelectObject(checkDC, oldP);
         DeleteObject(pen);
@@ -2769,6 +3243,10 @@ private:
     }
 
     void DrawTextInternal(int x, int y, int w, int h, const std::string& textUtf8, Color col, bool bold, UINT align) {
+        if (activeD2D) {
+            DrawTextD2D(x, y, w, h, textUtf8, col, bold, align);
+            return;
+        }
         if (textUtf8.empty() || w <= 0) return;
         std::wstring textW = Utf8ToWide(textUtf8);
         SetBkMode(hdc, TRANSPARENT);
@@ -2779,6 +3257,10 @@ private:
     }
 
     void DrawDimOverlay(Color dimCol) {
+        if (activeD2D) {
+            DrawRoundRectD2D(0, 0, clientW, clientH, 0, dimCol, dimCol);
+            return;
+        }
         if (clientW <= 0 || clientH <= 0) return;
         HDC dimDC = GetSolidPixelDC(dimCol);
         BLENDFUNCTION bf = { AC_SRC_OVER, 0, dimCol.a, 0 };
@@ -2786,15 +3268,24 @@ private:
     }
 
     void ApplyClipRect(const RECT& r) {
+        if (activeD2D) {
+            ID2D1RenderTarget* rt = ActiveD2DTarget();
+            if (rt) rt->PushAxisAlignedClip(D2D1::RectF(static_cast<float>(r.left), static_cast<float>(r.top), static_cast<float>(r.right), static_cast<float>(r.bottom)), D2D1_ANTIALIAS_MODE_ALIASED);
+            return;
+        }
         if (!hdc) return;
         SaveDC(hdc);
         IntersectClipRect(hdc, r.left, r.top, r.right, r.bottom);
     }
 
     void RemoveClipRect() {
+        if (activeD2D) {
+            ID2D1RenderTarget* rt = ActiveD2DTarget();
+            if (rt) rt->PopAxisAlignedClip();
+            return;
+        }
         if (hdc) RestoreDC(hdc, -1);
     }
-#endif
 
     void PushClipLogical(int x, int y, int w, int h) {
         RECT r = { x, y, x + w, y + h };
@@ -2828,7 +3319,7 @@ private:
         if (user32) {
             using SetProcessDpiAwarenessContextFn = BOOL(WINAPI*)(HANDLE);
             auto fn = reinterpret_cast<SetProcessDpiAwarenessContextFn>(
-    reinterpret_cast<void*>(GetProcAddress(user32, "SetProcessDpiAwarenessContext")));
+                reinterpret_cast<void*>(GetProcAddress(user32, "SetProcessDpiAwarenessContext")));
             if (fn) { fn(reinterpret_cast<HANDLE>(-4)); return; }
         }
         SetProcessDPIAware();
@@ -2838,7 +3329,7 @@ private:
         HDC hdc = GetDC(nullptr);
         int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
         ReleaseDC(nullptr, hdc);
-        return (float)dpi / 96.0f;
+        return static_cast<float>(dpi) / 96.0f;
     }
 
     static LRESULT CALLBACK StaticWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -2862,11 +3353,9 @@ private:
             case WM_DPICHANGED: {
                 UINT newDpi = HIWORD(wParam);
                 dpiScale = (newDpi > 0) ? (newDpi / 96.0f) : 1.0f;
-#ifdef SHAWARMAUI_USE_D2D
-                RebuildDWriteFormats();
-#else
-                RebuildGdiFonts();
-#endif
+                if (activeD2D) RebuildDWriteFormats();
+                else RebuildGdiFonts();
+
                 RECT* suggested = reinterpret_cast<RECT*>(lParam);
                 if (suggested) {
                     SetWindowPos(hWnd, nullptr, suggested->left, suggested->top,
@@ -2874,11 +3363,11 @@ private:
                                  suggested->bottom - suggested->top,
                                  SWP_NOZORDER | SWP_NOACTIVATE);
                 }
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
             }
-			
-			case WM_GETMINMAXINFO: {
+
+            case WM_GETMINMAXINFO: {
                 MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
                 mmi->ptMinTrackSize.x = S(minW);
                 mmi->ptMinTrackSize.y = S(minH);
@@ -2888,20 +3377,18 @@ private:
             case WM_SIZE:
                 clientW = LOWORD(lParam);
                 clientH = HIWORD(lParam);
-#ifdef SHAWARMAUI_USE_D2D
-                if (d2dHwndTarget && clientW > 0 && clientH > 0) {
+                if (activeD2D && d2dHwndTarget && clientW > 0 && clientH > 0) {
                     d2dHwndTarget->Resize(D2D1::SizeU(clientW, clientH));
                 }
-#endif
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_TIMER:
                 if (wParam == 1) {
-                    RequestRedraw();
+                    RequestRedraw(true);
                 } else if (wParam == 2 && onTimer) {
                     onTimer();
-                    RequestRedraw();
+                    RequestRedraw(true);
                 }
                 return 0;
 
@@ -2918,12 +3405,12 @@ private:
                     }
                 }
                 DragFinish(hDrop);
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
             }
 
             case WM_MOUSEMOVE: {
-                POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
+                POINT pt = { static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)) };
                 if (pt.x == mousePos.x && pt.y == mousePos.y) return 0;
                 mousePos = pt;
 
@@ -2936,7 +3423,7 @@ private:
                 int currentHover = GetHoveredRectIndex(mousePos);
                 if (currentHover != lastHoveredIndex || activeDragId != 0 || openComboId != 0 || !pendingTooltipText.empty()) {
                     lastHoveredIndex = currentHover;
-                    RequestRedraw();
+                    RequestRedraw(false);
                 }
                 return 0;
             }
@@ -2946,13 +3433,13 @@ private:
                 mousePos = { -1, -1 };
                 if (lastHoveredIndex != -1) {
                     lastHoveredIndex = -1;
-                    RequestRedraw();
+                    RequestRedraw(true);
                 }
                 return 0;
 
             case WM_MOUSEWHEEL: {
-                pendingWheelDelta += (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
-                RequestRedraw();
+                pendingWheelDelta += static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / static_cast<float>(WHEEL_DELTA);
+                RequestRedraw(true);
                 return 0;
             }
 
@@ -2960,31 +3447,31 @@ private:
                 mouseDown = true;
                 mouseClicked = true;
                 SetCapture(hWnd);
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_LBUTTONUP:
                 mouseDown = false;
                 activeDragId = 0;
                 ReleaseCapture();
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_LBUTTONDBLCLK:
                 mouseDoubleClicked = true;
                 mouseClicked = true;
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_RBUTTONDOWN:
                 rightMouseClicked = true;
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_CHAR:
                 if (focusedInputId != 0) {
                     pendingChars.push_back(static_cast<wchar_t>(wParam));
-                    RequestRedraw();
+                    RequestRedraw(true);
                     return 0;
                 }
                 break;
@@ -2992,17 +3479,17 @@ private:
             case WM_KEYDOWN:
             case WM_SYSKEYDOWN:
                 if (wParam < keyDown.size()) {
-                    if (!keyDown[wParam]) keyPressed[wParam] = true;
-                    keyDown[wParam] = true;
+                    if (!keyDown.at(wParam)) keyPressed.at(wParam) = true;
+                    keyDown.at(wParam) = true;
                 }
                 if (focusedInputId != 0) {
                     pendingKeys.push_back(static_cast<UINT>(wParam));
-                    RequestRedraw();
+                    RequestRedraw(true);
                     return 0;
                 }
                 if (openComboId != 0 && wParam == VK_ESCAPE) {
                     openComboId = 0;
-                    RequestRedraw();
+                    RequestRedraw(true);
                     return 0;
                 }
                 break;
@@ -3010,7 +3497,7 @@ private:
             case WM_KEYUP:
             case WM_SYSKEYUP:
                 if (wParam < keyDown.size()) {
-                    keyDown[wParam] = false;
+                    keyDown.at(wParam) = false;
                 }
                 break;
 
@@ -3023,48 +3510,62 @@ private:
                 lastHoveredIndex = -1;
                 keyDown.fill(false);
                 keyPressed.fill(false);
-                RequestRedraw();
+                RequestRedraw(true);
                 return 0;
 
             case WM_PAINT: {
                 PAINTSTRUCT ps;
                 HDC realDC = BeginPaint(hWnd, &ps);
-				(void)realDC;
                 RECT rc;
                 GetClientRect(hWnd, &rc);
                 clientW = rc.right - rc.left;
                 clientH = rc.bottom - rc.top;
 
                 if (clientW > 0 && clientH > 0) {
-#ifdef SHAWARMAUI_USE_D2D
-                    if (d2dHwndTarget) {
+                    if (activeD2D && d2dHwndTarget) {
                         d2dHwndTarget->BeginDraw();
                         d2dHwndTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                         BeginFrameState();
                         DrawGlassBackdrop(clientW, clientH);
                         if (renderCallback) renderCallback(*this);
                         EndFrameState();
-                        if (d2dHwndTarget->EndDraw() == D2DERR_RECREATE_TARGET) {
-                            d2dHwndTarget.Reset();
+                        HRESULT hr = d2dHwndTarget->EndDraw();
+                        if (hr == D2DERR_RECREATE_TARGET || FAILED(hr)) {
+                            CleanupResources();
                             InitGraphicsBackend();
+                            if (!activeD2D) {
+                                RequestRedraw(true);
+                            }
                         }
+                    } else {
+                        EnsureBackBuffer(realDC, clientW, clientH);
+                        hdc = backDC;
+                        BeginFrameState();
+                        DrawGlassBackdrop(clientW, clientH);
+                        if (renderCallback) renderCallback(*this);
+                        EndFrameState();
+                        BitBlt(realDC, 0, 0, clientW, clientH, backDC, 0, 0, SRCCOPY);
                     }
-#else
-                    EnsureBackBuffer(realDC, clientW, clientH);
-                    hdc = backDC;
-                    BeginFrameState();
-                    DrawGlassBackdrop(clientW, clientH);
-                    if (renderCallback) renderCallback(*this);
-                    EndFrameState();
-                    BitBlt(realDC, 0, 0, clientW, clientH, backDC, 0, 0, SRCCOPY);
-#endif
-                    if (hasActiveAnimations && !animTimerRunning) {
-                        UINT intervalMs = (style.animFps > 0) ? std::max(10u, 1000u / (UINT)style.animFps) : 33u;
-                        SetTimer(hWnd, 1, intervalMs, nullptr);
-                        animTimerRunning = true;
-                    } else if (!hasActiveAnimations && animTimerRunning) {
+
+                    if (pendingBackendSwitch) {
+                        pendingBackendSwitch = false;
+                        preferD2D = pendingWantD2D;
+                        CleanupResources();
+                        InitGraphicsBackend();
+                        RequestRedraw(true);
+                    }
+
+                    UINT nextDelayMs = GetNextFrameDelayMs();
+                    if (nextDelayMs > 0) {
+                        if (!animTimerRunning || currentTimerIntervalMs != nextDelayMs) {
+                            SetTimer(hWnd, 1, nextDelayMs, nullptr);
+                            animTimerRunning = true;
+                            currentTimerIntervalMs = nextDelayMs;
+                        }
+                    } else if (animTimerRunning) {
                         KillTimer(hWnd, 1);
                         animTimerRunning = false;
+                        currentTimerIntervalMs = 0;
                         lastFrameTime = 0;
                     }
                 }
@@ -3074,7 +3575,11 @@ private:
             }
 
             case WM_DESTROY:
-                if (animTimerRunning) KillTimer(hWnd, 1);
+                if (animTimerRunning) {
+                    KillTimer(hWnd, 1);
+                    animTimerRunning = false;
+                    currentTimerIntervalMs = 0;
+                }
                 PostQuitMessage(0);
                 return 0;
         }
